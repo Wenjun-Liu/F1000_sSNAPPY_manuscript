@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022) (preloaded format=pdflatex 2023.3.1)  9 MAR 2023 14:23
+This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022) (preloaded format=pdflatex 2023.3.1)  16 MAR 2023 16:07
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1466,7 +1466,7 @@ Here is how much of TeX's memory you used:
  14 hyphenation exceptions out of 8191
  114i,15n,131p,1509b,661s stack positions out of 10000i,1000n,20000p,200000b,200000s
  </Users/wenjunliu/Library/TinyTeX/texmf-var/fonts/pk/ljfour/jknappen/ec/ectt0800.643pk> </Users/wenjunliu/Library/TinyTeX/texmf-var/fonts/pk/ljfour/jknappen/ec/tctt0900.600pk> </Users/wenjunliu/Library/TinyTeX/texmf-var/fonts/pk/ljfour/jknappen/ec/tcit0900.600pk> </Users/wenjunliu/Library/TinyTeX/texmf-var/fonts/pk/ljfour/jknappen/ec/ectt0900.643pk>{/Users/wenjunliu/Library/TinyTeX/texmf-dist/fonts/enc/dvips/ly1/texnansi.enc} </Users/wenjunliu/Library/TinyTeX/texmf-var/fonts/pk/ljfour/jknappen/ec/ectt0800.563pk>{/Users/wenjunliu/Library/TinyTeX/texmf-dist/fonts/enc/dvips/base/8r.enc}</Users/wenjunliu/Library/TinyTeX/texmf-dist/fonts/type1/bitstrea/charter/bchb8a.pfb></Users/wenjunliu/Library/TinyTeX/texmf-dist/fonts/type1/bitstrea/charter/bchr8a.pfb></Users/wenjunliu/Library/TinyTeX/texmf-dist/fonts/type1/bitstrea/charter/bchri8a.pfb></Users/wenjunliu/Library/TinyTeX/texmf-dist/fonts/type1/public/mathdesign/mdbch/md-chb8t.pfb></Users/wenjunliu/Library/TinyTeX/texmf-dist/fonts/type1/public/mathdesign/mdbch/md-chr7m.pfb></Users/wenjunliu/Library/TinyTeX/texmf-dist/fonts/type1/public/mathdesign/mdbch/md-chr7t.pfb></Users/wenjunliu/Library/TinyTeX/texmf-dist/fonts/type1/public/mathdesign/mdbch/md-chr7v.pfb></Users/wenjunliu/Library/TinyTeX/texmf-dist/fonts/type1/public/mathdesign/mdbch/md-chr7y.pfb></Users/wenjunliu/Library/TinyTeX/texmf-dist/fonts/type1/public/mathdesign/mdbch/md-chr8t.pfb></Users/wenjunliu/Library/TinyTeX/texmf-dist/fonts/type1/public/mathdesign/mdbch/md-chri7m.pfb></Users/wenjunliu/Library/TinyTeX/texmf-dist/fonts/type1/urw/helvetic/uhvb8a.pfb></Users/wenjunliu/Library/TinyTeX/texmf-dist/fonts/type1/urw/helvetic/uhvr8a.pfb></Users/wenjunliu/Library/TinyTeX/texmf-dist/fonts/type1/urw/helvetic/uhvro8a.pfb>
-Output written on sSNAPPY_paper.pdf (19 pages, 520728 bytes).
+Output written on sSNAPPY_paper.pdf (19 pages, 520707 bytes).
 PDF statistics:
  540 PDF objects out of 1000 (max. 8388607)
  352 compressed objects within 4 object streams
