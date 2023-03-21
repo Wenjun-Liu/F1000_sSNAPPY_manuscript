@@ -120,7 +120,7 @@
 \thispagestyle{front}
 
 \begin{abstract}
-Detecting biological pathways whose activities were significantly different between biological conditions is a key interest in analysing RNA-seq data. Majority of current strategies function by testing for over-representation of differentially expressed genes (DEGs) among pre-defined gene-set, failing to account for gene-gene interactions encoded by pathway topologies or predicting the directionality of pathway activities. To address these issues, a single-sample pathway perturbation analysis method that leverages pathway topology information to compute perturbation scores that predict pathways' potential directions of changes was developed and made into a R/Bioconductor package \href{https://bioconductor.org/packages/sSNAPPY}{\emph{sSNAPPY}}. We demonstrated the use of \emph{sSNAPPY} by applying it to public scRNA-seq data derived from ovarian cancer patient tissues collected before and after chemotherapy. Not only replicated results reported in the original study, \emph{sSNAPPY} was also able to detect significant pathway perturbation of other interesting biological processes. \emph{sSNAPPY} presents a novel pathway analysis strategy that takes into consideration of pathway topology to predict biology pathways' activities in both individual samples and treatment groups. In addition to not relying on the detection of differentially expressed genes, the method also offers great flexibility and provides access to powerful visualisation functions.
+When analysing RNA-Seq data, a common outcome is to detect biological pathways with significantly altered activity between the conditions under investigation. The most common strategies test for over-representation within pre-defined gene-sets for genes showing changed expression\citep{Subramanian2005-lx, Young2010-jw}, but without accounting for gene-gene interactions encoded by pathway topologies, and not being able to directly predict the directional change of pathway activity. To address these issues, we have deloped a single-sample pathway perturbation analysis method \href{https://bioconductor.org/packages/sSNAPPY}{\emph{sSNAPPY}}, now available as an R/Bioconductor package, which leverages pathway topology information to compute pathway perturbation scores, and predicts the potential direction of change across a set of pathways. Here, we demonstrate the use of \emph{sSNAPPY} by applying the method to public scRNA-seq data, derived from ovarian cancer patient tissues collected before and after chemotherapy. Not only were we able to replicate results reported in the original study, but \emph{sSNAPPY} was also able to detect significant perturbation of other biological processes, yielding far greater insight into the response to treatment. \emph{sSNAPPY} represents a novel pathway analysis strategy that takes into consideration of pathway topology to predict impacted biology pathways, both within related samples and across treatment groups. In addition to not relying on the detection of differentially expressed genes, the method and associated R package offer important flexibility and provide powerful visualisation tools.
 \end{abstract}
 
 \section*{Keywords}
@@ -130,7 +130,7 @@ RNA-seq, pathway enrichment, R package, topology, KEGG, scRNA-seq
 \clearpage
 \pagestyle{main}
 
-\textbf{R version}: R version 4.2.2 (2022-10-31)
+\textbf{R version}: R version 4.2.2 Patched (2022-11-10 r83330)
 
 \textbf{Bioconductor version}: 3.16
 
