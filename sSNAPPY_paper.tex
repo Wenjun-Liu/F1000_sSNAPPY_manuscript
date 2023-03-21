@@ -130,16 +130,24 @@ RNA-seq, pathway enrichment, R package, topology, KEGG, scRNA-seq
 \clearpage
 \pagestyle{main}
 
-\textbf{R version}: R version 4.2.2 Patched (2022-11-10 r83330)
+\textbf{R version}: R version 4.2.3 (2023-03-15)
 
 \textbf{Bioconductor version}: 3.16
 
 \hypertarget{introduction}{%
 \section{Introduction}\label{introduction}}
 
-Using pathway enrichment analysis to gain biological insights from changes in gene expression is a pivotal step in analysing an interpreting RNA-seq data, for which numerous methods have been developed. Most of the existing methods, regardless of whether relying on the detection of differentially expressed genes (over-representation analysis ORA)\citep{Al-Shahrour2005} or scoring all genes (functional class scoring methodologies FCS)\citep{Ackermann2009}, tend to view pathways simply as a collection of gene names. However, databases such as Kyoto Encyclopaedia of Genes and Genomes (KEGG)\citep{OgataKEGGKyotoEncyclopediaa} and WikiPathways\citep{Martens2021} capture not only which genes are implicated in a certain biological process but also their interactions and relevant importance, both of which are overlooked in ORA and FCS.
+Using pathway enrichment analysis to gain biological insights from gene expression data is a pivotal step in the analysis and interpretation of RNA-seq data, for which numerous methods have been developed (reviewed in \citep{Maleki2020-ur, Mubeen2022-eq}).
+Many existing methods tend to view pathways simply as a collection of gene names, as seen in those relying on the detection of differentially expressed genes and applying over-representation analysis (ORA) strategies, and those scoring all genes using functional class scoring (FCS), such as in Gene Set Enrichment Analysis (GSEA) \citep{Subramanian2005-lx}, arguably the most widely-used approach.
+However, databases such as the Kyoto Encyclopaedia of Genes and Genomes (KEGG)\citep{OgataKEGGKyotoEncyclopediaa} and WikiPathways\citep{Martens2021} capture not only which genes are implicated in a certain biological process but also their interactions, activating or inhibitory roles, and their relative importance within the pathway, all of which are overlooked in ORA- and FCS-based approaches.
 
-To fully utilise that additional information, the latest generation of pathway analysis approaches have predominantly been topology-based\citep{Khatri2012}. Despite differences in the null hypotheses tested across these approaches, overall, they have demonstrated enhanced sensitivity and specificity due to their abilities to take gene-gene interconnections into account6. Nevertheless, most of those topology-based methods focus only on comparing activities of pathways between two groups (eg. treatment) and cannot be used to score individual samples\citep{Ma2019, Bayerlova2015}. In heterogenous data where more than one factors could affect pathway activities, however, individual sample scoring could be desirable\citep{Hanzelmann2013}. To address this gap, we present a single-sample directional pathway perturbation analysis strategy called \emph{sSNAPPY}. This article explains how \emph{sSNAPPY} computes changes in gene expression in individual samples and propagates that through gene-set topologies to predict the perturbation in pathway activities. The implication of the R/Bioconductor package will be illustrated through a public scRNA-seq dataset that has been pseudo-bulked.
+To fully utilise that additional information, the latest generation of pathway analysis approaches include many which are topology-based such as SPIA\citep{Tarca2009-nf}, DEGraph\citep{Jacob2012}, NetGSA\citep{Ma2016} and PRS\citep{Ibrahim2012}, as well as others which explicitly model inter-gene correlations\citep{Wu2012}.
+Despite differences in the null hypotheses tested across these approaches, overall, they have demonstrated enhanced sensitivity and specificity due to their abilities to take gene-gene interconnections into account\citep{Nguyen2019-va, Ma2019}.
+Nevertheless, most topology-based methods focus only on comparing activities of pathways between two treatment groups and cannot be used to score individual samples.
+However, in heterogenous data where more than one factor may be influencing our observations\citep{Hanzelmann2013}, incorporating scoring within paired samples may be desirable and may be able to reveal more nuanced insights.
+To address this gap, we present a Single-Sample Network and Pathway Perturbation analysis methodology called \href{https://bioconductor.org/packages/sSNAPPY}{\emph{sSNAPPY}}, available as an R/Bioconductor package.
+This article defines how \emph{sSNAPPY} computes changes in gene expression within paired samples, and propagates this through gene-set topologies to predict the perturbation in pathway activities within paired samples, before providing summarised results across an entire dataset which would include more robust levels of biological replication.
+The practical usage of the \emph{sSNAPPY} R/Bioconductor package will be illustrated through the analysis of a public scRNA-seq dataset using pseudo-bulk strategies.
 
 \hypertarget{methods}{%
 \section{Methods}\label{methods}}
