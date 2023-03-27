@@ -18,7 +18,13 @@ author:
     - Black Ochre Data Laboratories, Telethon Kids Institute, Adelaide, Australia
     - John Curtin School of Medical Research, Australian National University, Canberra, Australia
 abstract: 
- Detecting biological pathways whose activities were significantly different between biological conditions is a key interest in analysing RNA-seq data. Majority of current strategies function by testing for over-representation of differentially expressed genes (DEGs) among pre-defined gene-set, failing to account for gene-gene interactions encoded by pathway topologies or predicting the directionality of pathway activities. To address these issues, a single-sample pathway perturbation analysis method that leverages pathway topology information to compute perturbation scores that predict pathways’ potential directions of changes was developed and made into a R/Bioconductor package [*sSNAPPY*](https://bioconductor.org/packages/sSNAPPY). We demonstrated the use of *sSNAPPY* by applying it to public scRNA-seq data derived from ovarian cancer patient tissues collected before and after chemotherapy. Not only replicated results reported in the original study, *sSNAPPY* was also able to detect significant pathway perturbation of other interesting biological processes. *sSNAPPY* presents a novel pathway analysis strategy that takes into consideration of pathway topology to predict biology pathways’ activities in both individual samples and treatment groups. In addition to not relying on the detection of differentially expressed genes, the method also offers great flexibility and provides access to powerful visualisation functions.
+ When analysing RNA-Seq data, a common outcome is to detect biological pathways with significantly altered activity between the conditions under investigation. 
+ The most common strategies test for over-representation within pre-defined gene-sets for genes showing changed expression[@Subramanian2005-lx; @Young2010-jw], but without accounting for gene-gene interactions encoded by pathway topologies, and not being able to directly predict the directional change of pathway activity. 
+ To address these issues, we have deloped a single-sample pathway perturbation analysis method  [*sSNAPPY*](https://bioconductor.org/packages/sSNAPPY), now available as an R/Bioconductor package, which leverages pathway topology information to compute pathway perturbation scores, and predicts the potential direction of change across a set of pathways. 
+ Here, we demonstrate the use of *sSNAPPY* by applying the method to public scRNA-seq data, derived from ovarian cancer patient tissues collected before and after chemotherapy. 
+ Not only were we able to replicate results reported in the original study, but *sSNAPPY* was also able to detect significant perturbation of other biological processes, yielding far greater insight into the response to treatment.
+  *sSNAPPY* represents a novel pathway analysis strategy that takes into consideration of pathway topology to predict impacted biology pathways, both within related samples and across treatment groups. 
+  In addition to not relying on the detection of differentially expressed genes, the method and associated R package offer important flexibility and provide powerful visualisation tools.
 
 keywords: RNA-seq, pathway enrichment, R package, topology, KEGG, scRNA-seq
 bibliography: sample.bib
@@ -39,48 +45,78 @@ header-includes:
 
 # Introduction
 
-Using pathway enrichment analysis to gain biological insights from changes in gene expression is a pivotal step in analysing an interpreting RNA-seq data, for which numerous methods have been developed. Most of the existing methods, regardless of whether relying on the detection of differentially expressed genes (over-representation analysis ORA)[@Al-Shahrour2005]  or scoring all genes (functional class scoring methodologies FCS)[@Ackermann2009], tend to view pathways simply as a collection of gene names. However, databases such as Kyoto Encyclopaedia of Genes and Genomes (KEGG)[@OgataKEGGKyotoEncyclopediaa] and WikiPathways[@Martens2021] capture not only which genes are implicated in a certain biological process but also their interactions and relevant importance, both of which are overlooked in ORA and FCS. 
+Using pathway enrichment analysis to gain biological insights from gene expression data is a pivotal step in the analysis and interpretation of RNA-seq data, for which numerous methods have been developed (reviewed in [@Maleki2020-ur; @Mubeen2022-eq]). 
+Many existing methods tend to view pathways simply as a collection of gene names, as seen in those relying on the detection of differentially expressed genes and applying over-representation analysis (ORA) strategies, and those scoring all genes using functional class scoring (FCS), such as in Gene Set Enrichment Analysis (GSEA) [@Subramanian2005-lx], arguably the most widely-used approach. 
+However, databases such as the Kyoto Encyclopaedia of Genes and Genomes (KEGG)[@OgataKEGGKyotoEncyclopediaa] and WikiPathways[@Martens2021] capture not only which genes are implicated in a certain biological process but also their interactions, activating or inhibitory roles, and their relative importance within the pathway, all of which are overlooked in ORA- and FCS-based approaches. 
 
-To fully utilise that additional information, the latest generation of pathway analysis approaches have predominantly been topology-based[@Khatri2012]. Despite differences in the null hypotheses tested across these approaches, overall, they have demonstrated enhanced sensitivity and specificity due to their abilities to take gene-gene interconnections into account6. Nevertheless, most of those topology-based methods focus only on comparing activities of pathways between two groups (eg. treatment) and cannot be used to score individual samples[@Ma2019; @Bayerlova2015]. In heterogenous data where more than one factors could affect pathway activities, however, individual sample scoring could be desirable[@Hanzelmann2013]. To address this gap, we present a single-sample directional pathway perturbation analysis strategy called *sSNAPPY*. This article explains how *sSNAPPY* computes changes in gene expression in individual samples and propagates that through gene-set topologies to predict the perturbation in pathway activities. The implication of the R/Bioconductor package will be illustrated through a public scRNA-seq dataset that has been pseudo-bulked.
+To fully utilise that additional information, the latest generation of pathway analysis approaches include many which are topology-based such as SPIA[@Tarca2009-nf], DEGraph[@Jacob2012], NetGSA[@Ma2016] and PRS[@Ibrahim2012], as well as others which explicitly model inter-gene correlations[@Wu2012].
+Despite differences in the null hypotheses tested across these approaches, overall, they have demonstrated enhanced sensitivity and specificity due to their abilities to take gene-gene interconnections into account[@Nguyen2019-va; @Ma2019]. 
+Nevertheless, most topology-based methods focus only on comparing activities of pathways between two treatment groups and cannot be used to score individual samples. 
+However, in heterogenous data where more than one factor may be influencing our observations[@Hanzelmann2013], incorporating scoring within paired samples may be desirable and may be able to reveal more nuanced insights. 
+To address this gap, we present a Single-Sample Network and Pathway Perturbation analysis methodology called [*sSNAPPY*](https://bioconductor.org/packages/sSNAPPY), available as an R/Bioconductor package.
+<!-- To address this gap, we present a Single-Sample directional Pathway Perturbation analysis methodology called [*sSNAPPY*](https://bioconductor.org/packages/sSNAPPY), available as an R/Bioconductor package.  -->
+This article defines how *sSNAPPY* computes changes in gene expression within paired samples, and propagates this through gene-set topologies to predict the perturbation in pathway activities within paired samples, before providing summarised results across an entire dataset which would include more robust levels of biological replication. 
+The practical usage of the *sSNAPPY* R/Bioconductor package will be illustrated through the analysis of a public scRNA-seq dataset using pseudo-bulk strategies.
 
 
 # Methods
+
 ## Implementation
-*sSNAPPY* is an R package that has been reviewed and published on the open-source bioinformatics software platform [Bioconductor](https://bioconductor.org/packages/release/bioc/html/*sSNAPPY*.html) with its source codes deposited to GitHub. It is a topology-based pathway analysis method designed to compute directional single-sample pathway perturbation scores in RNA-seq datasets with matched-paired design (eg. samples collected before and after treatment), allowing the detection of significant pathway perturbation on not only treatment but also single-sample level. 
 
-To implement *sSNAPPY*, the only inputs required are a log-transformed counts per million (CPM) matrix and matching sample metadata data.frame describing the treatment of each sample and the categorical variable grouping samples into matched pairs. It is assumed that genes with low counts have been filtered out and the matrix has been normalised to correct for technical artefacts such as gene length or GC contents. Next, knowing what the baseline treatment level is, the single-sample log fold-changes (logFC) of each treated sample will be calculated by subtracting the logCPM of the corresponding baseline samples from the treated ones. Since it has been shown previously that in RNA-seq data, genes with lower expressions turn to have larger variance[@Law2014] , we introduced a weighting strategy to down-weight the raw single-sample logFCs of those genes. Our weighting strategy functions by estimating the relationships between the variances in single-sample logFCs and mean logCPMs for each gene with loess regression and defining the gene-wise weight to be the inverse of the predicted variance derived from applying the regression model to genes’ mean logCPM values. 
+*sSNAPPY* is an R package that has been reviewed and published on the open-source bioinformatics software platform [Bioconductor](https://bioconductor.org/packages/release/bioc/html/*sSNAPPY*.html) with all source code available via GitHub.
+The methodology itself is topology-based, designed to compute directional, single-sample, pathway perturbation scores in gene expression datasets with a matched-pair, or nested design (eg. samples collected before and after treatment).
+This allows for the detection of pathway perturbations within all samples from a treatment group, but also within individual samples.
 
-*sSNAPPY* was built upon the group-level topology-based scoring algorithm initially proposed in R package SPIA[@Tarca2009] to propagate genes’ changes in expression through pathway topologies to compute one perturbation score for each treated sample in each pathway, where the signs of the scores predict biological processes’ directions of changes. The single-sample perturbation score of a given pathway $S_{h}$ is defined to be:
+To run *sSNAPPY*, the only required data is a log-transformed expression matrix (e.g. logCPM) with matching sample metadata describing treatment groups and the nested structure.
+<!-- I've generalised this to log-transformed etc. as it should also work with microarray data... -->
+It is assumed that all pre-processing has been performed beforehand, such as the exclusion of low-signal genes or normalisation to minimise technical artefacts like GC-bias.
+The first step, performed internally by *sSNAPPY*, is to estimate sample-specific log fold-change ($\delta_{ghi} = \mu_{ghi} - \mu_{g0i}$) for a treatment $h$ across all genes $g$ within each sample $i$, by subtracting expression estimates for the baseline samples $\hat\mu_{g0i}$ from those in the treatment group $h$.
+Since it has been shown that in RNA-seq data, genes with lower expression tend to have larger variance and larger estimates of change[@Law2014], we utilise a gene-level weighting strategy to de-emphasise logFC estimates for low-abundance genes.
+Gene-level weights $w_g$ are obtained in a treatment-agnostic manner by fitting a loess curve through the relationship between observed gene-level variance ($\widehat\sigma_g$) and average signal ($\bar\mu_{g\cdot\cdot}$), and taking the inverse of the loess-predicted variance as the weight $w_g = a / f(\bar\mu_{g\cdot\cdot})$, where $f(\bar\mu_{g\cdot\cdot})$ is the predicted value from the loess curve and the constant $a$ ensures $\sum w_g = 1$.
+We then use these weighted estimates of logFC for calculation of all pathway perturbation scores.
+
+*sSNAPPY* was built upon the group-level topology-based scoring algorithm initially proposed in R package SPIA[@Tarca2009] to propagate genes' changes in expression through pathway topologies to compute a perturbation score for each pathway.
+By modifying the algorithm to incorporate single-sample, weighted estimates of changes in expression we are able to quantify changes in a pathway within a given sample, and then model these across all samples within a treatment group.
+Thus, we define the single-sample perturbation score ($S_{hip}$) for a given pathway $p$, sample $i$ and treatment $h$:
+
 
 $$
 \begin{aligned}
-S_{hi} = \Delta mu_{hi} + \sum_{j > i}^{N_{U}(i)} B_{ij} \frac{S_{hj}}{N_{D}(j)} \\
-S_{h} = \sum (S_{hi} - \Delta mu_{hi})
+S_{hip} = \sum_{g \in G_p} \lbrack S_{ghip} - \delta_{ghi}^*\rbrack \text{, where} \\
+S_{ghip} = \delta_{ghi}^* + \sum_{g' \in U_{gp}} \beta_{gg'p} \frac{S_{g'hip}}{N_{g'p}} 
 \end{aligned}
 $$
 where:
 
-* $S_{hi}$ is the gene-wise perturbation score of gene *i* in sample *h*
-* $\Delta mu_{hi}$ is the weighted logFC of gene *i* in sample *h* 
-* $g_j$ are the genes directly upstream $g_i$
-* $N_{U}(i)$ is the number of genes directly upstream $g_i$ 
-* $N_{D}(j)$ is the number of genes directly downstream $g_j$ 
-* $B_{ij}$ is the gene-gene interaction encoded by the topology matrix
-* $S_{h}$ is the pathway-level perturbation score in sample *h*
+* $G_p$ represents the set of genes in pathway $p$, such that $g \in G_p$
+* $S_{ghip}$ is the gene-, treatment- and sample-specific perturbation score for pathway $p$
+* $\delta_{ghi}^* = w_g\delta_{ghi}$ is the weighted logFC of gene $g$ as described above
+* $U_{gp}$ is the subset of $G_p$ containing only the genes directly upstream of gene $g$
+* $\beta_{gg'p}$ is the pair-wise gene-gene interactions[@Tarca2009] encoded by the topology matrix for genes $g$ and $g'$
+* $N_{gp}$ is the number of downstream genes from any gene $g$
+* $S_{hip}$ is the accumulated pathway perturbation score for pathway $p$ in treatment $h$ for sample $i$
 
-Bioconductor package graphite[@Sales2012] provides functions that can be used to retrieve pathway topologies from a database and convert topology information to adjacency matrices, but to streamline this process, we have chained multiple graphite functions into one, where users only need to provide the name of the desired database to retrieve all topology information in the format required by the scoring algorithm with the correct type of gene identifiers. 
+The Bioconductor package graphite[@Sales2012] provides functions that can be used to retrieve pathway topologies from a database and convert topology information to adjacency matrices.
+In order to streamline this process we have implemented a convenience function, where users only need to provide the name of the desired database to retrieve all topology information in the format required by the scoring algorithm with the correct type of gene identifiers.
+<!-- Do we need to specify which identifier? -->
 
-To scale the single-sample pathway perturbation scores so they are comparable across pathways and to test the significances of individual scores, null distributions of perturbation scores for each pathway will be generated through a sample permutation strategy. With each permutation round, the column names (ie. sample labels) for the logCPM matrix will be randomly shuffled while the rest of the scoring algorithm remains unchanged. We recommend users to perform a minimum of 1000 rounds of permutation, requiring at least 8 unique samples. Subsequently, the median and median absolute deviation (MAD) of the permuted perturbation scores will be calculated and used to normalise the raw perturbation scores to robust z-scores and obtain associated two-sided p-values. Since the method is single sample-based, the permutation strategy remains applicable regardless of experimental design. 
+To scale the single-sample pathway perturbation scores ($S_{hip}$) so they are comparable across pathways and to test for significance of individual scores, null distributions of perturbation scores for each pathway are generated through a sample permutation strategy, retaining the correct correlation structure between genes within a pathway.
+With each permutation, column names (i.e. sample labels) for the logCPM matrix are randomly shuffled while the rest of the scoring algorithm remains unchanged.
+We recommend users to perform a minimum of 1000 permutations, requiring at least 8 unique samples.
+<!-- How did you get this number? I make choose(8, 2) as 28 or am I missing something obvious? -->
+Subsequently, the median and median absolute deviation (MAD) of the permuted perturbation scores will be calculated and used to normalise the raw perturbation scores to robust $Z$-scores and obtain associated two-sided *p*-values.
+Since the method is single sample-based, the permutation strategy remains applicable regardless of experimental design.
 
-Apart from assessing whether a pathway’s activity changed significantly within an individual sample, users may also be interested in detecting changes at the group-level, which could be achieved by modelling scores with regression models. The single-sample nature of *sSNAPPY*’s pathway perturbation scores is particularly helpful for datasets with complex experimental designs or known confounding factors.
+Apart from assessing whether a pathway's activity changed significantly within an individual sample, users may also be interested in detecting changes at the group-level, which can be performed by modelling scores with regression models, incorporating Smyth's moderated $t$-statistics[@Smyth_2004] as implemented in *limma*[@limma_2015].
+The single-sample nature of *sSNAPPY*'s pathway perturbation scores is particularly helpful for datasets with complex experimental designs or known confounding factors as these can also be incorporated into the final regression models.
 
 
 ## Operation
-The package has been tested and will function on all operating systems. To install and operate the package, R version 4.2.0+ is required. The package needs to be downloaded using BiocManager.
+The package has been tested on all operating systems, requiring R > 4.2.0, and can be installed using BiocManager as follows. 
 
 ```{r eval=FALSE}
 if (!requireNamespace("BiocManager", quietly = TRUE))
-install.packages("BiocManager")
+  install.packages("BiocManager")
 BiocManager::install("sSNAPPY")
 ```
 
