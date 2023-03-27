@@ -155,52 +155,67 @@ The practical usage of the \emph{sSNAPPY} R/Bioconductor package will be illustr
 \hypertarget{implementation}{%
 \subsection{Implementation}\label{implementation}}
 
-\emph{sSNAPPY} is an R package that has been reviewed and published on the open-source bioinformatics software platform \href{https://bioconductor.org/packages/release/bioc/html/*sSNAPPY*.html}{Bioconductor} with its source codes deposited to GitHub. It is a topology-based pathway analysis method designed to compute directional single-sample pathway perturbation scores in RNA-seq datasets with matched-paired design (eg. samples collected before and after treatment), allowing the detection of significant pathway perturbation on not only treatment but also single-sample level.
+\emph{sSNAPPY} is an R package that has been reviewed and published on the open-source bioinformatics software platform \href{https://bioconductor.org/packages/release/bioc/html/*sSNAPPY*.html}{Bioconductor} with all source code available via GitHub.
+The methodology itself is topology-based, designed to compute directional, single-sample, pathway perturbation scores in gene expression datasets with a matched-pair, or nested design (eg. samples collected before and after treatment).
+This allows for the detection of pathway perturbations within all samples from a treatment group, but also within individual samples.
 
-To implement \emph{sSNAPPY}, the only inputs required are a log-transformed counts per million (CPM) matrix and matching sample metadata data.frame describing the treatment of each sample and the categorical variable grouping samples into matched pairs. It is assumed that genes with low counts have been filtered out and the matrix has been normalised to correct for technical artefacts such as gene length or GC contents. Next, knowing what the baseline treatment level is, the single-sample log fold-changes (logFC) of each treated sample will be calculated by subtracting the logCPM of the corresponding baseline samples from the treated ones. Since it has been shown previously that in RNA-seq data, genes with lower expressions turn to have larger variance\citep{Law2014} , we introduced a weighting strategy to down-weight the raw single-sample logFCs of those genes. Our weighting strategy functions by estimating the relationships between the variances in single-sample logFCs and mean logCPMs for each gene with loess regression and defining the gene-wise weight to be the inverse of the predicted variance derived from applying the regression model to genes' mean logCPM values.
+To run \emph{sSNAPPY}, the only required data is a log-transformed expression matrix (e.g.~logCPM) with matching sample metadata describing treatment groups and the nested structure.
+It is assumed that all pre-processing has been performed beforehand, such as the exclusion of low-signal genes or normalisation to minimise technical artefacts like GC-bias.
+The first step, performed internally by \emph{sSNAPPY}, is to estimate sample-specific log fold-change (\(\delta_{ghi} = \mu_{ghi} - \mu_{g0i}\)) for a treatment \(h\) across all genes \(g\) within each sample \(i\), by subtracting expression estimates for the baseline samples \(\hat\mu_{g0i}\) from those in the treatment group \(h\).
+Since it has been shown that in RNA-seq data, genes with lower expression tend to have larger variance and larger estimates of change\citep{Law2014}, we utilise a gene-level weighting strategy to de-emphasise logFC estimates for low-abundance genes.
+Gene-level weights \(w_g\) are obtained in a treatment-agnostic manner by fitting a loess curve through the relationship between observed gene-level variance (\(\widehat\sigma_g\)) and average signal (\(\bar\mu_{g\cdot\cdot}\)), and taking the inverse of the loess-predicted variance as the weight \(w_g = a / f(\bar\mu_{g\cdot\cdot})\), where \(f(\bar\mu_{g\cdot\cdot})\) is the predicted value from the loess curve and the constant \(a\) ensures \(\sum w_g = 1\).
+We then use these weighted estimates of logFC for calculation of all pathway perturbation scores.
 
-\emph{sSNAPPY} was built upon the group-level topology-based scoring algorithm initially proposed in R package SPIA\citep{Tarca2009} to propagate genes' changes in expression through pathway topologies to compute one perturbation score for each treated sample in each pathway, where the signs of the scores predict biological processes' directions of changes. The single-sample perturbation score of a given pathway \(S_{h}\) is defined to be:
+\emph{sSNAPPY} was built upon the group-level topology-based scoring algorithm initially proposed in R package SPIA\citep{Tarca2009} to propagate genes' changes in expression through pathway topologies to compute a perturbation score for each pathway.
+By modifying the algorithm to incorporate single-sample, weighted estimates of changes in expression we are able to quantify changes in a pathway within a given sample, and then model these across all samples within a treatment group.
+Thus, we define the single-sample perturbation score (\(S_{hip}\)) for a given pathway \(p\), sample \(i\) and treatment \(h\):
 
 \[
 \begin{aligned}
-S_{hi} = \Delta mu_{hi} + \sum_{j > i}^{N_{U}(i)} B_{ij} \frac{S_{hj}}{N_{D}(j)} \\
-S_{h} = \sum (S_{hi} - \Delta mu_{hi})
+S_{hip} = \sum_{g \in G_p} \lbrack S_{ghip} - \delta_{ghi}^*\rbrack \text{, where} \\
+S_{ghip} = \delta_{ghi}^* + \sum_{g' \in U_{gp}} \beta_{gg'p} \frac{S_{g'hip}}{N_{g'p}} 
 \end{aligned}
 \]
 where:
 
 \begin{itemize}
 \item
-  \(S_{hi}\) is the gene-wise perturbation score of gene \emph{i} in sample \emph{h}
+  \(G_p\) represents the set of genes in pathway \(p\), such that \(g \in G_p\)
 \item
-  \(\Delta mu_{hi}\) is the weighted logFC of gene \emph{i} in sample \emph{h}
+  \(S_{ghip}\) is the gene-, treatment- and sample-specific perturbation score for pathway \(p\)
 \item
-  \(g_j\) are the genes directly upstream \(g_i\)
+  \(\delta_{ghi}^* = w_g\delta_{ghi}\) is the weighted logFC of gene \(g\) as described above
 \item
-  \(N_{U}(i)\) is the number of genes directly upstream \(g_i\)
+  \(U_{gp}\) is the subset of \(G_p\) containing only the genes directly upstream of gene \(g\)
 \item
-  \(N_{D}(j)\) is the number of genes directly downstream \(g_j\)
+  \(\beta_{gg'p}\) is the pair-wise gene-gene interactions\citep{Tarca2009} encoded by the topology matrix for genes \(g\) and \(g'\)
 \item
-  \(B_{ij}\) is the gene-gene interaction encoded by the topology matrix
+  \(N_{gp}\) is the number of downstream genes from any gene \(g\)
 \item
-  \(S_{h}\) is the pathway-level perturbation score in sample \emph{h}
+  \(S_{hip}\) is the accumulated pathway perturbation score for pathway \(p\) in treatment \(h\) for sample \(i\)
 \end{itemize}
 
-Bioconductor package graphite\citep{Sales2012} provides functions that can be used to retrieve pathway topologies from a database and convert topology information to adjacency matrices, but to streamline this process, we have chained multiple graphite functions into one, where users only need to provide the name of the desired database to retrieve all topology information in the format required by the scoring algorithm with the correct type of gene identifiers.
+The Bioconductor package graphite\citep{Sales2012} provides functions that can be used to retrieve pathway topologies from a database and convert topology information to adjacency matrices.
+In order to streamline this process we have implemented a convenience function, where users only need to provide the name of the desired database to retrieve all topology information in the format required by the scoring algorithm with the correct type of gene identifiers.
 
-To scale the single-sample pathway perturbation scores so they are comparable across pathways and to test the significances of individual scores, null distributions of perturbation scores for each pathway will be generated through a sample permutation strategy. With each permutation round, the column names (ie. sample labels) for the logCPM matrix will be randomly shuffled while the rest of the scoring algorithm remains unchanged. We recommend users to perform a minimum of 1000 rounds of permutation, requiring at least 8 unique samples. Subsequently, the median and median absolute deviation (MAD) of the permuted perturbation scores will be calculated and used to normalise the raw perturbation scores to robust z-scores and obtain associated two-sided p-values. Since the method is single sample-based, the permutation strategy remains applicable regardless of experimental design.
+To scale the single-sample pathway perturbation scores (\(S_{hip}\)) so they are comparable across pathways and to test for significance of individual scores, null distributions of perturbation scores for each pathway are generated through a sample permutation strategy, retaining the correct correlation structure between genes within a pathway.
+With each permutation, column names (i.e.~sample labels) for the logCPM matrix are randomly shuffled while the rest of the scoring algorithm remains unchanged.
+We recommend users to perform a minimum of 1000 permutations, requiring at least 8 unique samples.
+Subsequently, the median and median absolute deviation (MAD) of the permuted perturbation scores will be calculated and used to normalise the raw perturbation scores to robust \(Z\)-scores and obtain associated two-sided \emph{p}-values.
+Since the method is single sample-based, the permutation strategy remains applicable regardless of experimental design.
 
-Apart from assessing whether a pathway's activity changed significantly within an individual sample, users may also be interested in detecting changes at the group-level, which could be achieved by modelling scores with regression models. The single-sample nature of \emph{sSNAPPY}'s pathway perturbation scores is particularly helpful for datasets with complex experimental designs or known confounding factors.
+Apart from assessing whether a pathway's activity changed significantly within an individual sample, users may also be interested in detecting changes at the group-level, which can be performed by modelling scores with regression models, incorporating Smyth's moderated \(t\)-statistics\citep{Smyth_2004} as implemented in \emph{limma}\citep{limma_2015}.
+The single-sample nature of \emph{sSNAPPY}'s pathway perturbation scores is particularly helpful for datasets with complex experimental designs or known confounding factors as these can also be incorporated into the final regression models.
 
 \hypertarget{operation}{%
 \subsection{Operation}\label{operation}}
 
-The package has been tested and will function on all operating systems. To install and operate the package, R version 4.2.0+ is required. The package needs to be downloaded using BiocManager.
+The package has been tested on all operating systems, requiring R \textgreater{} 4.2.0, and can be installed using BiocManager as follows.
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \ControlFlowTok{if}\NormalTok{ (}\SpecialCharTok{!}\FunctionTok{requireNamespace}\NormalTok{(}\StringTok{"BiocManager"}\NormalTok{, }\AttributeTok{quietly =} \ConstantTok{TRUE}\NormalTok{))}
-\FunctionTok{install.packages}\NormalTok{(}\StringTok{"BiocManager"}\NormalTok{)}
+  \FunctionTok{install.packages}\NormalTok{(}\StringTok{"BiocManager"}\NormalTok{)}
 \NormalTok{BiocManager}\SpecialCharTok{::}\FunctionTok{install}\NormalTok{(}\StringTok{"sSNAPPY"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
