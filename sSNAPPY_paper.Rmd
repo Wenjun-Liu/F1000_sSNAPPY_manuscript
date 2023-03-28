@@ -122,12 +122,22 @@ BiocManager::install("sSNAPPY")
 
 
 # Use Cases
+
 ## Data
-We used A publicly available scRNA-seq data of patient-derived ovarian tissue collected prior to and after 11 homogeneously treated high-grade serous ovarian cancer (HGSOC) patients were subjected to chemotherapy[@Zhang2022] to demonstrate the use of *sSNAPPY* here. Pre-processed count data were retrieved from Gene Expression Omnibus (GEO) with accession code GSE165897. 
 
-In the original study, cells were classified into epithelial, stromal, and immune cells but we have chosen to only focuses on epithelial cells as they were what the original study primarily focused on. Since *sSNAPPY* was designed for bulk RNA-seq data, counts of epithelial cells from the same samples were first summed into pseudo-bulk profiles, giving rise to a total of 22 samples. We considered a gene detectable if we observed >1.5 counts per million in >11 samples out of 22, representing all samples from a complete treatment group. A total of 11,101 (33.8%) out of 32,847 annotated genes passed the selection criteria and were included in downstream analyses. Conditional quantile normalisation[@Hansen2012] was applied to mitigate potential biases introduced by gene length and GC content. The logCPM matrix of the processed dataset and sample metadata can be downloaded from here. 
+To demonstrate the application of *sSNAPPY*, we used pre-processed counts from a publicly available scRNA-seq dataset, retrieved from Gene Expression Omnibus (GEO) with accession code GSE165897. 
+This dataset consists of 11 homogeneously treated high-grade serous ovarian cancer (HGSOC) patients, with samples taken before treatment and after chemotherapy[@Zhang2022].
+In the original study, cells were classified into epithelial, stromal, and immune cells, and we have chosen to only focuses on epithelial cells as they were what the original study primarily focused on. 
+Since *sSNAPPY* was designed for bulk RNA-seq data, counts of epithelial cells from the same samples were first summed into pseudo-bulk profiles, giving rise to a total of 22 samples. 
+We considered a gene detectable if we observed >1.5 counts per million in >11 samples out of 22, representing all samples from a complete treatment group. 
+11,101 (33.8%) of the 32,847 annotated genes passed this selection criteria and were included for downstream analyses. 
+Conditional quantile normalisation[@Hansen2012] was then applied to mitigate potential biases introduced by gene length and GC content. 
+The normalised logCPM matrix of the processed dataset and sample metadata can be downloaded from here.
+<!-- 
+Looks like we're missing the download link! Is it https://github.com/Wenjun-Liu/F1000_sSNAPPY_manuscript/raw/master/data/logCPM.rds? If so, we should  have it as a tsv instead of an RDS object. Same for the metadata.
+-->
 
-To start, firstly load all the packages that will be used in this workflow:
+The following packages are required for this workflow
 
 ```{r, message=FALSE}
 library(sSNAPPY)
@@ -141,6 +151,8 @@ library(edgeR)
 ```
 
 To read in the data:
+<!-- Change these to tsv files. Peole tendnot to provide public data as rds objects -->
+
 ```{r}
 logCPM <- readRDS(here::here("data/logCPM.rds"))
 sample_meta <- readRDS(here::here("data/sample_meta.rds"))
@@ -151,6 +163,7 @@ head(sample_meta)
 ## Data preparation and retrieval pathway topology
 
 To apply sSNAPPY, the rownames of the logCPM matrix must be converted to Entrez IDs. Genes without an Entrez IDs were removed.
+<!-- I think we should do this beforehand to simplify the paper, then just add another line in the data preparation section. That would dispense with all of the following chunk, which really has nothing to do with sSNAPPY -->
 
 ```{r, message=FALSE}
 ah <- AnnotationHub() %>%
@@ -166,41 +179,68 @@ logCPM <- logCPM[!is.na(rownames(logCPM)),]
 ```
 
 
-Next, pathway topology information needs to be retrieved from a chosen database. Using KEGG as an example, the retrieved topology information will be stored as a list where each element corresponds to a pathway and the numbers in the matrices encode gene-gene interaction. 
+As important step, pathway topology information needs to be retrieved from a chosen database.
+Using KEGG as an example, the retrieved topology information will be stored as a list where each element corresponds to a pathway and the numbers in the matrices encode gene-gene interaction. 
+
+<!-- I also think your argument `database` in the function ` retrieve_topology()` should be set to `database = c("kegg", "pathbank", "wikipathways", "reactome", "panther", "pharmgkb", "smpdb")`.  -->
+<!-- Then you add the line `database <- match.arg(database)` at the start of your function.  -->
+<!-- This is best practice, but really only works if you want to use one database.  -->
+<!-- Does the line .retrieveTopology(database, pathwayName) work with > 1 databses? -->
+<!-- It may also be worth adding a species argument species = c("athaliana", "btaurus", "celegans", "cfamiliaris", "dmelanogaster", "drerio", "ecoli", "ggallus", "hsapiens", "mmusculus", "rnorvegicus", "scerevisiae", "sscrofa", "xlaevis") and again using `species <- match.arg(species)` and manually checking the graphite::pathwayDatabases() data.frame that the combination exists. -->
+<!-- Again this will only work if we want to restrict things to one species which it looks like you're doing in `.retrieveTopology()` -->
+
+
 ```{r}
 gsTopology <- retrieve_topology(database = "kegg")
 ```
 
 
-Instead of downloading the topology matrices of all pathways, it is also possible to specify specific pathways’ names to focus on. Customised weights could be assigned to different types of gene-gene interaction type by providing a named numeric vector. 
+Instead of downloading the topology matrices of all pathways, it is also possible to provide a restricted set of pathways for a targeted analysis. 
+Customised weights could be assigned to different types of gene-gene interaction type by providing a named numeric vector. 
+
+<!-- Have you tried using pattern matching for this? -->
+<!-- Might be a dumb idea, but it might work... -->
 
 ```{r}
 # Only retrieve the topology matrices of 3 specific pathways
-gsTopology_sub <- retrieve_topology(
-  database = "kegg",
-  pathwayName = c(
-    "Glycolysis / Gluconeogenesis", 
-    "Citrate cycle (TCA cycle)",
+sub_path <- c(
+    "Glycolysis / Gluconeogenesis", "Citrate cycle (TCA cycle)",
     "Pentose phosphate pathway"
-))
+)
+gsTopology_sub <- retrieve_topology(database = "kegg",  pathwayName = sub_path)
 ```
 
 ## Score single-sample pathway perturbation 
 
-To compute the single-sample logFCs needed for perturbation scores, samples much be in matched pairs and the factor defining those pairs must be specified in the `weight_ss_fc()` function. In our example dataset, pre- and post-treatment samples are matched by patient IDs. Additionally, the sample metadata must include the treatment of all samples, one level of which must be the control level indicated as a parameter of the `weight_ss_fc()` function.
+To compute the single-sample expression changes (logFC) needed for perturbation scores, each treated sample must have a matching control sample, with the factor defining the paired structure passed to the `weight_ss_fc()` function. 
+In our example dataset, pre- and post-treatment samples are matched by patient IDs. 
+Additionally, the sample metadata must include the treatment of all samples, one level of which must be the control level indicated as a parameter of the `weight_ss_fc()` function.
+
+<!-- I'm a bit concerned about this function and think it's a bit lacking. You don't specify which column to look in for the factor, instead hard-wiring in the requirement for a `treatment` column. Alternative approaches can be done pretty easily. I'd also ensure that the 'treatment' column was a factor before being passed to the function (which it isn't above) and which gets rid of the requirement for providing the baseline level.
+I'm assuming that this could then produce weightedFC for multiple treatment levels...?
+Maybe a design matrix approach may be better?
+I'd also specify which column should contain column names from the `logCPM` matrix -->
 
 ```{r}
 weightedFC <- weight_ss_fc(
     logCPM, sample_meta, factor = "patient_id", 
     control = "treatment-naive"
 )
-names(weightedFC)
+glimpse(weightedFC)
 ```
 
+<!-- I also just noticed that all Entrez IDs had 'ENTREZID` placed at the start. -->
+<!-- This is quite unconventional and I'd really discourage this. -->
+<!-- Just use the IDs as is. Unless the KEGG pathways make you do this...? -->
 
-The output of the weight_ss_fc function is a `list` where one element is a matrix of single-sample logFCs with rows corresponding to genes and columns to treated samples and the other element is a vector of gene-wise weights that will be used to alleviate the influence of lowly expressed but highly variable genes. 
+The output of `weight_ss_fc()` is a `list` where one element is a matrix of single-sample logFCs ($\delta_{ghi}$), with rows corresponding to genes and columns to samples, and the other element is the vector of gene-wise weights ($w_g$) used to calculate the weighted logFC ($\delta_{ghi}^*$), as described above.
+<!-- Again, I'm a bit lost. Are the single sample logFCs weighted or raw? -->
+<!-- The text read like they were raw so that's why I put that there, but I may have been wrong -->
+<!-- I might have it wrong in the following paragraph too. -->
 
-Single-sample logFCs will then be piped through pathway topologies to compute the gene-wise perturbation scores for all genes included in a pathway. Apart from being summed into pathway-level perturbation scores, gene-wise perturbation scores can also be ranked to identify genes playing the most significant roles in each pathway, which will be further elaborated in the visualisation section below. The pathway-level perturbation scores will be returned as a data.frame containing sample and gene-set names. 
+The matrix of $\delta_{ghi}$ values are then passed to pathway topologies along with the vector of gene weights, to compute the gene-wise perturbation scores for all genes included in a pathway, before being summed into a single score for each pathway. 
+These gene-wise perturbation scores can also be used in downstream analysis to identify genes playing the most significant roles in each pathway, as will be demonstrated in the visualisation section below.
+The pathway-level perturbation scores ($S_{hip}$) are returned as a data.frame containing sample and gene-set names. 
 
 ```{r}
 # Compute perturbation scores at the gene-level within
