@@ -130,9 +130,11 @@ RNA-seq, pathway enrichment, R package, topology, KEGG, scRNA-seq
 \clearpage
 \pagestyle{main}
 
-\textbf{R version}: R version 4.2.3 (2023-03-15)
+\textbf{R version}: R version 4.2.2 (2022-10-31)
 
 \textbf{Bioconductor version}: 3.16
+
+\textbf{Package}: 1.2.4
 
 \hypertarget{introduction}{%
 \section{Introduction}\label{introduction}}
@@ -196,7 +198,7 @@ where:
 \end{itemize}
 
 The Bioconductor package graphite\citep{Sales2012} provides functions that can be used to retrieve pathway topologies from a database and convert topology information to adjacency matrices.
-In order to streamline this process we have implemented a convenience function, where users only need to provide the name of the desired database to retrieve all topology information in the format required by the scoring algorithm with the correct type of gene identifiers.
+In order to streamline this process we have implemented a convenience function, where users only need to provide the name of the desired database to retrieve all topology information in the format required by the scoring algorithm with the correct type of gene identifiers (ie. Entrez ID).
 
 To scale the single-sample pathway perturbation scores (\(S_{hip}\)) so they are comparable across pathways and to test for significance of individual scores, null distributions of perturbation scores for each pathway are generated through a sample permutation strategy, retaining the correct correlation structure between genes within a pathway.
 With each permutation, column names (i.e.~sample labels) for the logCPM matrix are randomly shuffled while the rest of the scoring algorithm remains unchanged.

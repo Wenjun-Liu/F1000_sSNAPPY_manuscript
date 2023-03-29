@@ -40,8 +40,7 @@ header-includes:
 
 **Bioconductor version**: `r BiocManager::version()`
 
-<!--  Update the name of the package below to be the name of the workflow package you are working on  
-**Package**: `r packageVersion("sSNAPPY")` -->
+**Package**: `r packageVersion("sSNAPPY")` 
 
 # Introduction
 
@@ -68,7 +67,6 @@ The methodology itself is topology-based, designed to compute directional, singl
 This allows for the detection of pathway perturbations within all samples from a treatment group, but also within individual samples.
 
 To run *sSNAPPY*, the only required data is a log-transformed expression matrix (e.g. logCPM) with matching sample metadata describing treatment groups and the nested structure.
-<!-- I've generalised this to log-transformed etc. as it should also work with microarray data... -->
 It is assumed that all pre-processing has been performed beforehand, such as the exclusion of low-signal genes or normalisation to minimise technical artefacts like GC-bias.
 The first step, performed internally by *sSNAPPY*, is to estimate sample-specific log fold-change ($\delta_{ghi} = \mu_{ghi} - \mu_{g0i}$) for a treatment $h$ across all genes $g$ within each sample $i$, by subtracting expression estimates for the baseline samples $\hat\mu_{g0i}$ from those in the treatment group $h$.
 Since it has been shown that in RNA-seq data, genes with lower expression tend to have larger variance and larger estimates of change[@Law2014], we utilise a gene-level weighting strategy to de-emphasise logFC estimates for low-abundance genes.
@@ -97,13 +95,13 @@ where:
 * $S_{hip}$ is the accumulated pathway perturbation score for pathway $p$ in treatment $h$ for sample $i$
 
 The Bioconductor package graphite[@Sales2012] provides functions that can be used to retrieve pathway topologies from a database and convert topology information to adjacency matrices.
-In order to streamline this process we have implemented a convenience function, where users only need to provide the name of the desired database to retrieve all topology information in the format required by the scoring algorithm with the correct type of gene identifiers.
-<!-- Do we need to specify which identifier? -->
+In order to streamline this process we have implemented a convenience function, where users only need to provide the name of the desired database to retrieve all topology information in the format required by the scoring algorithm with the correct type of gene identifiers (ie. Entrez ID).
 
 To scale the single-sample pathway perturbation scores ($S_{hip}$) so they are comparable across pathways and to test for significance of individual scores, null distributions of perturbation scores for each pathway are generated through a sample permutation strategy, retaining the correct correlation structure between genes within a pathway.
 With each permutation, column names (i.e. sample labels) for the logCPM matrix are randomly shuffled while the rest of the scoring algorithm remains unchanged.
 We recommend users to perform a minimum of 1000 permutations, requiring at least 8 unique samples.
 <!-- How did you get this number? I make choose(8, 2) as 28 or am I missing something obvious? -->
+<!-- I thought with n samples, there will be n! types of possible arrangement. Since order matters in this case, it's a permtuation not a combination. 6! only gives 720 possibilities and due to the match-paired design required by the method, 7 samples isn't plausible. So the smallest number required to have more than 1000 permutations is 8. Does that make sense?  -->
 Subsequently, the median and median absolute deviation (MAD) of the permuted perturbation scores will be calculated and used to normalise the raw perturbation scores to robust $Z$-scores and obtain associated two-sided *p*-values.
 Since the method is single sample-based, the permutation strategy remains applicable regardless of experimental design.
 
