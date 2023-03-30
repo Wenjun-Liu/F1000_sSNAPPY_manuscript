@@ -241,19 +241,23 @@ The output of `weight_ss_fc()` is a `list` where one element is a matrix of sing
 The matrix of $\delta_{ghi}$ values are then passed to pathway topologies along with the vector of gene weights, to compute the gene-wise perturbation scores for all genes included in a pathway, before being summed into a single score for each pathway. 
 These gene-wise perturbation scores can also be used in downstream analysis to identify genes playing the most significant roles in each pathway, as will be demonstrated in the visualisation section below.
 The pathway-level perturbation scores ($S_{hip}$) are returned as a data.frame containing sample and gene-set names. 
+In the following steps, we first calculate the gene-level contributions to each pathway ($S_{ghip}$) using the function `raw_gene_pert()` and then obtain pathway-level summaries using `pathway_pert()`
 
 ```{r}
-# Compute perturbation scores at the gene-level within
-# each pathway each treated sample
 genePertScore <- raw_gene_pert(weightedFC$logFC, gsTopology)
-# Sum gene-level scores to derive pathway-level scores
 ssPertScore <- pathway_pert(genePertScore)
 head(ssPertScore)
 ```
 
 ## Sample permutation for normalisation and significance testing
 
-To estimate the significance of individual scores and transform the scores so they are comparable across pathways, sSNAPPY utilises a sample-permutation strategy to simulate the null distributions of perturbation scores. Since sample labels will be permuted randomly, sample metadata is not required by the generate_permuted _scores function, instead, users only need to specify the number of treatment groups in the study, including the control level. Since permutation requires a large amount of computational time and memory, sSNAPPY parallelises this step through functions provided by BiocParallel. Users can choose to customize the parallel back-end or the default one returned by `BiocParallel::bpparam( )` will be used. If the number of samples or the size of the chosen pathway database is large, it is recommended to perform the permutation step on a high-performance computer. 
+The values obtained from each pathway will vary greatly due to the variability in topologies.
+To determine the significance of individual scores and transform scores to ensure they are comparable across pathways, sSNAPPY utilises a sample-permutation strategy to simulate the null distributions of perturbation scores. 
+Since sample labels will be permuted randomly, sample metadata is not required by the generate_permuted _scores function, instead, users only need to specify the number of treatment groups in the study, including the control level. 
+<!-- I think we need to have a discussion about how that is specified -->
+Since permutation requires a large amount of computational time and memory, sSNAPPY utilises the BiocParallel backend[@BiocParallel], also allowing for customisation by the user. 
+<!-- Do we need to include some guidelines for anticipated computational time? -->
+Whilst permutations can be performed an a local machine, this strategy also allows for performing the permutation steps on a HPC cluster or similar.
 
 ```{r eval=FALSE}
 permutedScore <- generate_permuted_scores(
@@ -262,92 +266,122 @@ permutedScore <- generate_permuted_scores(
 )
 ```
 
+<!-- In the above chunk, you really should use `set.seed()` to ensure the results obtained  -->
+<!-- by the user running the code are identical to what you've provided. -->
+
 ```{r, echo=FALSE}
 permutedScore <- readRDS(here::here("data/permutedScore.rds"))
 ```
 
-Next, using the function normalise_by_permu, the raw perturbation scores will be normalised to robust z-scores using the median and MAD of permuted scores and further converted to two-sided p-values. Defaulted to using the false-discovery rate, the p-values will be corrected for multiple testings using a user-defined approach. In this case, using an FDR of 0.05 as a cut-off, none of the pathways was considered to be significantly perturbed at the individual sample level. 
+<!-- I notice a whole lot of these are all zero. -->
+<!-- Is this problematic? Do you think it will cause the reviewers to ask questions? -->
+<!-- How are these handled internally as clearly we'll have `NaN` in some output? -->
+<!-- Also, do we need to show a boxplot or something from the above? -->
+
+Permuted distributions are then used to convert each pathway-level score into a robust $Z$-score using the function normalise_by_permu.
+<!-- Are we scaling these? https://stats.stackexchange.com/questions/523865/calculating-robust-z-scores-with-median-and-mad -->
+Robust Z-scores can in turn be transformed into two-sided p-values and corrected for multiple testing using any of the available methods, and returning the FDR adjusted values by default.
+<!-- You need to include the following line in your function -->
+<!-- pAdj_method <- match.arg(pAdj_method, p.adjust.methods) -->
+In our example data, no pathways would be considered as significantly perturbed at the single-sample level using an FDR adjustment with $\alpha$ = 0.05
+<!-- Should we include a sort.by argument in this function so it returns a ranked data.frame? -->
+<!-- Then the following `head()` would demonstrate the lack of significance nicely -->
+
 
 ```{r}
 normalisedScores <- normalise_by_permu(permutedScore, ssPertScore)
 head(normalisedScores)
 ```
 
+A key question of interest in this dataset is to identify which biological processes were impacted by chemotherapy across the entire group of patients.
+Using the sample-level output obtained above, we can explore this by applying t-tests or regression models across all samples.
+In order to minimise spurious results, Smyth's moderated t-statistics[@Smyth_2004] are able to be applied across the complete dataset, however given that we have robust Z-score, a constant variance should be assumed across all pathways.
+To perform this analysis, we convert the robust Z-scores to a matrix then use the standard limma methodologies.
+For this use case, no design matrix is required and a simple t-test is appropriate.
 
-A key biological question to answer in this study was what biological processes were impacted by chemotherapy across all patients, the answer to which could be obtained by applying t-tests to normalised scores for each pathway, with the null hypothesis being the mean of normalised perturbation scores equals to 0 for a given pathway. To avoid under-estimation of sample variance, the moderated t-statistics approach proposed by Smyth 200414 was adopted here. Being an empirical Bayes strategy, in moderated t-test, estimated sample variances will be adjusted towards the expected variances estimated by pooling information across all genes/pathways. Performances of the moderated t-statistics were evaluated through simulation studies, and the moderated approach demonstrated more advantageous performance in controlling the false discovery rate. 
 
 ```{r}
-# Normalised perturbation scores were converted to a matrix, 
-# with rows corresponding to pathways and columns to samples 
-pert_matrix <- normalisedScores %>%
-    dplyr::select(robustZ, gs_name, sample) %>%
-    pivot_wider(
-        names_from = sample, 
-        values_from = robustZ
-    ) %>%
-    column_to_rownames("gs_name") %>%
-as.matrix()
-# Linear models were fitted for each pathway. No design matrix was 
-# specified as all samples were replicates of the same treatment group
-fit_kg <- lmFit(pert_matrix)
-# Moderated t-statistics are calculated using the eBayes function
-fit_kg <- eBayes(fit_kg, trend = abs(rowMeans(pert_matrix)))
+z_matrix <- normalisedScores %>%
+  dplyr::select(robustZ, gs_name, sample) %>%
+  pivot_wider(
+    names_from = "sample", values_from = "robustZ"
+  ) %>%
+  column_to_rownames("gs_name") %>%
+  as.matrix()
+z_fits <- lmFit(z_matrix, design = rep(1, ncol(z_matrix))) %>% 
+  eBayes(trend = FALSE)
 ```
 
 Pathways with an FDR < 0.05 in the moderated t-test were considered to be significantly perturbed at the group level. 22 out of the 315 tested KEGG pathways passed the selection threshold (Table \@ref(tab:Table1)).
 
 ```{r}
-# Use topTable to summarise the linear model fit and correct the p-values with FDR
-table1 <- topTable(fit_kg,
-                   number = Inf) %>%
-    rownames_to_column("gs_name") %>%
-    mutate(
-        logFC = round(logFC, 4),
-        gs_name = as.factor(gs_name),
-        Direction = ifelse(logFC < 0, "Inhibited", "Activated"),
-        Significant = ifelse(adj.P.Val < 0.05, TRUE, FALSE)) %>%
-    dplyr::select(
-        `Gene-set Name` = gs_name, `Change in Perturbation Score` = logFC, 
-        P.Value, FDR = adj.P.Val, Direction, Significant
-    )
+table1 <- topTable(z_fits, number = Inf) %>%
+  rownames_to_column("gs_name") %>%
+  dplyr::filter(adj.P.Val < 0.05) %>% 
+  mutate(
+    Direction = ifelse(logFC < 0, "Inhibited", "Activated")
+  ) %>%
+  dplyr::select(
+    Pathway = gs_name, Change = logFC,  P.Value, FDR = adj.P.Val, Direction
+  )
 ```
 
 
 ```{r Table1, echo=FALSE, message=FALSE, warning=FALSE}
-knitr::kable(table1, format = "latex", caption = "Results of KEGG pathways identified among post-chemotherapy samples using sSNAPPY", 
-             booktabs = T) %>%
-    kableExtra::kable_styling(
-        latex_options = c("scale_down", "striped")
-    ) 
+knitr::kable(
+  table1, format = "latex",
+  caption = "Significantly impacted KEGG pathways identified among post-chemotherapy samples using sSNAPPY", 
+  booktabs = T,
+  format.args = list(digits = 2)
+) %>%
+  kableExtra::kable_styling(
+    latex_options = c("scale_down", "striped")
+  ) 
 ```
 
 
-In the original study[@Zhang2022], to study the effect of chemotherapy, unsupervised clustering was performed on all cells labelled to be cancer cells. Identified cancer clusters were labelled by performing pathway enrichment testing on cluster marker genes. Two clusters, associated with proliferative DNA repair signatures and stress-related markers, were found to contain significantly higher numbers of post-chemotherapy cells then pre-treatment ones (Ta in @Zhang2022). Marker genes reported for those two clusters were observed in pathways that were detected to be significantly perturbed by sSNAPPY(Table \@ref(tab:Table2) ). 
+For enrichment analysis in the original study[@Zhang2022], unsupervised clustering was performed on all cells labelled to be cancer cells. 
+Identified cancer clusters were labelled by performing pathway enrichment testing on cluster marker genes. 
+Two clusters, associated with proliferative DNA repair signatures and stress-related markers, were found to contain significantly higher numbers of post-chemotherapy cells then pre-treatment ones (Ta in [@Zhang2022]).
+<!-- Do we need to provide the formal pathway names? -->
+Marker genes reported for those two clusters were also observed in pathways that were considered to be significantly impacted when using sSNAPPY for pathway analysis (Table \@ref(tab:Table2)). 
+
+<!-- I feel like there is too much information in the following table & it doesn't make your point clear. -->
+<!-- Would it be better to simply list the genes in the text in a descriptive manner? -->
 
 ```{r Table2, echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE, results="asis"}
-table2 <- readxl::read_excel(here::here("sSNAPPY_paper_files/Tables/Table2.xlsx"))
-knitr::kable(table2, caption = ". Detection of stress-associated and proliferative DNA repair signatures, as reported by Zhang et al., 2022, in significantly perturbed pathways identified by sSNAPPY.", booktabs = TRUE) %>%
-    kableExtra::kable_styling(
-        latex_options = c("scale_down", "striped")
-    ) 
+table2 <- readxl::read_excel(
+  here::here("sSNAPPY_paper_files/Tables/Table2.xlsx")
+)
+knitr::kable(
+  table2, 
+  caption = ". Detection of stress-associated and proliferative DNA repair signatures, as reported by Zhang et al., 2022, in significantly perturbed pathways identified by sSNAPPY.", 
+  booktabs = TRUE
+) %>%
+  kableExtra::kable_styling(latex_options = c("scale_down", "striped")) 
 ```
 
-
-Apart from treating all treated samples as biological replicates, users might also wish to subset samples into groups by phenotypic traits known to affect patients’ responses to chemotherapy, such as the stages of their cancers. To do that through the moderated t-statistic strategy, we simply need to provide a design matrix in the `lmFit` step.
+Apart from treating all treated samples as biological replicates, users may wish to perform an analysis samples incorporating other phenotypic traits which may affect patients’ responses to chemotherapy, such as the stages of their cancers. 
+To do that through the moderated t-statistic strategy and extend the above analysos, we simply need to provide an appropriate design matrix in the `lmFit` step.
 
 ```{r, eval=FALSE}
 X <- model.matrix(
     ~0 + Stage, 
     data = sample_meta %>%
         dplyr::filter(treatment == "post-NACT") %>%
-        .[match(colnames(pert_matrix), .$patient_id),] %>%
+        .[match(colnames(z_matrix), .$patient_id),] %>%
         mutate(
             Stage = ifelse(Stage == "IVA", "IVA", "IIIC/IVB")
         ) )  %>%
     set_colnames(str_remove_all(colnames(.), "Stage")) %>%
     .[,colSums(.) != 0]  
-fit_kg2 <- lmFit(pert_matrix, design = X)
+z_fits2 <- lmFit(z_matrix, design = X) %>% 
+  eBayes(trend = FALSE)
 ```
+
+<!-- I don't think we've nailed this. Too many weird hits turn up. -->
+<!-- Does this confuse the issue? -->
+<!-- Would we be better just subsetting these samples as combining IIIC/IVB seems a bit wrong from a clinical perspective -->
 
 ## Visualise perturbed pathways as networks
 
@@ -360,7 +394,7 @@ set.seed(123)
 ```{r Figure1, out.width='100%', fig.width = 12, fig.height = 5, fig.cap = "Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, colored by (A) pathways’ predicted directions of changes and (B) pathways’ -log10(p-values). Pathways with a FDR < 0.05 in the moderated t-test were included."}
 # Extract significantly perturbed pathway. To colour the nodes by directions 
 # of changes, the column name of the average perturbation scores must be robustZ. 
-sigPathway <- topTable(fit_kg, number = Inf) %>% 
+sigPathway <- topTable(z_fits, number = Inf) %>% 
     dplyr::filter(adj.P.Val < 0.05) %>%
     rownames_to_column("gs_name") %>%
     dplyr::rename(
