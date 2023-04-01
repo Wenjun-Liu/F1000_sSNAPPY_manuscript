@@ -398,10 +398,10 @@ Defined by the colorBy parameter, pathway nodes can be coloured by either the pa
 The returned plot is a ggplot2 [@Wickham2009] object, meaning that components of its theme could be customized just as any other ggplot objects.
 
 First we should obtain a subset of pathways to visualise.
-In the following we'll inspect the 6 most highly ranked pathways and then for visualisation, create a categorical variable with the pathway status, rename the logFC column to reflect the true meaning of the value and transform the p-values for simpler visualisation
+In the following we'll inspect the most highly ranked pathways and then for visualisation, 1) create a categorical variable with the pathway status, 2) rename the logFC column to reflect the true meaning of the value and, 3) transform the p-values for simpler visualisation
 
 ```{r}
-sigPathway <- topTable(z_fits, number = 6) %>% 
+sigPathway <- topTable(z_fits, number = 8) %>% 
   rownames_to_column("gs_name") %>% 
   dplyr::rename(Z = logFC) %>% 
   mutate(
@@ -424,6 +424,7 @@ p1 <- plot_gs_network(
 ) +
   scale_colour_manual(values = c("red", "blue", "grey30")) +
   theme_void()
+set.seed(123)
 p2 <- plot_gs_network(
   normalisedScores = sigPathway,
   gsTopology = gsTopology, 
@@ -435,37 +436,48 @@ p1 + p2 + plot_annotation(tag_levels = "A")
 ```
 
 
-By examining the network structure, we can see that many of the highly connected pathways playing a central role in the network are immune-related. To confirm it and further condense the information, we can summarise the network structures into key biological groups by performing community detection. Widely used in network analysis, community detection is a technique used to identify groups of nodes that are more densely connected than to any other nodes in the network[@Newman2004]. sSNAPPY’s `plot_community()` function is a one-stop shop for applying a community detection algorithm of the user’s choice to the network structure and annotating identified communities by the most common pathway category, denoting the main biological processes perturbed in that community. Retrieved directly from the [KEGG website](https://www.genome.jp/kegg/pathway.html), we have curated the most recent categorisations of KEGG pathways and included it as part of the sSNAPPY package.  Annotation of KEGG pathway communities will be automatically completed by calling the in-built database, while analyses involving other pathway databases require user-provided pathway categorisations. 
-
-The defaulted Louvain method was applied to the network of significantly perturbed biological pathways and revealed two community structures, where one was annotated to be endocrine system related and the other one was infectious disease-related (Figure \@ref(fig:Figure2)). 
+By examining the network structure, we can see that many of the highly connected pathways playing a central role in the network may be immune-related. 
+To summarise related pathways and further enable interpretation, we use community detection to group related pathways
+Widely used in network analysis, community detection is a technique for identifying groups of nodes that are more densely connected than to any other nodes in the network[@Newman2004]. 
+sSNAPPY’s `plot_community()` function is a one-stop shop for applying a community detection algorithm of the user’s choice to the network structure and annotating identified communities by the most common pathway category, denoting the main biological processes perturbed in that community. 
+Retrieved directly from the [KEGG website](https://www.genome.jp/kegg/pathway.html), we have curated the most recent categories for KEGG pathways and included this as part of sSNAPPY. 
+Annotation of KEGG pathway communities will be automatically completed by calling the in-built data object.
+However, analyses involving other pathway databases will require user-provided pathway categories. 
+In the current dataset, the Louvain method was applied to the network of biological pathways and revealed two primary communities, where one was annotated to be endocrine system related and the other one was clearly related to infectious diseases, and the immune system (Figure \@ref(fig:Figure2)). 
 
 ```{r Figure2, out.width='80%', fig.width = 10, fig.height = 7, fig.cap = 'Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, colored by (A) pathways’ predicted directions of changes and (B) pathways’ -log10(p-values). Pathways with a FDR < 0.05 in the moderated t-test were included.'}
+set.seed(123)
 plot_community(
   normalisedScores = sigPathway, 
   gsTopology = gsTopology, 
   colorBy = "status", 
 ) +
   scale_colour_manual(values = c("red", "blue", "grey30")) +
+  scale_x_continuous(expand = expansion(0.15)) +
+  scale_y_continuous(expand = expansion(0.15)) +
   theme_void()
 ```
 
-Inferred directly from the expression matrix, a key advantage of sSNAPPY is that it does not require the prior definition of differentially expressed genes, which is not always detectable in clinical datasets. However, knowing the genes that are implicated in perturbing biological pathways, particularly those that affect multiple gene-sets, can provide valuable insights for biologists seeking to formulate hypotheses about underlying biological mechanisms. Therefore, sSNAPPY presents another visualisation feature called `plot_gs2gene`, which enables the inclusion of pathway genes in network structures. Although defaulted to colour all gene nodes in grey, users can provide a vector of logFCs to colour the genes by their changes in expression. As pathways are often made of hundreds of genes, it is recommended not to plot all genes included in perturbed pathways but filter for genes more likely to be playing a significant role, achieved through only providing logFCs of genes to plot.  In this example dataset, we chose to only include genes with the top 500 magnitudes of mean logFCs (Figure \@ref(fig:Figure3)). 
+Inferred directly from the expression matrix, a key advantage of sSNAPPY is that it does not require the prior identification of differentially expressed genes, which is not always possible in clinical datasets. 
+However, knowing which genes are implicated in the perturbation of pathways, particularly those which influence multiple pathways, can provide valuable insights for researchers for hypotheses generation about underlying biological mechanisms. 
+Therefore, sSNAPPY presents another visualisation feature called `plot_gs2gene`, which enables the inclusion of pathway genes in network structures.
+Users can provide a vector of fold-changes to colour the genes by their estimated change in expression. 
+As pathways are often made of hundreds of genes, we recommend to filter for genes more likely to be playing a significant role.
+In this example dataset, we chose to only include genes within the top 500 when ranking by the magnitude of the mean log fold-change (Figure \@ref(fig:Figure3)). 
 
 ```{r}
-# Calculate gene-wise mean logFCs
 meanFC <- apply(weightedFC$logFC, 1, mean )
-# Extract the top 500 meanFCs
 top500_FC <- meanFC %>%
   abs() %>%
   sort(decreasing = TRUE, ) %>%
   .[1:500] 
 ```
 
-Since pathway topologies were retrieved in Entrez IDs, by default, genes’ Entrez IDs will be used to annotate gene nodes in the plot. However, users can provide a data.frame mapping Entrez IDs to their chosen identifiers through the mapRownameTo parameter. A data.frame converting Entrez IDs to ensemble gene names has been made available as part of the package. 
+Since pathway topologies were retrieved in Entrez IDs, by default, genes’ Entrez IDs will be used to annotate gene nodes in the plot. 
+However, users can provide a data.frame mapping Entrez IDs to their chosen identifiers through the mapRownameTo parameter. 
+A data.frame converting Entrez IDs to ensemble gene names has been made available as part of the package. 
 
 ```{r}
-# Read in built-in data.frame entrez2name that matches genes’ 
-# Entrez IDs to gene names
 load(system.file("extdata", "entrez2name.rda", package = "sSNAPPY"))
 head(entrez2name)
 ```
@@ -489,6 +501,7 @@ sSNAPPY::plot_gs2gene(
 ```
 
 ## Identify hub genes contributing to pathway perturbation
+
 If we would like to further investigate a specific pathway and elucidate the key genes that contributed to its perturbation, such as the activation of the "p53 signalling pathway," we can employ a heatmap to display the gene-level perturbation scores of all the genes within the pathway and annotate each column (ie. each sample) by the direction of pathway perturbation in that sample or any other sample metadata using the plot_gene_contribution function (Figure \@ref(fig:Figure4)).
 
 ```{r Figure4, out.width='100%', fig.width = 18, fig.height = 10, fig.cap = 'Gene-level perturbation scores of all genes included in the \"p53 signalling pathway\" pathway in each sample where columns of samples were annotated by pathway-level perturbation and the stages of cancers. Genes ATR and ATM were the key driver of the activation of p53 signalling pathway. '}
