@@ -443,7 +443,7 @@ sSNAPPY’s `plot_community()` function is a one-stop shop for applying a commun
 Retrieved directly from the [KEGG website](https://www.genome.jp/kegg/pathway.html), we have curated the most recent categories for KEGG pathways and included this as part of sSNAPPY. 
 Annotation of KEGG pathway communities will be automatically completed by calling the in-built data object.
 However, analyses involving other pathway databases will require user-provided pathway categories. 
-In the current dataset, the Louvain method was applied to the network of biological pathways and revealed two primary communities, where one was annotated to be endocrine system related and the other one was clearly related to infectious diseases, and the immune system (Figure \@ref(fig:Figure2)). 
+In the current dataset, the Louvain method was applied to the network of biological pathways and revealed two primary communities, where one was annotated to be endocrine system related and the other one was clearly related to infectious diseases and the immune system (Figure \@ref(fig:Figure2)). 
 
 ```{r Figure2, out.width='80%', fig.width = 10, fig.height = 7, fig.cap = 'Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, colored by (A) pathways’ predicted directions of changes and (B) pathways’ -log10(p-values). Pathways with a FDR < 0.05 in the moderated t-test were included.'}
 set.seed(123)
@@ -453,27 +453,29 @@ plot_community(
   colorBy = "status", 
 ) +
   scale_colour_manual(values = c("red", "blue", "grey30")) +
-  scale_x_continuous(expand = expansion(0.15)) +
-  scale_y_continuous(expand = expansion(0.15)) +
+  scale_x_continuous(expand = expansion(0.2)) +
+  scale_y_continuous(expand = expansion(0.2)) +
   theme_void()
 ```
 
 Inferred directly from the expression matrix, a key advantage of sSNAPPY is that it does not require the prior identification of differentially expressed genes, which is not always possible in clinical datasets. 
-However, knowing which genes are implicated in the perturbation of pathways, particularly those which influence multiple pathways, can provide valuable insights for researchers for hypotheses generation about underlying biological mechanisms. 
-Therefore, sSNAPPY presents another visualisation feature called `plot_gs2gene`, which enables the inclusion of pathway genes in network structures.
-Users can provide a vector of fold-changes to colour the genes by their estimated change in expression. 
-As pathways are often made of hundreds of genes, we recommend to filter for genes more likely to be playing a significant role.
+However, knowing which genes are implicated in the perturbation of pathways, particularly those which influence multiple pathways, can provide valuable insights for hypotheses generation about underlying biological mechanisms. 
+Therefore, sSNAPPY presents another visualisation feature called `plot_gs2gene`, which enables the inclusion of select genes from each pathway using network structures.
+Users can provide a vector of fold-change estimates to visualise genes within pathways, showing their estimated change in expression. 
+As pathways often include hundreds of genes, we recommend to filter for genes most likely to be playing a significant role.
 In this example dataset, we chose to only include genes within the top 500 when ranking by the magnitude of the mean log fold-change (Figure \@ref(fig:Figure3)). 
 
 ```{r}
-meanFC <- apply(weightedFC$logFC, 1, mean )
-top500_FC <- meanFC %>%
-  abs() %>%
-  sort(decreasing = TRUE, ) %>%
-  .[1:500] 
+meanFC <- rowMeans(weightedFC$logFC) / weightedFC$weight
+top500 <- rank(1/abs(meanFC)) <= 500
+dirFC <- ifelse(meanFC > 0, "Up-Regulated", "Down-Regulated")
 ```
 
-Since pathway topologies were retrieved in Entrez IDs, by default, genes’ Entrez IDs will be used to annotate gene nodes in the plot. 
+<!-- Your previous method for the above chunk was really quite wrong. You only took the absolute values! -->
+<!-- I'm sorry, but I really needed to point that out as it was a significant error -->
+<!-- I found the same in your package examples -->
+
+Since KEGG pathway topologies were retrieved using EntrezIDs, a mapping object for IDs to gene names can also be provided.
 However, users can provide a data.frame mapping Entrez IDs to their chosen identifiers through the mapRownameTo parameter. 
 A data.frame converting Entrez IDs to ensemble gene names has been made available as part of the package. 
 
@@ -483,21 +485,19 @@ head(entrez2name)
 ```
 
 ```{r Figure3, out.width='80%', fig.width = 12, fig.height = 10, fig.cap = 'Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, annotated by community structure identified with the Louvain algorithm.2 communities were formed, both of which were annotated by the pathway category that the majority of the pathways belong to. '}
-# Plot the pathway-gene network for genes with top 500 
-#magnitudes of mean FCs and label gene nodes by gene names
-sSNAPPY::plot_gs2gene(
+set.seed(123)
+plot_gs2gene(
   normalisedScores = sigPathway, 
   gsTopology = gsTopology, 
-  colorGS_By = "robustZ", 
+  colorGsBy = "status", 
   mapEntrezID = entrez2name, 
-  geneFC = top500_FC, 
+  geneFC = meanFC[top500], 
   edgeAlpha = 0.3, 
-  GsName_size = 4
+  gsNameSize = 4, gsNodeSize = 4
 ) +
-  theme(
-    panel.border = element_blank(), 
-    panel.background = element_blank()
-  )
+  scale_colour_gradient2(name = "logFC") +
+  scale_fill_manual(values = c("red", "blue", "grey50")) +
+  theme_void()
 ```
 
 ## Identify hub genes contributing to pathway perturbation
