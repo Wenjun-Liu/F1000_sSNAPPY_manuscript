@@ -328,7 +328,7 @@ Two clusters, associated with proliferative DNA repair signatures and stress-rel
 The representative pathways enriched in the stress-associated cluster were *IL6-mediated signaling events*, *TNF signaling pathway*, and *cellular responses to stress*,  characterized by marker genes JUN, FOS, IL6, TNF, CXCR4, SNAI1, VIM, GADD45B, and MCL1. 
 Among the stress-related marker genes reported, 6 of them(CXCR4, FOS, GADD45B, IL6, JUN, and TNF) were implicated in pathways that were considered to be significantly impacted by sSNAPPY.
 The other post-chemotherapy cell dominated cluster in the original study was enriched for pathways associated with cell proliferation and DNA repair, such as the Cell cycle, DNA repair, Homology directed repair (HDR) through homologous recombination, and Fanconi anemia pathway. 
-Key genes involved in those gene-sets were PCNA, CHEK1, HMGB2, BRCA2, FANCI, and POLD1.\
+A key gene involved in those pathways was CHEK1, which was also found in significantly perturbed pathways detected by sSNAPPY: the p53 signaling pathway, Cellular senescence and the Human T-cell leukemia virus 1 infection pathway.\
 
 Apart from treating all treated samples as biological replicates, users may wish to perform an analysis samples incorporating other phenotypic traits which may affect patients’ responses to chemotherapy, such as the stages of their cancers. 
 To do that through the moderated t-statistic strategy and extend the above analysos, we simply need to provide an appropriate design matrix in the `lmFit` step.
