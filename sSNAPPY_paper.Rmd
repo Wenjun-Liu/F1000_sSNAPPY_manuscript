@@ -144,7 +144,7 @@ library(edgeR)
 
 To read in the data:
 
-```{r}
+```{r, message=FALSE}
 logCPM <- read_tsv(here::here("data/logCPM.tsv")) %>%
     column_to_rownames("entrezid")
 sample_meta <- read_tsv(here::here("data/sample_meta.tsv"))
@@ -327,34 +327,8 @@ Identified cancer clusters were labelled by performing pathway enrichment testin
 Two clusters, associated with proliferative DNA repair signatures and stress-related markers, were found to contain significantly higher numbers of post-chemotherapy cells then pre-treatment ones (Ta in [@Zhang2022]).
 The representative pathways enriched in the stress-associated cluster were *IL6-mediated signaling events*, *TNF signaling pathway*, and *cellular responses to stress*,  characterized by marker genes JUN, FOS, IL6, TNF, CXCR4, SNAI1, VIM, GADD45B, and MCL1. 
 Among the stress-related marker genes reported, 6 of them(CXCR4, FOS, GADD45B, IL6, JUN, and TNF) were implicated in pathways that were considered to be significantly impacted by sSNAPPY.
-<!-- Do we need to provide the formal pathway names? -->
-Marker genes reported for those two clusters were also observed in pathways that were considered to be significantly impacted when using sSNAPPY for pathway analysis (Table \@ref(tab:Table2)). 
-
-<!-- I feel like there is too much information in the following table & it doesn't make your point clear. -->
-<!-- Would it be better to simply list the genes in the text in a descriptive manner? -->
-
-
-```{r}
-table2 %>%
-    mutate(`Gene-set Name` = strsplit(as.character(`Gene-set Name`), ", ")) %>%
-    unnest(`Gene-set Name`) %>%
-    split(f = .$`Gene Name`) %>%
-    lapply(dplyr::select, -`Marker Type`) %>%
-    lapply(unique)
-    
-```
-
-```{r Table2, echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE, results="asis"}
-table2 <- readxl::read_excel(
-  here::here("sSNAPPY_paper_files/Tables/Table2.xlsx")
-)
-knitr::kable(
-  table2, 
-  caption = ". Detection of stress-associated and proliferative DNA repair signatures, as reported by Zhang et al., 2022, in significantly perturbed pathways identified by sSNAPPY.", 
-  booktabs = TRUE
-) %>%
-  kableExtra::kable_styling(latex_options = c("scale_down", "striped")) 
-```
+The other post-chemotherapy cell dominated cluster in the original study was enriched for pathways associated with cell proliferation and DNA repair, such as the Cell cycle, DNA repair, Homology directed repair (HDR) through homologous recombination, and Fanconi anemia pathway. 
+Key genes involved in those gene-sets were PCNA, CHEK1, HMGB2, BRCA2, FANCI, and POLD1.\
 
 Apart from treating all treated samples as biological replicates, users may wish to perform an analysis samples incorporating other phenotypic traits which may affect patients’ responses to chemotherapy, such as the stages of their cancers. 
 To do that through the moderated t-statistic strategy and extend the above analysos, we simply need to provide an appropriate design matrix in the `lmFit` step.
@@ -363,20 +337,19 @@ To do that through the moderated t-statistic strategy and extend the above analy
 X <- model.matrix(
     ~0 + Stage, 
     data = sample_meta %>%
-        dplyr::filter(treatment == "post-NACT") %>%
-        .[match(colnames(z_matrix), .$patient_id),] %>%
-        mutate(
-            Stage = ifelse(Stage == "IVA", "IVA", "IIIC/IVB")
-        ) )  %>%
+         dplyr::filter(treatment == "post-NACT") 
+    #%>%
+    #     .[match(colnames(z_matrix), .$patient_id),] %>%
+    #     mutate(
+    #         Stage = ifelse(Stage == "IVA", "IVA", "IIIC/IVB")
+    #     ) 
+    )  %>%
     set_colnames(str_remove_all(colnames(.), "Stage")) %>%
     .[,colSums(.) != 0]  
 z_fits2 <- lmFit(z_matrix, design = X) %>% 
   eBayes(trend = FALSE)
 ```
 
-<!-- I don't think we've nailed this. Too many weird hits turn up. -->
-<!-- Does this confuse the issue? -->
-<!-- Would we be better just subsetting these samples as combining IIIC/IVB seems a bit wrong from a clinical perspective -->
 
 ## Visualise perturbed pathways as networks
 

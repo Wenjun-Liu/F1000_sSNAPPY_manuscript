@@ -23,31 +23,3 @@ Yersinia infection & 0.62 & 2.3e-03 & 0.0464 & Activated\\
 \bottomrule
 \end{tabular}}
 \end{table}
-\efloatseparator
- 
-\begin{table}
-
-\caption{\label{tab:Table2}. Detection of stress-associated and proliferative DNA repair signatures, as reported by Zhang et al., 2022, in significantly perturbed pathways identified by sSNAPPY.}
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tabular}[t]{lll}
-\toprule
-Marker Type & Gene Name & Gene-set Name\\
-\midrule
-\cellcolor{gray!6}{Stress-associated} & \cellcolor{gray!6}{GADD45B} & \cellcolor{gray!6}{p53 signaling pathway, Cellular senescence}\\
-Stress-associated & TNF & Pathogenic Escherichia coli infection, Salmonella infection, Toxoplasmosis, Yersinia infection, Human T-cell leukemia virus 1 infection, Antigen processing and presentation, Osteoclast differentiation, Human immunodeficiency virus 1 infection, Fluid shear stress and atherosclerosis, Chagas disease\\
-\cellcolor{gray!6}{Stress-associated} & \cellcolor{gray!6}{JUN} & \cellcolor{gray!6}{Pathogenic Escherichia coli infection, Salmonella infection, Yersinia infection, Human T-cell leukemia virus 1 infection, Pertussis, Relaxin signaling pathway, Osteoclast differentiation, Th17 cell differentiation, Rheumatoid arthritis, Human immunodeficiency virus 1 infection, B cell receptor signaling pathway, Fluid shear stress and atherosclerosis, Chagas disease}\\
-Stress-associated & FOS & Pathogenic Escherichia coli infection, Salmonella infection, Parathyroid hormone synthesis, secretion and action, Yersinia infection, Human T-cell leukemia virus 1 infection, Pertussis, Relaxin signaling pathway, Osteoclast differentiation, Th17 cell differentiation, Rheumatoid arthritis, Human immunodeficiency virus 1 infection, B cell receptor signaling pathway, Fluid shear stress and atherosclerosis, Chagas disease\\
-\cellcolor{gray!6}{Stress-associated} & \cellcolor{gray!6}{IL6} & \cellcolor{gray!6}{Pathogenic Escherichia coli infection, Salmonella infection, Yersinia infection, Human T-cell leukemia virus 1 infection, Th17 cell differentiation, Chagas disease}\\
-\addlinespace
-Stress-associated & CXCR4 & Human immunodeficiency virus 1 infection, Leukocyte transendothelial migration\\
-\cellcolor{gray!6}{Proliferative DNA repair} & \cellcolor{gray!6}{GADD45B} & \cellcolor{gray!6}{p53 signaling pathway, Cellular senescence}\\
-Proliferative DNA repair & TNF & Pathogenic Escherichia coli infection, Salmonella infection, Toxoplasmosis, Yersinia infection, Human T-cell leukemia virus 1 infection, Antigen processing and presentation, Osteoclast differentiation, Human immunodeficiency virus 1 infection, Fluid shear stress and atherosclerosis, Chagas disease\\
-\cellcolor{gray!6}{Proliferative DNA repair} & \cellcolor{gray!6}{JUN} & \cellcolor{gray!6}{Pathogenic Escherichia coli infection, Salmonella infection, Yersinia infection, Human T-cell leukemia virus 1 infection, Pertussis, Relaxin signaling pathway, Osteoclast differentiation, Th17 cell differentiation, Rheumatoid arthritis, Human immunodeficiency virus 1 infection, B cell receptor signaling pathway, Fluid shear stress and atherosclerosis, Chagas disease}\\
-Proliferative DNA repair & FOS & Pathogenic Escherichia coli infection, Salmonella infection, Parathyroid hormone synthesis, secretion and action, Yersinia infection, Human T-cell leukemia virus 1 infection, Pertussis, Relaxin signaling pathway, Osteoclast differentiation, Th17 cell differentiation, Rheumatoid arthritis, Human immunodeficiency virus 1 infection, B cell receptor signaling pathway, Fluid shear stress and atherosclerosis, Chagas disease\\
-\addlinespace
-\cellcolor{gray!6}{Proliferative DNA repair} & \cellcolor{gray!6}{IL6} & \cellcolor{gray!6}{Pathogenic Escherichia coli infection, Salmonella infection, Yersinia infection, Human T-cell leukemia virus 1 infection, Th17 cell differentiation, Chagas disease}\\
-Proliferative DNA repair & CXCR4 & Human immunodeficiency virus 1 infection, Leukocyte transendothelial migration\\
-\bottomrule
-\end{tabular}}
-\end{table}

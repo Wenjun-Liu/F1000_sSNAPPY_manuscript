@@ -258,38 +258,7 @@ To read in the data:
 \begin{Highlighting}[]
 \NormalTok{logCPM }\OtherTok{\textless{}{-}} \FunctionTok{read\_tsv}\NormalTok{(here}\SpecialCharTok{::}\FunctionTok{here}\NormalTok{(}\StringTok{"data/logCPM.tsv"}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%}
     \FunctionTok{column\_to\_rownames}\NormalTok{(}\StringTok{"entrezid"}\NormalTok{)}
-\end{Highlighting}
-\end{Shaded}
-
-\begin{verbatim}
-## Rows: 10098 Columns: 23
-## -- Column specification --------------------------------------------------------
-## Delimiter: "\t"
-## dbl (23): entrezid, EOC1005_post-NACT, EOC1005_treatment-naive, EOC136_post-...
-## 
-## i Use `spec()` to retrieve the full column specification for this data.
-## i Specify the column types or set `show_col_types = FALSE` to quiet this message.
-\end{verbatim}
-
-\begin{Shaded}
-\begin{Highlighting}[]
 \NormalTok{sample\_meta }\OtherTok{\textless{}{-}} \FunctionTok{read\_tsv}\NormalTok{(here}\SpecialCharTok{::}\FunctionTok{here}\NormalTok{(}\StringTok{"data/sample\_meta.tsv"}\NormalTok{))}
-\end{Highlighting}
-\end{Shaded}
-
-\begin{verbatim}
-## Rows: 22 Columns: 8
-## -- Column specification --------------------------------------------------------
-## Delimiter: "\t"
-## chr (5): sample, treatment, patient_id, anatomical_location, Stage
-## dbl (3): Age, PFI, CRS
-## 
-## i Use `spec()` to retrieve the full column specification for this data.
-## i Specify the column types or set `show_col_types = FALSE` to quiet this message.
-\end{verbatim}
-
-\begin{Shaded}
-\begin{Highlighting}[]
 \FunctionTok{head}\NormalTok{(sample\_meta)}
 \end{Highlighting}
 \end{Shaded}
@@ -555,34 +524,10 @@ Yersinia infection & 0.62 & 2.3e-03 & 0.0464 & Activated\\
 For enrichment analysis in the original study\citep{Zhang2022}, unsupervised clustering was performed on all cells labelled to be cancer cells.
 Identified cancer clusters were labelled by performing pathway enrichment testing on cluster marker genes.
 Two clusters, associated with proliferative DNA repair signatures and stress-related markers, were found to contain significantly higher numbers of post-chemotherapy cells then pre-treatment ones (Ta in \citep{Zhang2022}).
-Marker genes reported for those two clusters were also observed in pathways that were considered to be significantly impacted when using sSNAPPY for pathway analysis (Table \ref{tab:Table2}).
-
-\begin{table}
-
-\caption{\label{tab:Table2}. Detection of stress-associated and proliferative DNA repair signatures, as reported by Zhang et al., 2022, in significantly perturbed pathways identified by sSNAPPY.}
-\centering
-\resizebox{\linewidth}{!}{
-\begin{tabular}[t]{lll}
-\toprule
-Marker Type & Gene Name & Gene-set Name\\
-\midrule
-\cellcolor{gray!6}{Stress-associated} & \cellcolor{gray!6}{GADD45B} & \cellcolor{gray!6}{p53 signaling pathway, Cellular senescence}\\
-Stress-associated & TNF & Pathogenic Escherichia coli infection, Salmonella infection, Toxoplasmosis, Yersinia infection, Human T-cell leukemia virus 1 infection, Antigen processing and presentation, Osteoclast differentiation, Human immunodeficiency virus 1 infection, Fluid shear stress and atherosclerosis, Chagas disease\\
-\cellcolor{gray!6}{Stress-associated} & \cellcolor{gray!6}{JUN} & \cellcolor{gray!6}{Pathogenic Escherichia coli infection, Salmonella infection, Yersinia infection, Human T-cell leukemia virus 1 infection, Pertussis, Relaxin signaling pathway, Osteoclast differentiation, Th17 cell differentiation, Rheumatoid arthritis, Human immunodeficiency virus 1 infection, B cell receptor signaling pathway, Fluid shear stress and atherosclerosis, Chagas disease}\\
-Stress-associated & FOS & Pathogenic Escherichia coli infection, Salmonella infection, Parathyroid hormone synthesis, secretion and action, Yersinia infection, Human T-cell leukemia virus 1 infection, Pertussis, Relaxin signaling pathway, Osteoclast differentiation, Th17 cell differentiation, Rheumatoid arthritis, Human immunodeficiency virus 1 infection, B cell receptor signaling pathway, Fluid shear stress and atherosclerosis, Chagas disease\\
-\cellcolor{gray!6}{Stress-associated} & \cellcolor{gray!6}{IL6} & \cellcolor{gray!6}{Pathogenic Escherichia coli infection, Salmonella infection, Yersinia infection, Human T-cell leukemia virus 1 infection, Th17 cell differentiation, Chagas disease}\\
-\addlinespace
-Stress-associated & CXCR4 & Human immunodeficiency virus 1 infection, Leukocyte transendothelial migration\\
-\cellcolor{gray!6}{Proliferative DNA repair} & \cellcolor{gray!6}{GADD45B} & \cellcolor{gray!6}{p53 signaling pathway, Cellular senescence}\\
-Proliferative DNA repair & TNF & Pathogenic Escherichia coli infection, Salmonella infection, Toxoplasmosis, Yersinia infection, Human T-cell leukemia virus 1 infection, Antigen processing and presentation, Osteoclast differentiation, Human immunodeficiency virus 1 infection, Fluid shear stress and atherosclerosis, Chagas disease\\
-\cellcolor{gray!6}{Proliferative DNA repair} & \cellcolor{gray!6}{JUN} & \cellcolor{gray!6}{Pathogenic Escherichia coli infection, Salmonella infection, Yersinia infection, Human T-cell leukemia virus 1 infection, Pertussis, Relaxin signaling pathway, Osteoclast differentiation, Th17 cell differentiation, Rheumatoid arthritis, Human immunodeficiency virus 1 infection, B cell receptor signaling pathway, Fluid shear stress and atherosclerosis, Chagas disease}\\
-Proliferative DNA repair & FOS & Pathogenic Escherichia coli infection, Salmonella infection, Parathyroid hormone synthesis, secretion and action, Yersinia infection, Human T-cell leukemia virus 1 infection, Pertussis, Relaxin signaling pathway, Osteoclast differentiation, Th17 cell differentiation, Rheumatoid arthritis, Human immunodeficiency virus 1 infection, B cell receptor signaling pathway, Fluid shear stress and atherosclerosis, Chagas disease\\
-\addlinespace
-\cellcolor{gray!6}{Proliferative DNA repair} & \cellcolor{gray!6}{IL6} & \cellcolor{gray!6}{Pathogenic Escherichia coli infection, Salmonella infection, Yersinia infection, Human T-cell leukemia virus 1 infection, Th17 cell differentiation, Chagas disease}\\
-Proliferative DNA repair & CXCR4 & Human immunodeficiency virus 1 infection, Leukocyte transendothelial migration\\
-\bottomrule
-\end{tabular}}
-\end{table}
+The representative pathways enriched in the stress-associated cluster were \emph{IL6-mediated signaling events}, \emph{TNF signaling pathway}, and \emph{cellular responses to stress}, characterized by marker genes JUN, FOS, IL6, TNF, CXCR4, SNAI1, VIM, GADD45B, and MCL1.
+Among the stress-related marker genes reported, 6 of them(CXCR4, FOS, GADD45B, IL6, JUN, and TNF) were implicated in pathways that were considered to be significantly impacted by sSNAPPY.
+The other post-chemotherapy cell dominated cluster in the original study was enriched for pathways associated with cell proliferation and DNA repair, such as the Cell cycle, DNA repair, Homology directed repair (HDR) through homologous recombination, and Fanconi anemia pathway.
+Key genes involved in those gene-sets were PCNA, CHEK1, HMGB2, BRCA2, FANCI, and POLD1.\\
 
 Apart from treating all treated samples as biological replicates, users may wish to perform an analysis samples incorporating other phenotypic traits which may affect patients' responses to chemotherapy, such as the stages of their cancers.
 To do that through the moderated t-statistic strategy and extend the above analysos, we simply need to provide an appropriate design matrix in the \texttt{lmFit} step.
@@ -592,11 +537,13 @@ To do that through the moderated t-statistic strategy and extend the above analy
 \NormalTok{X }\OtherTok{\textless{}{-}} \FunctionTok{model.matrix}\NormalTok{(}
     \SpecialCharTok{\textasciitilde{}}\DecValTok{0} \SpecialCharTok{+}\NormalTok{ Stage, }
     \AttributeTok{data =}\NormalTok{ sample\_meta }\SpecialCharTok{\%\textgreater{}\%}
-\NormalTok{        dplyr}\SpecialCharTok{::}\FunctionTok{filter}\NormalTok{(treatment }\SpecialCharTok{==} \StringTok{"post{-}NACT"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
-\NormalTok{        .[}\FunctionTok{match}\NormalTok{(}\FunctionTok{colnames}\NormalTok{(z\_matrix), .}\SpecialCharTok{$}\NormalTok{patient\_id),] }\SpecialCharTok{\%\textgreater{}\%}
-        \FunctionTok{mutate}\NormalTok{(}
-            \AttributeTok{Stage =} \FunctionTok{ifelse}\NormalTok{(Stage }\SpecialCharTok{==} \StringTok{"IVA"}\NormalTok{, }\StringTok{"IVA"}\NormalTok{, }\StringTok{"IIIC/IVB"}\NormalTok{)}
-\NormalTok{        ) )  }\SpecialCharTok{\%\textgreater{}\%}
+\NormalTok{         dplyr}\SpecialCharTok{::}\FunctionTok{filter}\NormalTok{(treatment }\SpecialCharTok{==} \StringTok{"post{-}NACT"}\NormalTok{) }
+    \CommentTok{\#\%\textgreater{}\%}
+    \CommentTok{\#     .[match(colnames(z\_matrix), .$patient\_id),] \%\textgreater{}\%}
+    \CommentTok{\#     mutate(}
+    \CommentTok{\#         Stage = ifelse(Stage == "IVA", "IVA", "IIIC/IVB")}
+    \CommentTok{\#     ) }
+\NormalTok{    )  }\SpecialCharTok{\%\textgreater{}\%}
     \FunctionTok{set\_colnames}\NormalTok{(}\FunctionTok{str\_remove\_all}\NormalTok{(}\FunctionTok{colnames}\NormalTok{(.), }\StringTok{"Stage"}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%}
 \NormalTok{    .[,}\FunctionTok{colSums}\NormalTok{(.) }\SpecialCharTok{!=} \DecValTok{0}\NormalTok{]  }
 \NormalTok{z\_fits2 }\OtherTok{\textless{}{-}} \FunctionTok{lmFit}\NormalTok{(z\_matrix, }\AttributeTok{design =}\NormalTok{ X) }\SpecialCharTok{\%\textgreater{}\%} 
