@@ -130,7 +130,7 @@ RNA-seq, pathway enrichment, R package, topology, KEGG, scRNA-seq
 \clearpage
 \pagestyle{main}
 
-\textbf{R version}: R version 4.2.2 (2022-10-31)
+\textbf{R version}: R version 4.2.3 (2023-03-15)
 
 \textbf{Bioconductor version}: 3.16
 
@@ -252,33 +252,34 @@ The following packages are required for this workflow
 \end{Highlighting}
 \end{Shaded}
 
-To read in the data:
+First we can read in the data, setting the treatment column in the metadata to be a factor.
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{logCPM }\OtherTok{\textless{}{-}} \FunctionTok{read\_tsv}\NormalTok{(here}\SpecialCharTok{::}\FunctionTok{here}\NormalTok{(}\StringTok{"data/logCPM.tsv"}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%}
     \FunctionTok{column\_to\_rownames}\NormalTok{(}\StringTok{"entrezid"}\NormalTok{)}
-\NormalTok{sample\_meta }\OtherTok{\textless{}{-}} \FunctionTok{read\_tsv}\NormalTok{(here}\SpecialCharTok{::}\FunctionTok{here}\NormalTok{(}\StringTok{"data/sample\_meta.tsv"}\NormalTok{))}
+\NormalTok{sample\_meta }\OtherTok{\textless{}{-}} \FunctionTok{read\_tsv}\NormalTok{(here}\SpecialCharTok{::}\FunctionTok{here}\NormalTok{(}\StringTok{"data/sample\_meta.tsv"}\NormalTok{), }\AttributeTok{col\_types =} \StringTok{"cfccncnc"}\NormalTok{)}
 \FunctionTok{head}\NormalTok{(sample\_meta)}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{verbatim}
 ## # A tibble: 6 x 8
-##   sample        treatment patient_id anatomical_location   Age Stage   PFI   CRS
-##   <chr>         <chr>     <chr>      <chr>               <dbl> <chr> <dbl> <dbl>
-## 1 EOC372_treat~ treatmen~ EOC372     Peritoneum             68 IIIC    460     1
-## 2 EOC372_post-~ post-NACT EOC372     Peritoneum             68 IIIC    460     1
-## 3 EOC443_post-~ post-NACT EOC443     Omentum                54 IVA     177     3
-## 4 EOC443_treat~ treatmen~ EOC443     Omentum                54 IVA     177     3
-## 5 EOC540_treat~ treatmen~ EOC540     Omentum                62 IIIC    126     2
-## 6 EOC540_post-~ post-NACT EOC540     Omentum                62 IIIC    126     2
+##   sample                 treatment       patie~1 anato~2   Age Stage   PFI CRS  
+##   <chr>                  <fct>           <chr>   <chr>   <dbl> <chr> <dbl> <chr>
+## 1 EOC372_treatment-naive treatment-naive EOC372  Perito~    68 IIIC    460 1    
+## 2 EOC372_post-NACT       post-NACT       EOC372  Perito~    68 IIIC    460 1    
+## 3 EOC443_post-NACT       post-NACT       EOC443  Omentum    54 IVA     177 3    
+## 4 EOC443_treatment-naive treatment-naive EOC443  Omentum    54 IVA     177 3    
+## 5 EOC540_treatment-naive treatment-naive EOC540  Omentum    62 IIIC    126 2    
+## 6 EOC540_post-NACT       post-NACT       EOC540  Omentum    62 IIIC    126 2    
+## # ... with abbreviated variable names 1: patient_id, 2: anatomical_location
 \end{verbatim}
 
 Note that to apply sSNAPPY, the rownames of the logCPM matrix must be in Entrez IDs.
 
-\hypertarget{retrieval-pathway-topology}{%
-\subsection{Retrieval pathway topology}\label{retrieval-pathway-topology}}
+\hypertarget{retrieval-of-pathway-topology}{%
+\subsection{Retrieval of pathway topology}\label{retrieval-of-pathway-topology}}
 
 As important step, pathway topology information needs to be retrieved from a chosen database.
 Using KEGG as an example, the retrieved topology information will be stored as a list where each element corresponds to a pathway and the numbers in the matrices encode gene-gene interaction.
@@ -319,12 +320,6 @@ Additionally, the sample metadata must include the treatment of all samples. The
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# Change the treatment column to factors with treatment{-}naive as the reference}
-\NormalTok{sample\_meta }\OtherTok{\textless{}{-}} \FunctionTok{mutate}\NormalTok{(}
-\NormalTok{    sample\_meta, }
-    \AttributeTok{treatment =} \FunctionTok{factor}\NormalTok{(}
-\NormalTok{        treatment, }\AttributeTok{levels =} \FunctionTok{c}\NormalTok{(}\StringTok{"treatment{-}naive"}\NormalTok{, }\StringTok{"post{-}NACT"}\NormalTok{))}
-\NormalTok{)}
 \NormalTok{weightedFC }\OtherTok{\textless{}{-}} \FunctionTok{weight\_ss\_fc}\NormalTok{(}\FunctionTok{as.matrix}\NormalTok{(logCPM), }\AttributeTok{metadata =}\NormalTok{ sample\_meta,}
  \AttributeTok{sampleColumn =} \StringTok{"sample"}\NormalTok{, }\AttributeTok{groupBy =} \StringTok{"patient\_id"}\NormalTok{, }\AttributeTok{treatColumn =} \StringTok{"treatment"}\NormalTok{)}
 \FunctionTok{glimpse}\NormalTok{(weightedFC)}
@@ -388,7 +383,7 @@ Whilst permutations can be performed an a local machine, this strategy also allo
 \end{Shaded}
 
 Apart from pathways whose permuted perturbation scores are all zeros, the rest of the pathways' empirical distributions should be approximately normally distributed with means equal to zero.
-To demonstrate that, we randomly sampled 6 pathways and visaulised theIR permuted perturbation scores as boxplots(Figure \ref{fig:Figure1}).
+To demonstrate that, we randomly sampled 6 pathways and visualised the permuted perturbation scores as boxplots (Figure \ref{fig:Figure1}).
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -403,7 +398,8 @@ To demonstrate that, we randomly sampled 6 pathways and visaulised theIR permute
         \AttributeTok{values\_to =} \StringTok{"score"}
 \NormalTok{    ) }\SpecialCharTok{\%\textgreater{}\%}
     \FunctionTok{mutate}\NormalTok{(}
-        \AttributeTok{gs\_name =} \FunctionTok{str\_replace\_all}\NormalTok{(gs\_name, }\StringTok{"}\SpecialCharTok{\textbackslash{}\textbackslash{}}\StringTok{."}\NormalTok{, }\StringTok{" "}\NormalTok{)}
+        \AttributeTok{gs\_name =} \FunctionTok{str\_replace\_all}\NormalTok{(gs\_name, }\StringTok{"}\SpecialCharTok{\textbackslash{}\textbackslash{}}\StringTok{."}\NormalTok{, }\StringTok{" "}\NormalTok{),}
+        \AttributeTok{gs\_name =} \FunctionTok{str\_remove\_all}\NormalTok{(gs\_name, }\StringTok{"kegg "}\NormalTok{)}
 \NormalTok{    ) }\SpecialCharTok{\%\textgreater{}\%}
     \FunctionTok{ggplot}\NormalTok{(}
         \FunctionTok{aes}\NormalTok{(gs\_name, score, }\AttributeTok{fill =}\NormalTok{ gs\_name)}
@@ -435,8 +431,7 @@ In our example data, no pathways would be considered as significantly perturbed 
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{normalisedScores }\OtherTok{\textless{}{-}} \FunctionTok{normalise\_by\_permu}\NormalTok{(permutedScore, ssPertScore, }
-                                       \AttributeTok{sortBy =} \StringTok{"pvalue"}\NormalTok{)}
+\NormalTok{normalisedScores }\OtherTok{\textless{}{-}} \FunctionTok{normalise\_by\_permu}\NormalTok{(permutedScore, ssPertScore, }\AttributeTok{sortBy =} \StringTok{"pvalue"}\NormalTok{)}
 \FunctionTok{head}\NormalTok{(normalisedScores)}
 \end{Highlighting}
 \end{Shaded}
@@ -461,16 +456,14 @@ In our example data, no pathways would be considered as significantly perturbed 
 A key question of interest in this dataset is to identify which biological processes were impacted by chemotherapy across the entire group of patients.
 Using the sample-level output obtained above, we can explore this by applying t-tests or regression models across all samples.
 In order to minimise spurious results, Smyth's moderated t-statistics\citep{Smyth_2004} are able to be applied across the complete dataset, however given that we have robust Z-score, a constant variance should be assumed across all pathways.
-To perform this analysis, we convert the robust Z-scores to a matrix then use the standard limma methodologies.
-For this use case, no design matrix is required and a simple t-test is appropriate.
+To perform this analysis, we convert the robust Z-scores to a matrix then use the standard limma methodologies setting variance to be constant as values have been normalised using robust Z scores.
+For our use case here, no design matrix is required and a simple t-test is appropriate.
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{z\_matrix }\OtherTok{\textless{}{-}}\NormalTok{ normalisedScores }\SpecialCharTok{\%\textgreater{}\%}
 \NormalTok{  dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(robustZ, gs\_name, sample) }\SpecialCharTok{\%\textgreater{}\%}
-  \FunctionTok{pivot\_wider}\NormalTok{(}
-    \AttributeTok{names\_from =} \StringTok{"sample"}\NormalTok{, }\AttributeTok{values\_from =} \StringTok{"robustZ"}
-\NormalTok{  ) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{pivot\_wider}\NormalTok{(}\AttributeTok{names\_from =} \StringTok{"sample"}\NormalTok{, }\AttributeTok{values\_from =} \StringTok{"robustZ"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
   \FunctionTok{column\_to\_rownames}\NormalTok{(}\StringTok{"gs\_name"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
   \FunctionTok{as.matrix}\NormalTok{()}
 \NormalTok{z\_fits }\OtherTok{\textless{}{-}} \FunctionTok{lmFit}\NormalTok{(z\_matrix, }\AttributeTok{design =} \FunctionTok{rep}\NormalTok{(}\DecValTok{1}\NormalTok{, }\FunctionTok{ncol}\NormalTok{(z\_matrix))) }\SpecialCharTok{\%\textgreater{}\%} 
@@ -526,64 +519,44 @@ Identified cancer clusters were labelled by performing pathway enrichment testin
 Two clusters, associated with proliferative DNA repair signatures and stress-related markers, were found to contain significantly higher numbers of post-chemotherapy cells then pre-treatment ones (Ta in \citep{Zhang2022}).
 The representative pathways enriched in the stress-associated cluster were \emph{IL6-mediated signaling events}, \emph{TNF signaling pathway}, and \emph{cellular responses to stress}, characterized by marker genes JUN, FOS, IL6, TNF, CXCR4, SNAI1, VIM, GADD45B, and MCL1.
 Among the stress-related marker genes reported, 6 of them(CXCR4, FOS, GADD45B, IL6, JUN, and TNF) were implicated in pathways that were considered to be significantly impacted by sSNAPPY.
-The other post-chemotherapy cell dominated cluster in the original study was enriched for pathways associated with cell proliferation and DNA repair, such as the Cell cycle, DNA repair, Homology directed repair (HDR) through homologous recombination, and Fanconi anemia pathway.
-A key gene involved in those pathways was CHEK1, which was also found in significantly perturbed pathways detected by sSNAPPY: the p53 signaling pathway, Cellular senescence and the Human T-cell leukemia virus 1 infection pathway.\\
+The other post-chemotherapy cell dominated cluster in the original study was enriched for pathways associated with cell proliferation and DNA repair, such as the Cell cycle, DNA repair, Homology directed repair (HDR) through homologous recombination, and Fanconi anaemia pathway.
+A key gene involved in those pathways was CHEK1, which was also found in significantly perturbed pathways detected by sSNAPPY: the p53 signaling pathway, Cellular senescence and the Human T-cell leukaemia virus 1 infection pathway.\\
 
-Apart from treating all treated samples as biological replicates, users may wish to perform an analysis samples incorporating other phenotypic traits which may affect patients' responses to chemotherapy, such as the stages of their cancers.
-To do that through the moderated t-statistic strategy and extend the above analysos, we simply need to provide an appropriate design matrix in the \texttt{lmFit} step.
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{X }\OtherTok{\textless{}{-}} \FunctionTok{model.matrix}\NormalTok{(}
-    \SpecialCharTok{\textasciitilde{}}\DecValTok{0} \SpecialCharTok{+}\NormalTok{ Stage, }
-    \AttributeTok{data =}\NormalTok{ sample\_meta }\SpecialCharTok{\%\textgreater{}\%}
-\NormalTok{         dplyr}\SpecialCharTok{::}\FunctionTok{filter}\NormalTok{(treatment }\SpecialCharTok{==} \StringTok{"post{-}NACT"}\NormalTok{) }
-    \CommentTok{\#\%\textgreater{}\%}
-    \CommentTok{\#     .[match(colnames(z\_matrix), .$patient\_id),] \%\textgreater{}\%}
-    \CommentTok{\#     mutate(}
-    \CommentTok{\#         Stage = ifelse(Stage == "IVA", "IVA", "IIIC/IVB")}
-    \CommentTok{\#     ) }
-\NormalTok{    )  }\SpecialCharTok{\%\textgreater{}\%}
-    \FunctionTok{set\_colnames}\NormalTok{(}\FunctionTok{str\_remove\_all}\NormalTok{(}\FunctionTok{colnames}\NormalTok{(.), }\StringTok{"Stage"}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%}
-\NormalTok{    .[,}\FunctionTok{colSums}\NormalTok{(.) }\SpecialCharTok{!=} \DecValTok{0}\NormalTok{]  }
-\NormalTok{z\_fits2 }\OtherTok{\textless{}{-}} \FunctionTok{lmFit}\NormalTok{(z\_matrix, }\AttributeTok{design =}\NormalTok{ X) }\SpecialCharTok{\%\textgreater{}\%} 
-  \FunctionTok{eBayes}\NormalTok{(}\AttributeTok{trend =} \ConstantTok{FALSE}\NormalTok{)}
-\end{Highlighting}
-\end{Shaded}
+Apart from treating all treated samples as biological replicates, users may wish to perform an analysis incorporating other phenotypic traits which may affect patients' responses to chemotherapy, such as the stages of their cancers.
+To do that through the moderated t-statistic strategy and extend the above analysis, we simply need to provide an appropriate design matrix in the \texttt{lmFit} step, or subset our samples accordingly
 
 \hypertarget{visualise-perturbed-pathways-as-networks}{%
 \subsection{Visualise perturbed pathways as networks}\label{visualise-perturbed-pathways-as-networks}}
 
-sSNAPPY provides various visualisation functions to assist in the interpretation of results. Since biological pathways are not independent of each other and often contain redundant genes, visualising pathway analysis results as a network is a powerful way to not only intuitively summarise the results but also to facilitate the interpretations of the underlying biology. The \texttt{plot\_gs\_network()} function allows users to easily convert a list of significantly perturbed biological pathways to a network where edges between pathway nodes represent overlapping genes. Defined by the colorBy parameter, pathway nodes can be coloured by either the pathways' predicted direction of changes or the significance levels (Figure \ref{fig:Figure2}). The returned plot is a ggplot2 \citep{Wickham2009} object, meaning that components of its theme could be customized just as any other ggplots using the \texttt{ggplot2::theme} function.
+In addition to performing the analysis, sSNAPPY provides various visualisation functions to assist in the interpretation of results.
+Biological pathways are not independent of each other with many genes playing a role across multiple pathways, and as such, visualising pathway analysis results as a network can be a powerful way to intuitively summarise the results, and also to facilitate interpretation of the underlying biology.
+The \texttt{plot\_gs\_network()} function allows users to easily visualise a set of pathways as a network where edges connect genes to pathway nodes, easily capturing information across multiple pathways.
+Pathway nodes can be coloured by any of the returned values, such as the magnitude of perturbation (logFC), p-value or additional classifications performed manually (Figure \ref{fig:Figure1}).
+As the returned plot is a ggplot2 \citep{Wickham2009} object, colour schemes and plotting themes can be easily customised as desired.
+
+In order to
+First we should obtain a subset of pathways to visualise.
+In the following we'll inspect the most highly ranked pathways and then for visualisation, 1) create a categorical variable with the pathway status, 2) rename the logFC column to reflect the true meaning of the value and, 3) transform the p-values for simpler visualisation
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \CommentTok{\# Extract significantly perturbed pathway. To color the pathways}
 \CommentTok{\# by perturbation status, add a column to the data.frame}
+\FunctionTok{set.seed}\NormalTok{(}\DecValTok{123}\NormalTok{)}
 \NormalTok{sigPathway }\OtherTok{\textless{}{-}} \FunctionTok{topTable}\NormalTok{(z\_fits, }\AttributeTok{number =} \ConstantTok{Inf}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%} 
 \NormalTok{    dplyr}\SpecialCharTok{::}\FunctionTok{filter}\NormalTok{(adj.P.Val }\SpecialCharTok{\textless{}} \FloatTok{0.05}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
     \FunctionTok{rownames\_to\_column}\NormalTok{(}\StringTok{"gs\_name"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
-    \FunctionTok{mutate}\NormalTok{(}
-        \AttributeTok{Status =} \FunctionTok{ifelse}\NormalTok{(}
-\NormalTok{            AveExpr }\SpecialCharTok{\textless{}} \DecValTok{0}\NormalTok{, }\StringTok{"Inhibited"}\NormalTok{, }\StringTok{"Activated"}\NormalTok{))}
-\CommentTok{\# Plot the network structure}
+    \FunctionTok{mutate}\NormalTok{(}\AttributeTok{Status =} \FunctionTok{ifelse}\NormalTok{(AveExpr }\SpecialCharTok{\textless{}} \DecValTok{0}\NormalTok{, }\StringTok{"Inhibited"}\NormalTok{, }\StringTok{"Activated"}\NormalTok{))}
 \NormalTok{p1 }\OtherTok{\textless{}{-}}\NormalTok{ sSNAPPY}\SpecialCharTok{::}\FunctionTok{plot\_gs\_network}\NormalTok{(}
     \AttributeTok{normalisedScores =}\NormalTok{ sigPathway ,}
     \AttributeTok{gsTopology =}\NormalTok{ gsTopology, }
     \AttributeTok{colorBy =} \StringTok{"Status"}
-\NormalTok{) }\SpecialCharTok{+}
-    \FunctionTok{theme}\NormalTok{(}
-        \AttributeTok{panel.background =} \FunctionTok{element\_blank}\NormalTok{()}
-\NormalTok{    )}
+\NormalTok{) }\SpecialCharTok{+} \FunctionTok{theme\_void}\NormalTok{()}
 \NormalTok{p2 }\OtherTok{\textless{}{-}}\NormalTok{ sSNAPPY}\SpecialCharTok{::}\FunctionTok{plot\_gs\_network}\NormalTok{(}
     \AttributeTok{normalisedScores =}\NormalTok{ sigPathway,}
     \AttributeTok{gsTopology =}\NormalTok{ gsTopology, }
-    \CommentTok{\# or color nodes by significance levels}
     \AttributeTok{colorBy  =} \StringTok{"P.Value"}
-\NormalTok{) }\SpecialCharTok{+}
-    \FunctionTok{theme}\NormalTok{(}
-        \AttributeTok{panel.background =} \FunctionTok{element\_blank}\NormalTok{()}
-\NormalTok{    )}
+\NormalTok{) }\SpecialCharTok{+} \FunctionTok{theme\_void}\NormalTok{()}
 \FunctionTok{plot\_grid}\NormalTok{(}
 \NormalTok{    p1, p2, }
     \AttributeTok{labels =} \FunctionTok{c}\NormalTok{(}\StringTok{"A"}\NormalTok{, }\StringTok{"B"}\NormalTok{)}
@@ -600,28 +573,27 @@ sSNAPPY provides various visualisation functions to assist in the interpretation
 \caption{Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, colored by (A) pathways’ predicted directions of changes and (B) pathways’ -log10(p-values). Pathways with a FDR < 0.05 in the moderated t-test were included.}\label{fig:Figure2}
 \end{figure}
 
-By examining the network structure, we can see that many of the highly connected pathways playing a central role in the network are immune-related. To confirm it and further condense the information, we can summarise the network structures into key biological groups by performing community detection. Widely used in network analysis, community detection is a technique used to identify groups of nodes that are more densely connected than to any other nodes in the network\citep{Newman2004}. sSNAPPY's \texttt{plot\_community()} function is a one-stop shop for applying a community detection algorithm of the user's choice to the network structure and annotating identified communities by the most common pathway category, denoting the main biological processes perturbed in that community. Retrieved directly from the \href{https://www.genome.jp/kegg/pathway.html}{KEGG website}, we have curated the most recent categorisations of KEGG pathways and included it as part of the sSNAPPY package. Annotation of KEGG pathway communities will be automatically completed by calling the in-built database, while analyses involving other pathway databases require user-provided pathway categorisations.
-
-The defaulted Louvain method was applied to the network of significantly perturbed biological pathways and revealed two community structures, where one was annotated to be endocrine system related and the other one was infectious disease-related (Figure \ref{fig:Figure3}).
+By examining the network structure, we can see that many of the highly connected pathways playing a central role in the network may be immune-related.
+To summarise related pathways and further enable interpretation, we use community detection to group related pathways
+Widely used in network analysis, community detection is a technique for identifying groups of nodes that are more densely connected than to any other nodes in the network\citep{Newman2004}.
+sSNAPPY's \texttt{plot\_community()} function is a one-stop shop for applying a community detection algorithm of the user's choice to the network structure and annotating identified communities by the most common pathway category, denoting the main biological processes perturbed in that community.
+Retrieved directly from the \href{https://www.genome.jp/kegg/pathway.html}{KEGG website}, we have curated the most recent categories for KEGG pathways and included this as part of sSNAPPY.
+Annotation of KEGG pathway communities will be automatically completed by calling the in-built data object.
+However, analyses involving other pathway databases will require user-provided pathway categories.
+In the current dataset, the Louvain method was applied to the network of biological pathways and revealed two primary communities, where one was annotated to be endocrine system related and the other one was clearly related to infectious diseases and the immune system (Figure \ref{fig:Figure2}).
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\FunctionTok{set.seed}\NormalTok{(}\DecValTok{123}\NormalTok{)}
 \NormalTok{sSNAPPY}\SpecialCharTok{::}\FunctionTok{plot\_community}\NormalTok{(}
-    \AttributeTok{normalisedScores =}\NormalTok{ sigPathway, }
-    \AttributeTok{gsTopology =}\NormalTok{ gsTopology, }
-    \AttributeTok{colorBy =} \StringTok{"Status"}\NormalTok{, }
-    \AttributeTok{communityMethod =} \StringTok{"louvain"}\NormalTok{, }
-    \AttributeTok{lb\_size =} \DecValTok{6}\NormalTok{, }
-    \AttributeTok{label.fontsize =} \DecValTok{18}\NormalTok{,}
-    \AttributeTok{label.fill =} \ConstantTok{NULL}\NormalTok{,}
-    \AttributeTok{label.colour =} \StringTok{"blue"}\NormalTok{,}
-    \AttributeTok{con.colour =} \StringTok{"blue"}\NormalTok{,}
-    \AttributeTok{label.buffer =} \FunctionTok{unit}\NormalTok{(}\DecValTok{13}\NormalTok{, }\StringTok{"mm"}\NormalTok{)}
+  \AttributeTok{normalisedScores =}\NormalTok{ sigPathway,}
+  \AttributeTok{gsTopology =}\NormalTok{ gsTopology, }
+  \AttributeTok{colorBy =} \StringTok{"Status"}
 \NormalTok{) }\SpecialCharTok{+}
-    \FunctionTok{theme}\NormalTok{(}
-        \AttributeTok{panel.background =} \FunctionTok{element\_blank}\NormalTok{()}
-\NormalTok{    ) }\SpecialCharTok{+}
-\NormalTok{    ggplot2}\SpecialCharTok{::}\FunctionTok{scale\_fill\_ordinal}\NormalTok{()}
+  \FunctionTok{scale\_fill\_ordinal}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{scale\_x\_continuous}\NormalTok{(}\AttributeTok{expand =} \FunctionTok{expansion}\NormalTok{(}\FloatTok{0.3}\NormalTok{)) }\SpecialCharTok{+}
+  \FunctionTok{scale\_y\_continuous}\NormalTok{(}\AttributeTok{expand =} \FunctionTok{expansion}\NormalTok{(}\FloatTok{0.3}\NormalTok{)) }\SpecialCharTok{+}
+  \FunctionTok{theme\_void}\NormalTok{() }
 \end{Highlighting}
 \end{Shaded}
 
@@ -634,15 +606,18 @@ The defaulted Louvain method was applied to the network of significantly perturb
 \caption{Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, colored by community structures detected through the louvain algorithm. The two main biological processes perturbed by the chemo-therapy were endocrine- and immune-related.}\label{fig:Figure3}
 \end{figure}
 
-Inferred directly from the expression matrix, a key advantage of sSNAPPY is that it does not require the prior definition of differentially expressed genes, which is not always detectable in clinical datasets. However, knowing the genes that are implicated in perturbing biological pathways, particularly those that affect multiple gene-sets, can provide valuable insights for biologists seeking to formulate hypotheses about underlying biological mechanisms. Therefore, sSNAPPY presents another visualisation feature called \texttt{plot\_gs2gene}, which enables the inclusion of pathway genes in network structures. Although defaulted to colour all gene nodes in grey, users can provide a vector of logFCs to colour the genes by their changes in expression. As pathways are often made of hundreds of genes, it is recommended not to plot all genes included in perturbed pathways but filter for genes more likely to be playing a significant role, achieved through only providing logFCs of genes to plot. In this example dataset, we chose to only include genes with the top 500 magnitudes of mean logFCs (Figure \ref{fig:Figure4}).
+Inferred directly from the expression matrix, a key advantage of sSNAPPY is that it does not require the prior identification of differentially expressed genes, which is not always possible in clinical datasets.
+However, knowing which genes are implicated in the perturbation of pathways, particularly those which influence multiple pathways, can provide valuable insights for hypotheses generation about underlying biological mechanisms.
+Therefore, sSNAPPY presents another visualisation feature called \texttt{plot\_gs2gene}, which enables the inclusion of select genes from each pathway using network structures.
+Users can provide a vector of fold-change estimates to visualise genes within pathways, showing their estimated change in expression.
+As pathways often include hundreds of genes, we recommend to filter for genes most likely to be playing a significant role.
+In this example dataset, we chose to only include genes within the top 500 when ranking by the magnitude of the mean log fold-change (Figure \ref{fig:Figure3}).
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# Calculate gene{-}wise mean logFCs}
-\NormalTok{meanFC }\OtherTok{\textless{}{-}} \FunctionTok{apply}\NormalTok{(weightedFC}\SpecialCharTok{$}\NormalTok{logFC, }\DecValTok{1}\NormalTok{, mean )}
-\CommentTok{\# Extract the top 500 meanFCs}
+\NormalTok{meanFC }\OtherTok{\textless{}{-}} \FunctionTok{rowMeans}\NormalTok{(weightedFC}\SpecialCharTok{$}\NormalTok{logFC) }\SpecialCharTok{/}\NormalTok{ weightedFC}\SpecialCharTok{$}\NormalTok{weight}
 \NormalTok{top500 }\OtherTok{\textless{}{-}} \FunctionTok{rank}\NormalTok{(}\DecValTok{1}\SpecialCharTok{/}\FunctionTok{abs}\NormalTok{(meanFC)) }\SpecialCharTok{\textless{}=} \DecValTok{500}
-\NormalTok{fcByDir }\OtherTok{\textless{}{-}} \FunctionTok{ifelse}\NormalTok{(meanFC[top500] }\SpecialCharTok{\textgreater{}} \DecValTok{0}\NormalTok{, }\StringTok{"Up{-}Regulated"}\NormalTok{, }\StringTok{"Down{-}Regulated"}\NormalTok{)}
+\NormalTok{dirFC }\OtherTok{\textless{}{-}} \FunctionTok{ifelse}\NormalTok{(meanFC }\SpecialCharTok{\textgreater{}} \DecValTok{0}\NormalTok{, }\StringTok{"Up{-}Regulated"}\NormalTok{, }\StringTok{"Down{-}Regulated"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -686,36 +661,37 @@ Since pathway topologies were retrieved in Entrez IDs, by default, genes' Entrez
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\FunctionTok{str\_subset}\NormalTok{(}\FunctionTok{names}\NormalTok{(fcByDir), }\StringTok{"ENTREZID:3117|ENTREZID:3118"}\NormalTok{)}
+\CommentTok{\# str\_subset(names(dirFC), "ENTREZID:3117|ENTREZID:3118")}
 \end{Highlighting}
 \end{Shaded}
-
-\begin{verbatim}
-## [1] "ENTREZID:3117"
-\end{verbatim}
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \CommentTok{\# Plot the pathway{-}gene network for genes with top 500 }
 \CommentTok{\#magnitudes of mean FCs and label gene nodes by gene names}
 \NormalTok{sSNAPPY}\SpecialCharTok{::}\FunctionTok{plot\_gs2gene}\NormalTok{(}
-    \AttributeTok{normalisedScores =}\NormalTok{ sigPathway , }
-    \AttributeTok{gsTopology =}\NormalTok{ gsTopology, }
-    \AttributeTok{colorGsBy =} \StringTok{"Status"}\NormalTok{, }
-    \AttributeTok{mapEntrezID =}\NormalTok{ entrez2name, }
-    \AttributeTok{geneFC =}\NormalTok{ fcByDir, }
-    \AttributeTok{filterGeneBy =} \DecValTok{0}\NormalTok{,}
-    \AttributeTok{GsName\_size =} \DecValTok{4}\NormalTok{,}
-     \AttributeTok{geneNameSize =} \DecValTok{5}\NormalTok{, }
-    \AttributeTok{gsNodeSize =} \DecValTok{4}
+  \AttributeTok{normalisedScores =}\NormalTok{ sigPathway , }
+  \AttributeTok{gsTopology =}\NormalTok{ gsTopology, }
+  \AttributeTok{colorGsBy =} \StringTok{"Status"}\NormalTok{, }
+  \AttributeTok{mapEntrezID =}\NormalTok{ entrez2name, }
+  \AttributeTok{geneFC =}\NormalTok{ dirFC, }
+  \AttributeTok{filterGeneBy =} \DecValTok{0}\NormalTok{,}
+  \AttributeTok{GsName\_size =} \DecValTok{4}\NormalTok{,}
+  \AttributeTok{geneNameSize =} \DecValTok{5}\NormalTok{, }
+  \AttributeTok{gsNodeSize =} \DecValTok{4}
 \NormalTok{) }\SpecialCharTok{+}
-    \FunctionTok{theme}\NormalTok{(}
-        \AttributeTok{panel.background =} \FunctionTok{element\_blank}\NormalTok{()}
-\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{theme}\NormalTok{(}
+    \AttributeTok{panel.background =} \FunctionTok{element\_blank}\NormalTok{()}
+\NormalTok{  ) }\SpecialCharTok{+}
   \FunctionTok{scale\_fill\_manual}\NormalTok{(}\AttributeTok{values =} \FunctionTok{c}\NormalTok{(}\StringTok{"darkred"}\NormalTok{, }\StringTok{"lightskyblue"}\NormalTok{), }\AttributeTok{name =} \StringTok{"Pathway"}\NormalTok{) }\SpecialCharTok{+}
   \FunctionTok{scale\_colour\_manual}\NormalTok{(}\AttributeTok{values =} \FunctionTok{c}\NormalTok{(}\StringTok{"blue"}\NormalTok{, }\StringTok{"red"}\NormalTok{), }\AttributeTok{name =} \StringTok{"Gene}\SpecialCharTok{\textbackslash{}n}\StringTok{Direction"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
+
+\begin{verbatim}
+## Warning: ggrepel: 2 unlabeled data points (too many overlaps). Consider
+## increasing max.overlaps
+\end{verbatim}
 
 \begin{figure}
 
