@@ -153,7 +153,7 @@ head(sample_meta)
 
 Note that to apply sSNAPPY, the rownames of the logCPM matrix must be in Entrez IDs. 
 
-## Retrieval of pathway topology
+## Retrieval of Pathway Topology
 
 As important step, pathway topology information needs to be retrieved from a chosen database.
 Using KEGG as an example, the retrieved topology information will be stored as a list where each element corresponds to a pathway and the numbers in the matrices encode gene-gene interaction. 
@@ -163,24 +163,28 @@ gsTopology <- retrieve_topology(database = "kegg", species = "hsapiens")
 ```
 
 Instead of downloading the topology matrices of all pathways, it is also possible to provide a restricted set of keywords for a targeted analysis. 
+In the following we'll use the keywords 'metabolism' and 'estrogen' to only return a subset of pathways.
 <!-- Do we really need to mention the following? -->
-Customised weights could be assigned to different types of gene-gene interaction type by providing a named numeric vector. 
+<!-- Customised weights could be assigned to different types of gene-gene interaction type by providing a named numeric vector.  -->
 
 ```{r dont-run, eval=FALSE}
 # Only retrieve the topology matrices of metabolism- or signalling-related pathways
-gsTopology_sub <- retrieve_topology(database = "kegg",species = "hsapien", 
+gsTopology_sub <- retrieve_topology(database = "kegg", species = "hsapiens", 
                                     keyword = c("metabolism", "estrogen"))
 names(gsTopology_sub)
 ```
 
-In addition to focusing on one database, users could provide a vector to the `database` parameter to retrieve topology information from multiple database
+In addition to working with a single database, users can choose multiple databases for more comprehensive analyses.
+However, there will be an accompanying increase in both analytic and downloading time.
+<!-- I wonder if we should cache these somehow -->
+<!-- Might be worth investigating as a feature improvement later -->
 
 ```{r dont-run2, eval=FALSE}
-gsTopology_2databases <- retrieve_topology(database = c("kegg", "reactome"), 
-                                           species = "hsapien")
+gsTopology_2databases <- retrieve_topology(database = c("kegg", "wiki"), 
+                                           species = "hs")
 ```
 
-## Score single-sample pathway perturbation 
+## Score Single-Sample Pathway Perturbation 
 
 To compute the single-sample expression changes (logFC) needed for perturbation scores, each treated sample must have a matching control sample, with the factor defining the paired structure passed to the `weight_ss_fc()` function through the `groupBy` parameter. 
 In our example dataset, pre- and post-treatment samples are matched by patient IDs. 
@@ -207,7 +211,7 @@ ssPertScore <- pathway_pert(genePertScore)
 head(ssPertScore)
 ```
 
-## Sample permutation for normalisation and significance testing
+## Sample Permutation for Normalisation and Significance Testing
 
 The values obtained from each pathway will vary greatly due to the variability in topologies.
 To determine the significance of individual scores and transform scores to ensure they are comparable across pathways, sSNAPPY utilises a sample-permutation strategy to simulate the null distributions of perturbation scores. 
@@ -231,32 +235,26 @@ permutedScore <- readRDS(here::here("data/permutedScore.rds"))
 Apart from pathways whose permuted perturbation scores are all zeros, the rest of the pathways' empirical distributions should be approximately normally distributed with means equal to zero. 
 To demonstrate that, we randomly sampled 6 pathways and visualised the permuted perturbation scores as boxplots (Figure \@ref(fig:Figure1)).
 
-```{r Figure1, out.width='100%', fig.width=12, fig.height=7, fig.cap="Permuted perturbation scores of six randomly selected pathways. All sampled empirical distributions are approximately normally distributed with a mean of zero."}
+```{r Figure1, out.width='100%', fig.width=8, fig.height=6, fig.cap="Permuted perturbation scores of six randomly selected pathways. All sampled empirical distributions are approximately normally distributed with a mean of zero."}
 set.seed(234)
 permutedScore %>%
     keep(~all(.!=0)) %>%
     .[sample(seq_along(.), 6)] %>%
     as.data.frame() %>%
     pivot_longer(
-        cols = everything(), 
-        names_to = "gs_name", 
-        values_to = "score"
+      cols = everything(), names_to = "gs_name", values_to = "score"
     ) %>%
     mutate(
         gs_name = str_replace_all(gs_name, "\\.", " "),
         gs_name = str_remove_all(gs_name, "kegg ")
     ) %>%
-    ggplot(
-        aes(gs_name, score, fill = gs_name)
-    ) +
+    ggplot(aes(gs_name, score, fill = gs_name)) +
     geom_boxplot() +
     scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) +
     scale_fill_discrete(name = "Gene-set Name") + 
-    labs(
-        x = "Gene-set Name", 
-        y = "Permuted Perturbation Score") +
-    theme_bw(
-    )
+    labs(x = "Pathway", y = "Permuted Perturbation Score") +
+    theme_bw() + 
+    theme(legend.position = "none")
 ```
 
 Permuted distributions are then used to convert each pathway-level score into a scaled robust $Z$-score using the function normalise_by_permu.
@@ -332,7 +330,7 @@ A key gene involved in those pathways was CHEK1, which was also found in signifi
 Apart from treating all treated samples as biological replicates, users may wish to perform an analysis incorporating other phenotypic traits which may affect patients’ responses to chemotherapy, such as the stages of their cancers. 
 To do that through the moderated t-statistic strategy and extend the above analysis, we simply need to provide an appropriate design matrix in the `lmFit` step, or subset our samples accordingly
 
-## Visualise perturbed pathways as networks
+## Visualise Perturbed Pathways as Networks
 
 In addition to performing the analysis, sSNAPPY provides various visualisation functions to assist in the interpretation of results. 
 Biological pathways are not independent of each other with many genes playing a role across multiple pathways, and as such, visualising pathway analysis results as a network can be a powerful way to intuitively summarise the results, and also to facilitate interpretation of the underlying biology. 
@@ -355,7 +353,7 @@ sigPathway <- top_table %>%
 ```
 
 
-```{r Figure2, out.width='100%', fig.width = 12, fig.height = 5, fig.cap = "Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, colored by (A) pathways’ predicted directions of changes and (B) pathways’ -log10(p-values). Pathways with a FDR < 0.05 in the moderated t-test were included."}
+```{r Figure2, out.width='100%', fig.width = 10, fig.height = 4.2, fig.cap = "Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, colored by (A) pathways’ predicted directions of changes and (B) pathways’ -log10(p-values). Pathways with a FDR < 0.05 in the moderated t-test were included."}
 set.seed(123)
 p1 <- plot_gs_network(
   normalisedScores = sigPathway, gsTopology = gsTopology, colorBy = "status"
@@ -384,7 +382,7 @@ Annotation of KEGG pathway communities will be automatically completed by callin
 However, analyses involving other pathway databases will require user-provided pathway categories. 
 In the current dataset, the Louvain method was applied to the network of biological pathways and revealed two primary communities, where one was annotated to be endocrine system related and the other one was clearly related to infectious diseases and the immune system (Figure \@ref(fig:Figure2)). 
 
-```{r Figure3, out.width='80%', fig.width = 15, fig.height = 10, fig.cap = 'Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, colored by community structures detected through the louvain algorithm. The two main biological processes perturbed by the chemo-therapy were endocrine- and immune-related.'}
+```{r Figure3, out.width='80%', fig.width = 10, fig.height = 6.5, fig.cap = 'Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, colored by community structures detected through the louvain algorithm. The two main biological processes perturbed by the chemo-therapy were endocrine- and immune-related.'}
 set.seed(123)
 plot_community(
   normalisedScores = sigPathway,
@@ -393,8 +391,8 @@ plot_community(
 ) +
   scale_colour_manual(values = c("red", "blue")) +
   scale_fill_viridis_d() +
-  scale_x_continuous(expand = expansion(0.2)) +
-  scale_y_continuous(expand = expansion(0.2)) +
+  scale_x_continuous(expand = expansion(0.25)) +
+  scale_y_continuous(expand = expansion(0.25)) +
   theme_void() 
 ```
 
@@ -422,7 +420,7 @@ load(system.file("extdata", "entrez2name.rda", package = "sSNAPPY"))
 head(entrez2name)
 ```
 
-```{r Figure3, out.width='80%', fig.width = 12, fig.height = 10, fig.cap = 'Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, showing any genes in the top 500 ranked for differential expression, and which pathways they are likely contributing to. No genes in the top500 were found to be contributing to the perturbation of the AMPK signaling pathway.'}
+```{r Figure4, out.width='80%', fig.width = 9.6, fig.height = 8, fig.cap = 'Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, showing any genes in the top 500 ranked for differential expression, and which pathways they are likely contributing to. No genes in the top500 were found to be contributing to the perturbation of the AMPK signaling pathway.'}
 set.seed(123)
 plot_gs2gene(
   normalisedScores = sigPathway, 
@@ -439,24 +437,30 @@ plot_gs2gene(
 ```
 
 
-## Identify hub genes contributing to pathway perturbation
+## Identify Key Gene Contributions
 
 To further investigate a specific pathway and elucidate the key genes that contribute to its perturbation, we can generate a heatmap via `plot_gene_contribution()` which shows the gene-level perturbation scores for the top-ranked members of a given pathway.
-Taking the average gene-level contribution to the perturbation score, we can show gene-level sample-specific perturbation scores, as well as other annotations such as the robust Z-scores at the sample level and tumour stage. (Figure \@ref(fig:Figure5)).
+Taking the average gene-level contribution to the perturbation score, we can show gene-level sample-specific perturbation scores.
+This function takes advantage of the plotting capabilities of the `pheatmap` package, and as such, other annotations are also able to be easily included, such as the tumour stage, or the general range of the normalised Z-Scores are in for each sample.
+<!-- We'll need to reference pheatmap here -->
+By including the Z-Scores, we can assess the level of perturbation predicted in each sample and any corresponding changes in key genes (Figure \@ref(fig:Figure5)).
 
-```{r Figure5, out.width='100%', fig.width = 18, fig.height = 10, fig.cap = 'Gene-level perturbation scores of the top 20 genes in the \"p53 signalling pathway\" ranked by their average contribution to the perturbation score. Samples were annotated by the stages of cancers, along with robust Z-scores which indicate the extent of perturbation within each sample. The genes ATR and ATM were identified as possible key drivers of the activation of p53 signalling pathway, with downregulation of MDM4 also appearing likely to be playing a role.'}
+```{r Figure5, out.width='100%', fig.width = 12, fig.height = 7, fig.cap = 'Gene-level perturbation scores of the top 20 genes in the \"p53 signalling pathway\" ranked by their average contribution to the perturbation score. Samples were annotated by the stages of cancers, along with robust Z-scores which indicate the extent of perturbation within each sample. The genes ATR and ATM were identified as possible key drivers of the activation of p53 signalling pathway, with downregulation of MDM4 also appearing likely to be playing a role.'}
 annotation_df <- normalisedScores %>%
     dplyr::filter(gs_name == "kegg.p53 signaling pathway") %>%
     mutate(
-      `Z Range` = cut(robustZ, breaks = seq(-2, 2, length.out = 6), include.lowest = TRUE)
+      `Z Range` = cut(
+        robustZ, breaks = seq(-2, 2, length.out = 6), include.lowest = TRUE
+      )
     ) %>%
     left_join(dplyr::select(sample_meta, sample, Stage), by = "sample") %>%
     dplyr::select(sample, `Z Range`, Stage)
+z_levels <- levels(annotation_df$`Z Range`)
 annotation_col <- list(
   Stage = c(IIIC = "#4B0055", IVA = "#009B95", IVB = "#FDE333"),
   `Z Range` = setNames(
-    colorRampPalette(c("navyblue", "white", "darkred"))(length(levels(annotation_df$`Z Range`))),
-    levels(annotation_df$Z)
+    colorRampPalette(c("navyblue", "white", "darkred"))(length(z_levels)),
+    z_levels
   )
 )
 plot_gene_contribution(
@@ -478,12 +482,16 @@ Also involved in DNA damage repair, the Ataxia telangiectasia and RAD3-related p
 
 # Discussion
 
-The package *sSNAPPY* takes advantage of pathway responses within individuals with a paired structure, which are known to vary greatly across clinical and tissues obtain
+In conclusion, we have presented and provided a demonstration for the R/Bioconductor package *sSNAPPY* which offers a novel single-sample pathway perturbation testing approach, tailored for heterogeneous tissue samples where multiple samples are taken from the same source. 
+In contrast to many common enrichment methods, sSNAPPY uses pathway topology information to compute perturbation scores which indicate the likely impact on the activity of a pathway, by predicting direction of change.
+Our approach addresses the limitations of alternative strategies that fail to account for gene-gene interactions encoded by pathway topologies or predict the directionality of pathway activities. 
+In addition, the shared and divergent responses between individuals can be identified as possible clue to heterogeneous responses across clinical samples.
 
-In conclusion, we have present the e paper showcased an R/Bioconductor package that offers a novel single-sample pathway perturbation testing approach, tailored for heterogenous tissue sample. 
-sSNAPPY utilizes pathway topology information to compute perturbation scores that predict pathways' potential directions of changes in individual samples. This approach addresses the limitations of current strategies that fail to account for gene-gene interactions encoded by pathway topologies or predict the directionality of pathway activities. By applying sSNAPPY to a public scRNA-seq data collected before and after HGSOC patients were subjected to chemotherapy, we demonstrated its ability to detect significant pathway perturbations of various interesting biological processes beyond what were shown in the original studies. Overall, sSNAPPY presents a promising strategy for single sample-based pathway analysis in RNA-seq data.
+By applying sSNAPPY to a public scRNA-seq data collected before and after HGSOC patients were subjected to chemotherapy, we demonstrated its ability to detect significant pathway perturbations of various interesting biological processes consistent with, and far beyond what was shown in the original study. 
+Overall, we believe sSNAPPY represents a valuable addition to the existing body of pathway analysis methods.
 
 # Data availability
+
 The dataset analysed in this manuscript are stored in the data directory of this GitHub repository. 
 
 # Software availability
@@ -494,9 +502,11 @@ The dataset analysed in this manuscript are stored in the data directory of this
 * License: [MIT](https://opensource.org/license/mit/)
 
 # Competing interests 
+
 No competing interests were disclosed
 
 # Grant information 
+
 Any grants that supported the work must be listed here, including the grant number.  
 
 # Acknowledgements

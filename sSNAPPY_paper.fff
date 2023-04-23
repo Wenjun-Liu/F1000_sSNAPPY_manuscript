@@ -34,7 +34,7 @@
 
 }
 
-\caption{Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY and asssiociated pathway gens with top 500 magnitudes of fold-changes. Both pathways and genes were colored by their directions of changes. Only genes involced in at least 2 pathways were included.}\label{fig:Figure4}
+\caption{Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, showing any genes in the top 500 ranked for differential expression, and which pathways they are likely contributing to. No genes in the top500 were found to be contributing to the perturbation of the AMPK signaling pathway.}\label{fig:Figure4}
 \end{figure}
 \efloatseparator
  
@@ -44,5 +44,5 @@
 
 }
 
-\caption{Gene-level perturbation scores of all genes included in the "p53 signalling pathway" in each sample where columns of samples were annotated by pathway-level perturbation and the stages of cancers. Genes ATR and ATM were identified to be the key driverd of the activation of p53 signalling pathway. }\label{fig:Figure5}
+\caption{Gene-level perturbation scores of the top 20 genes in the "p53 signalling pathway" ranked by their average contribution to the perturbation score. Samples were annotated by the stages of cancers, along with robust Z-scores which indicate the extent of perturbation within each sample. The genes ATR and ATM were identified as possible key drivers of the activation of p53 signalling pathway, with downregulation of MDM4 also appearing likely to be playing a role.}\label{fig:Figure5}
 \end{figure}
