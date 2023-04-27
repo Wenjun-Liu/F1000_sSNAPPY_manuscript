@@ -136,6 +136,7 @@ library(sSNAPPY)
 library(tidyverse)
 library(magrittr)
 library(ggplot2)
+library(patchwork)
 library(kableExtra)
 library(AnnotationHub) 
 library(edgeR)
@@ -164,8 +165,6 @@ gsTopology <- retrieve_topology(database = "kegg", species = "hsapiens")
 
 Instead of downloading the topology matrices of all pathways, it is also possible to provide a restricted set of keywords for a targeted analysis. 
 In the following we'll use the keywords 'metabolism' and 'estrogen' to only return a subset of pathways.
-<!-- Do we really need to mention the following? -->
-<!-- Customised weights could be assigned to different types of gene-gene interaction type by providing a named numeric vector.  -->
 
 ```{r dont-run, eval=FALSE}
 # Only retrieve the topology matrices of metabolism- or signalling-related pathways
@@ -176,8 +175,6 @@ names(gsTopology_sub)
 
 In addition to working with a single database, users can choose multiple databases for more comprehensive analyses.
 However, there will be an accompanying increase in both analytic and downloading time.
-<!-- I wonder if we should cache these somehow -->
-<!-- Might be worth investigating as a feature improvement later -->
 
 ```{r dont-run2, eval=FALSE}
 gsTopology_2databases <- retrieve_topology(database = c("kegg", "wiki"), 
@@ -225,7 +222,6 @@ set.seed(123)
 permutedScore <- generate_permuted_scores(
     as.matrix(logCPM), numOfTreat = 2, NB = 1000, 
     gsTopology = gsTopology, weight = weightedFC$weight
-)
 ```
 
 ```{r, echo=FALSE}
@@ -290,9 +286,6 @@ top_table <- topTable(z_fits, number = Inf) %>%
 Pathways with an FDR < 0.05 in the moderated t-test were considered to be significantly perturbed at the group level. 
 22 out of the 315 tested KEGG pathways passed the selection threshold (Table \@ref(tab:Table1)).
 
-<!-- This seems like more than beforehand -->
-<!-- When I chose the top 8 previously, some were unchanged... -->
-
 ```{r}
 table1 <- top_table %>%
   dplyr::filter(adj.P.Val < 0.05) %>% 
@@ -334,39 +327,43 @@ To do that through the moderated t-statistic strategy and extend the above analy
 
 In addition to performing the analysis, sSNAPPY provides various visualisation functions to assist in the interpretation of results. 
 Biological pathways are not independent of each other with many genes playing a role across multiple pathways, and as such, visualising pathway analysis results as a network can be a powerful way to intuitively summarise the results, and also to facilitate interpretation of the underlying biology. 
-The `plot_gs_network()` function allows users to easily visualise a set of pathways as a network where edges connect genes to pathway nodes, easily capturing information across multiple pathways.
-Pathway nodes can be coloured by any of the returned values, such as the magnitude of perturbation (logFC), p-value or additional classifications performed manually (Figure \@ref(fig:Figure1)). 
-As the returned plot is a ggplot2 [@Wickham2009] object, colour schemes and plotting themes can be easily customised as desired.
+The `plot_gs_network()` function allows users to easily convert a list of significantly perturbed biological pathways to a network where edges between pathway nodes represent overlapping genes. 
+Defined by the colorBy parameter, pathway nodes can be coloured by either the pathways’ predicted direction of changes or the significance levels (Figure \@ref(fig:Figure2)). 
+The returned plot is a ggplot2 [@Wickham2009] object, meaning that components of its theme could be customized just as any other ggplot objects.
 
 First we should obtain a subset of pathways to visualise.
 In the following we'll inspect the most highly ranked pathways and then for visualisation, 1) create a categorical variable with the pathway status, 2) rename the logFC column to reflect the true meaning of the value and, 3) transform the p-values for simpler visualisation
 
 ```{r}
-sigPathway <- top_table %>% 
-  dplyr::filter(adj.P.Val < 0.05) %>% 
+sigPathway <- topTable(z_fits, number = 8) %>% 
+  rownames_to_column("gs_name") %>% 
   dplyr::rename(Z = logFC) %>% 
   mutate(
-    status = ifelse(Z > 0, "Activated", "Inhibited"),
+    status = case_when(
+      adj.P.Val > 0.05 ~ "Unchanged",
+      Z > 0 ~ "Activated", 
+      Z < 0 ~ "Inhibited"
+    ),
     status = as.factor(status),
     `-log10(p)` = -log10(P.Value)
   )
 ```
 
 
-```{r Figure2, out.width='100%', fig.width = 10, fig.height = 4.2, fig.cap = "Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, colored by (A) pathways’ predicted directions of changes and (B) pathways’ -log10(p-values). Pathways with a FDR < 0.05 in the moderated t-test were included."}
+```{r Figure2, out.width='100%', fig.width = 12, fig.height = 5, fig.cap = "Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, colored by (A) pathways’ predicted directions of changes and (B) pathways’ -log10(p-values). Pathways with a FDR < 0.05 in the moderated t-test were included."}
 set.seed(123)
+# Plot the network structure
 p1 <- plot_gs_network(
   normalisedScores = sigPathway, gsTopology = gsTopology, colorBy = "status"
 ) +
-  scale_colour_manual(values = c("red", "blue")) +
+  scale_colour_manual(values = c("red", "blue", "grey30")) +
   theme_void()
 set.seed(123)
 p2 <- plot_gs_network(
   normalisedScores = sigPathway,
   gsTopology = gsTopology, 
-  colorBy  = "-log10(p)"
+  colorBy  = "-log10(p)", color_lg_title = expression(paste(-log[10], "p"))
 ) +
-  labs(colour = expression(paste(-log[10], "p"))) +
   scale_colour_viridis_c() +
   theme_void()
 p1 + p2 + plot_annotation(tag_levels = "A")
@@ -395,8 +392,6 @@ plot_community(
   scale_y_continuous(expand = expansion(0.25)) +
   theme_void() 
 ```
-
-<!-- I've made the package modification to remove the 'kegg.' prefix. This looks much better -->
 
 Inferred directly from the expression matrix, a key advantage of sSNAPPY is that it does not require the prior identification of differentially expressed genes, which is not always possible in clinical datasets. 
 However, knowing which genes are implicated in the perturbation of pathways, particularly those which influence multiple pathways, can provide valuable insights for hypotheses generation about underlying biological mechanisms. 
@@ -428,21 +423,19 @@ plot_gs2gene(
   colorGsBy = "status", 
   mapEntrezID = entrez2name, 
   geneFC = meanFC[top500], 
-  edgeAlpha = 0.3, 
+  edgeAlpha = 0.6, 
   gsNameSize = 4, gsNodeSize = 4
 ) +
   scale_colour_gradient2(name = "logFC") +
-  scale_fill_manual(values = c("red", "blue")) +
+  scale_fill_manual(values = c("red", "blue", "grey50")) +
   theme_void()
 ```
-
 
 ## Identify Key Gene Contributions
 
 To further investigate a specific pathway and elucidate the key genes that contribute to its perturbation, we can generate a heatmap via `plot_gene_contribution()` which shows the gene-level perturbation scores for the top-ranked members of a given pathway.
 Taking the average gene-level contribution to the perturbation score, we can show gene-level sample-specific perturbation scores.
-This function takes advantage of the plotting capabilities of the `pheatmap` package, and as such, other annotations are also able to be easily included, such as the tumour stage, or the general range of the normalised Z-Scores are in for each sample.
-<!-- We'll need to reference pheatmap here -->
+This function takes advantage of the plotting capabilities of the `pheatmap` package[@pheatmap], and as such, other annotations are also able to be easily included, such as the tumour stage, or the general range of the normalised Z-Scores are in for each sample.
 By including the Z-Scores, we can assess the level of perturbation predicted in each sample and any corresponding changes in key genes (Figure \@ref(fig:Figure5)).
 
 ```{r Figure5, out.width='100%', fig.width = 12, fig.height = 7, fig.cap = 'Gene-level perturbation scores of the top 20 genes in the \"p53 signalling pathway\" ranked by their average contribution to the perturbation score. Samples were annotated by the stages of cancers, along with robust Z-scores which indicate the extent of perturbation within each sample. The genes ATR and ATM were identified as possible key drivers of the activation of p53 signalling pathway, with downregulation of MDM4 also appearing likely to be playing a role.'}
@@ -476,9 +469,9 @@ plot_gene_contribution(
 
 
 From this heatmap we can identify candidate genes which are likely to be making the biggest contribution to the activation of p53 Signaling Pathway upon chemotherapy, such as *ART* and *ATM*, along with the *MDM4* and members of the GADD45 family. 
-Ataxia-telangiectasia mutated (*ATM*) is a well-established oncosuppressor[@Moslemi2021], mutation of which has been observed in many types of cancers[@Choi2016]. 
-Also involved in DNA damage repair, the Ataxia telangiectasia and RAD3-related protein kinase (ATR) gene has been shown to be a promising therapeutic target for HGSOC[@Li2022]. 
-<!-- We'll need to add a reference for MDM4 here -->
+Ataxia-telangiectasia mutated (*ATM*) is a well-established oncosuppressor[@Moslemi2021] while haploinsufficient mouse double minute 4 (*MDM4*) is an oncogene that suppresses p53[@Momand]. Mutations of both genes have been observed in many types of cancers[@Choi2016; @Gansmo2016; @Atwal2009]. 
+Moreover, the Ataxia telangiectasia and RAD3-related protein kinase (*ATR*) and the growth arrest and DNA damage-inducible gene 45 (*GADD45*) have gained great attention as potential targets for anti-tumor treatments due to their involvement in DNA damage repair[@Liebermann2011; @Hu2022].
+ATR inhibitors, in particular, have shown promising results in clinical trials for HGSOC.[@Li2022; @Gong2021]. 
 
 # Discussion
 
@@ -511,3 +504,4 @@ Any grants that supported the work must be listed here, including the grant numb
 
 # Acknowledgements
 
+# References

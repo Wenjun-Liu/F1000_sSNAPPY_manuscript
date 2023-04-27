@@ -130,11 +130,11 @@ RNA-seq, pathway enrichment, R package, topology, KEGG, scRNA-seq
 \clearpage
 \pagestyle{main}
 
-\textbf{R version}: R version 4.2.3 (2023-03-15)
+\textbf{R version}: R version 4.2.2 (2022-10-31)
 
 \textbf{Bioconductor version}: 3.16
 
-\textbf{Package}: 1.3.4
+\textbf{Package}: 1.3.6
 
 \hypertarget{introduction}{%
 \section{Introduction}\label{introduction}}
@@ -245,6 +245,7 @@ The following packages are required for this workflow
 \FunctionTok{library}\NormalTok{(tidyverse)}
 \FunctionTok{library}\NormalTok{(magrittr)}
 \FunctionTok{library}\NormalTok{(ggplot2)}
+\FunctionTok{library}\NormalTok{(patchwork)}
 \FunctionTok{library}\NormalTok{(kableExtra)}
 \FunctionTok{library}\NormalTok{(AnnotationHub) }
 \FunctionTok{library}\NormalTok{(edgeR)}
@@ -265,15 +266,14 @@ First we can read in the data, setting the treatment column in the metadata to b
 
 \begin{verbatim}
 ## # A tibble: 6 x 8
-##   sample                 treatment       patie~1 anato~2   Age Stage   PFI CRS  
-##   <chr>                  <fct>           <chr>   <chr>   <dbl> <chr> <dbl> <chr>
-## 1 EOC372_treatment-naive treatment-naive EOC372  Perito~    68 IIIC    460 1    
-## 2 EOC372_post-NACT       post-NACT       EOC372  Perito~    68 IIIC    460 1    
-## 3 EOC443_post-NACT       post-NACT       EOC443  Omentum    54 IVA     177 3    
-## 4 EOC443_treatment-naive treatment-naive EOC443  Omentum    54 IVA     177 3    
-## 5 EOC540_treatment-naive treatment-naive EOC540  Omentum    62 IIIC    126 2    
-## 6 EOC540_post-NACT       post-NACT       EOC540  Omentum    62 IIIC    126 2    
-## # ... with abbreviated variable names 1: patient_id, 2: anatomical_location
+##   sample        treatment patient_id anatomical_location   Age Stage   PFI CRS  
+##   <chr>         <fct>     <chr>      <chr>               <dbl> <chr> <dbl> <chr>
+## 1 EOC372_treat~ treatmen~ EOC372     Peritoneum             68 IIIC    460 1    
+## 2 EOC372_post-~ post-NACT EOC372     Peritoneum             68 IIIC    460 1    
+## 3 EOC443_post-~ post-NACT EOC443     Omentum                54 IVA     177 3    
+## 4 EOC443_treat~ treatmen~ EOC443     Omentum                54 IVA     177 3    
+## 5 EOC540_treat~ treatmen~ EOC540     Omentum                62 IIIC    126 2    
+## 6 EOC540_post-~ post-NACT EOC540     Omentum                62 IIIC    126 2
 \end{verbatim}
 
 Note that to apply sSNAPPY, the rownames of the logCPM matrix must be in Entrez IDs.
@@ -379,7 +379,6 @@ Whilst permutations can be performed an a local machine, this strategy also allo
 \NormalTok{permutedScore }\OtherTok{\textless{}{-}} \FunctionTok{generate\_permuted\_scores}\NormalTok{(}
     \FunctionTok{as.matrix}\NormalTok{(logCPM), }\AttributeTok{numOfTreat =} \DecValTok{2}\NormalTok{, }\AttributeTok{NB =} \DecValTok{1000}\NormalTok{, }
     \AttributeTok{gsTopology =}\NormalTok{ gsTopology, }\AttributeTok{weight =}\NormalTok{ weightedFC}\SpecialCharTok{$}\NormalTok{weight}
-\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -527,20 +526,24 @@ To do that through the moderated t-statistic strategy and extend the above analy
 
 In addition to performing the analysis, sSNAPPY provides various visualisation functions to assist in the interpretation of results.
 Biological pathways are not independent of each other with many genes playing a role across multiple pathways, and as such, visualising pathway analysis results as a network can be a powerful way to intuitively summarise the results, and also to facilitate interpretation of the underlying biology.
-The \texttt{plot\_gs\_network()} function allows users to easily visualise a set of pathways as a network where edges connect genes to pathway nodes, easily capturing information across multiple pathways.
-Pathway nodes can be coloured by any of the returned values, such as the magnitude of perturbation (logFC), p-value or additional classifications performed manually (Figure \ref{fig:Figure1}).
-As the returned plot is a ggplot2 \citep{Wickham2009} object, colour schemes and plotting themes can be easily customised as desired.
+The \texttt{plot\_gs\_network()} function allows users to easily convert a list of significantly perturbed biological pathways to a network where edges between pathway nodes represent overlapping genes.
+Defined by the colorBy parameter, pathway nodes can be coloured by either the pathways' predicted direction of changes or the significance levels (Figure \ref{fig:Figure2}).
+The returned plot is a ggplot2 \citep{Wickham2009} object, meaning that components of its theme could be customized just as any other ggplot objects.
 
 First we should obtain a subset of pathways to visualise.
 In the following we'll inspect the most highly ranked pathways and then for visualisation, 1) create a categorical variable with the pathway status, 2) rename the logFC column to reflect the true meaning of the value and, 3) transform the p-values for simpler visualisation
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{sigPathway }\OtherTok{\textless{}{-}}\NormalTok{ top\_table }\SpecialCharTok{\%\textgreater{}\%} 
-\NormalTok{  dplyr}\SpecialCharTok{::}\FunctionTok{filter}\NormalTok{(adj.P.Val }\SpecialCharTok{\textless{}} \FloatTok{0.05}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%} 
+\NormalTok{sigPathway }\OtherTok{\textless{}{-}} \FunctionTok{topTable}\NormalTok{(z\_fits, }\AttributeTok{number =} \DecValTok{8}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{rownames\_to\_column}\NormalTok{(}\StringTok{"gs\_name"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%} 
 \NormalTok{  dplyr}\SpecialCharTok{::}\FunctionTok{rename}\NormalTok{(}\AttributeTok{Z =}\NormalTok{ logFC) }\SpecialCharTok{\%\textgreater{}\%} 
   \FunctionTok{mutate}\NormalTok{(}
-    \AttributeTok{status =} \FunctionTok{ifelse}\NormalTok{(Z }\SpecialCharTok{\textgreater{}} \DecValTok{0}\NormalTok{, }\StringTok{"Activated"}\NormalTok{, }\StringTok{"Inhibited"}\NormalTok{),}
+    \AttributeTok{status =} \FunctionTok{case\_when}\NormalTok{(}
+\NormalTok{      adj.P.Val }\SpecialCharTok{\textgreater{}} \FloatTok{0.05} \SpecialCharTok{\textasciitilde{}} \StringTok{"Unchanged"}\NormalTok{,}
+\NormalTok{      Z }\SpecialCharTok{\textgreater{}} \DecValTok{0} \SpecialCharTok{\textasciitilde{}} \StringTok{"Activated"}\NormalTok{, }
+\NormalTok{      Z }\SpecialCharTok{\textless{}} \DecValTok{0} \SpecialCharTok{\textasciitilde{}} \StringTok{"Inhibited"}
+\NormalTok{    ),}
     \AttributeTok{status =} \FunctionTok{as.factor}\NormalTok{(status),}
     \StringTok{\textasciigrave{}}\AttributeTok{{-}log10(p)}\StringTok{\textasciigrave{}} \OtherTok{=} \SpecialCharTok{{-}}\FunctionTok{log10}\NormalTok{(P.Value)}
 \NormalTok{  )}
@@ -550,18 +553,18 @@ In the following we'll inspect the most highly ranked pathways and then for visu
 \begin{Shaded}
 \begin{Highlighting}[]
 \FunctionTok{set.seed}\NormalTok{(}\DecValTok{123}\NormalTok{)}
+\CommentTok{\# Plot the network structure}
 \NormalTok{p1 }\OtherTok{\textless{}{-}} \FunctionTok{plot\_gs\_network}\NormalTok{(}
   \AttributeTok{normalisedScores =}\NormalTok{ sigPathway, }\AttributeTok{gsTopology =}\NormalTok{ gsTopology, }\AttributeTok{colorBy =} \StringTok{"status"}
 \NormalTok{) }\SpecialCharTok{+}
-  \FunctionTok{scale\_colour\_manual}\NormalTok{(}\AttributeTok{values =} \FunctionTok{c}\NormalTok{(}\StringTok{"red"}\NormalTok{, }\StringTok{"blue"}\NormalTok{)) }\SpecialCharTok{+}
+  \FunctionTok{scale\_colour\_manual}\NormalTok{(}\AttributeTok{values =} \FunctionTok{c}\NormalTok{(}\StringTok{"red"}\NormalTok{, }\StringTok{"blue"}\NormalTok{, }\StringTok{"grey30"}\NormalTok{)) }\SpecialCharTok{+}
   \FunctionTok{theme\_void}\NormalTok{()}
 \FunctionTok{set.seed}\NormalTok{(}\DecValTok{123}\NormalTok{)}
 \NormalTok{p2 }\OtherTok{\textless{}{-}} \FunctionTok{plot\_gs\_network}\NormalTok{(}
   \AttributeTok{normalisedScores =}\NormalTok{ sigPathway,}
   \AttributeTok{gsTopology =}\NormalTok{ gsTopology, }
-  \AttributeTok{colorBy  =} \StringTok{"{-}log10(p)"}
+  \AttributeTok{colorBy  =} \StringTok{"{-}log10(p)"}\NormalTok{, }\AttributeTok{color\_lg\_title =} \FunctionTok{expression}\NormalTok{(}\FunctionTok{paste}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{log[}\DecValTok{10}\NormalTok{], }\StringTok{"p"}\NormalTok{))}
 \NormalTok{) }\SpecialCharTok{+}
-  \FunctionTok{labs}\NormalTok{(}\AttributeTok{colour =} \FunctionTok{expression}\NormalTok{(}\FunctionTok{paste}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{log[}\DecValTok{10}\NormalTok{], }\StringTok{"p"}\NormalTok{))) }\SpecialCharTok{+}
   \FunctionTok{scale\_colour\_viridis\_c}\NormalTok{() }\SpecialCharTok{+}
   \FunctionTok{theme\_void}\NormalTok{()}
 \NormalTok{p1 }\SpecialCharTok{+}\NormalTok{ p2 }\SpecialCharTok{+} \FunctionTok{plot\_annotation}\NormalTok{(}\AttributeTok{tag\_levels =} \StringTok{"A"}\NormalTok{)}
@@ -658,11 +661,11 @@ A data.frame converting Entrez IDs to ensemble gene names has been made availabl
   \AttributeTok{colorGsBy =} \StringTok{"status"}\NormalTok{, }
   \AttributeTok{mapEntrezID =}\NormalTok{ entrez2name, }
   \AttributeTok{geneFC =}\NormalTok{ meanFC[top500], }
-  \AttributeTok{edgeAlpha =} \FloatTok{0.3}\NormalTok{, }
+  \AttributeTok{edgeAlpha =} \FloatTok{0.6}\NormalTok{, }
   \AttributeTok{gsNameSize =} \DecValTok{4}\NormalTok{, }\AttributeTok{gsNodeSize =} \DecValTok{4}
 \NormalTok{) }\SpecialCharTok{+}
   \FunctionTok{scale\_colour\_gradient2}\NormalTok{(}\AttributeTok{name =} \StringTok{"logFC"}\NormalTok{) }\SpecialCharTok{+}
-  \FunctionTok{scale\_fill\_manual}\NormalTok{(}\AttributeTok{values =} \FunctionTok{c}\NormalTok{(}\StringTok{"red"}\NormalTok{, }\StringTok{"blue"}\NormalTok{)) }\SpecialCharTok{+}
+  \FunctionTok{scale\_fill\_manual}\NormalTok{(}\AttributeTok{values =} \FunctionTok{c}\NormalTok{(}\StringTok{"red"}\NormalTok{, }\StringTok{"blue"}\NormalTok{, }\StringTok{"grey50"}\NormalTok{)) }\SpecialCharTok{+}
   \FunctionTok{theme\_void}\NormalTok{()}
 \end{Highlighting}
 \end{Shaded}
@@ -681,7 +684,7 @@ A data.frame converting Entrez IDs to ensemble gene names has been made availabl
 
 To further investigate a specific pathway and elucidate the key genes that contribute to its perturbation, we can generate a heatmap via \texttt{plot\_gene\_contribution()} which shows the gene-level perturbation scores for the top-ranked members of a given pathway.
 Taking the average gene-level contribution to the perturbation score, we can show gene-level sample-specific perturbation scores.
-This function takes advantage of the plotting capabilities of the \texttt{pheatmap} package, and as such, other annotations are also able to be easily included, such as the tumour stage, or the general range of the normalised Z-Scores are in for each sample.
+This function takes advantage of the plotting capabilities of the \texttt{pheatmap} package\citep{pheatmap}, and as such, other annotations are also able to be easily included, such as the tumour stage, or the general range of the normalised Z-Scores are in for each sample.
 By including the Z-Scores, we can assess the level of perturbation predicted in each sample and any corresponding changes in key genes (Figure \ref{fig:Figure5}).
 
 \begin{Shaded}
@@ -725,8 +728,9 @@ By including the Z-Scores, we can assess the level of perturbation predicted in 
 \end{figure}
 
 From this heatmap we can identify candidate genes which are likely to be making the biggest contribution to the activation of p53 Signaling Pathway upon chemotherapy, such as \emph{ART} and \emph{ATM}, along with the \emph{MDM4} and members of the GADD45 family.
-Ataxia-telangiectasia mutated (\emph{ATM}) is a well-established oncosuppressor\citep{Moslemi2021}, mutation of which has been observed in many types of cancers\citep{Choi2016}.
-Also involved in DNA damage repair, the Ataxia telangiectasia and RAD3-related protein kinase (ATR) gene has been shown to be a promising therapeutic target for HGSOC\citep{Li2022}.
+Ataxia-telangiectasia mutated (\emph{ATM}) is a well-established oncosuppressor\citep{Moslemi2021} while haploinsufficient mouse double minute 4 (\emph{MDM4}) is an oncogene that suppresses p53\citep{Momand}. Mutations of both genes have been observed in many types of cancers\citep{Choi2016, Gansmo2016, Atwal2009}.
+Moreover, the Ataxia telangiectasia and RAD3-related protein kinase (\emph{ATR}) and the growth arrest and DNA damage-inducible gene 45 (\emph{GADD45}) have gained great attention as potential targets for anti-tumor treatments due to their involvement in DNA damage repair\citep{Liebermann2011, Hu2022}.
+ATR inhibitors, in particular, have shown promising results in clinical trials for HGSOC.\citep{Li2022, Gong2021}.
 
 \hypertarget{discussion}{%
 \section{Discussion}\label{discussion}}
@@ -768,7 +772,10 @@ No competing interests were disclosed
 
 Any grants that supported the work must be listed here, including the grant number.
 
-\renewcommand\refname{Acknowledgements}
+\hypertarget{acknowledgements}{%
+\section{Acknowledgements}\label{acknowledgements}}
+
+\renewcommand\refname{References}
 {\small\bibliography{sample.bib}}
 
 \end{document}
