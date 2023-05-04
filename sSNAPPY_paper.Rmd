@@ -6,8 +6,6 @@ author:
     email: Corresponding Author wenjun.liu@adelaide.edu.au
   - name: Ville-Petteri Mäkinen
     affiliation: 
-    - Australian Centre for Precision Health, Cancer Research Institute, University of South Australia, Adelaide, Australia
-    - Computational and Systems Biology Program, Precision Medicine Theme, South Australian Health and Medical Research Institute, Adelaide, Australia
     - Computational Medicine, Faculty of Medicine, University of Oulu, Oulu, Finland
     - Center for Life Course Health Research, Faculty of Medicine, University of Oulu, Oulu, Finland
   - name: Wayne D. Tilley
