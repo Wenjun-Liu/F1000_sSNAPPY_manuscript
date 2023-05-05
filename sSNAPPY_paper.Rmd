@@ -157,7 +157,7 @@ sample_meta <- read_tsv(here::here("data/sample_meta.tsv"), col_types = "cfccncn
 head(sample_meta)
 ```
 
-```{r}
+```{r, echo=FALSE}
 ## Code for plotting figure 1 - sd vs mean relationship
 # Figure_1 <- logCPM %>%
 #     mutate(

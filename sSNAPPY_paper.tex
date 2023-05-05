@@ -284,45 +284,6 @@ First we can read in the data, setting the treatment column in the metadata to b
 ## 6 EOC540_post-~ post-NACT EOC540     Omentum                62 IIIC    126 2
 \end{verbatim}
 
-\begin{Shaded}
-\begin{Highlighting}[]
-\DocumentationTok{\#\# Code for plotting figure 1 {-} sd vs mean relationship}
-\CommentTok{\# Figure\_1 \textless{}{-} logCPM \%\textgreater{}\%}
-\CommentTok{\#     mutate(}
-\CommentTok{\#         sd = apply(., 1, sd), }
-\CommentTok{\#         mean = apply(., 1, mean)}
-\CommentTok{\#         ) \%\textgreater{}\%}
-\CommentTok{\#     \# rownames\_to\_column("entrezid") \%\textgreater{}\%}
-\CommentTok{\#     \# pivot\_longer(}
-\CommentTok{\#     \#     cols = {-}c("entrezid", "sd"), }
-\CommentTok{\#     \#     names\_to = "sample", }
-\CommentTok{\#     \#     values\_to = "logCPM"}
-\CommentTok{\#     \# ) \%\textgreater{}\%}
-\CommentTok{\#     ggplot(}
-\CommentTok{\#         aes(mean, sd)}
-\CommentTok{\#     ) +}
-\CommentTok{\#     geom\_point() +}
-\CommentTok{\#     geom\_smooth(}
-\CommentTok{\#         method = "loess") +}
-\CommentTok{\#     labs(}
-\CommentTok{\#         x = expression(Gene{-}wise\textasciitilde{}average\textasciitilde{}expression\textasciitilde{}(bar(mu[g]))), }
-\CommentTok{\#         y = expression(Gene{-}wise\textasciitilde{}standard\textasciitilde{}deviation\textasciitilde{}(widehat(sigma[g])))}
-\CommentTok{\#     ) +}
-\CommentTok{\#     theme\_bw() +}
-\CommentTok{\#     theme(}
-\CommentTok{\#         panel.grid = element\_blank(), }
-\CommentTok{\#         axis.title = element\_text(size = 14)}
-\CommentTok{\#     )}
-\CommentTok{\# pdf(}
-\CommentTok{\#     here::here("sSNAPPY\_paper\_files/figure{-}latex/Figure1.pdf") ,}
-\CommentTok{\#     width = 8, }
-\CommentTok{\#     height = 6}
-\CommentTok{\#     )}
-\CommentTok{\# Figure\_1 }
-\CommentTok{\# dev.off()}
-\end{Highlighting}
-\end{Shaded}
-
 Note that to apply sSNAPPY, the rownames of the logCPM matrix must be in Entrez IDs.
 
 \hypertarget{retrieval-of-pathway-topology}{%
