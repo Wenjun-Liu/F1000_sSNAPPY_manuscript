@@ -7,19 +7,19 @@
 \toprule
 Pathway & Change & P.Value & FDR & Direction\\
 \midrule
-\cellcolor{gray!6}{AMPK signaling pathway} & \cellcolor{gray!6}{0.88} & \cellcolor{gray!6}{1.2e-05} & \cellcolor{gray!6}{0.0026} & \cellcolor{gray!6}{Activated}\\
-p53 signaling pathway & 0.88 & 2.4e-04 & 0.0190 & Activated\\
-\cellcolor{gray!6}{Progesterone-mediated oocyte maturation} & \cellcolor{gray!6}{-0.77} & \cellcolor{gray!6}{2.7e-04} & \cellcolor{gray!6}{0.0190} & \cellcolor{gray!6}{Inhibited}\\
-Pathogenic Escherichia coli infection & 0.66 & 5.7e-04 & 0.0303 & Activated\\
-\cellcolor{gray!6}{Cellular senescence} & \cellcolor{gray!6}{0.68} & \cellcolor{gray!6}{1.1e-03} & \cellcolor{gray!6}{0.0464} & \cellcolor{gray!6}{Activated}\\
+\cellcolor{gray!6}{AMPK signaling pathway} & \cellcolor{gray!6}{0.88} & \cellcolor{gray!6}{1.1e-05} & \cellcolor{gray!6}{0.0024} & \cellcolor{gray!6}{Activated}\\
+p53 signaling pathway & 0.88 & 2.4e-04 & 0.0186 & Activated\\
+\cellcolor{gray!6}{Progesterone-mediated oocyte maturation} & \cellcolor{gray!6}{-0.77} & \cellcolor{gray!6}{2.6e-04} & \cellcolor{gray!6}{0.0186} & \cellcolor{gray!6}{Inhibited}\\
+Pathogenic Escherichia coli infection & 0.66 & 5.3e-04 & 0.0286 & Activated\\
+\cellcolor{gray!6}{Cellular senescence} & \cellcolor{gray!6}{0.68} & \cellcolor{gray!6}{1.1e-03} & \cellcolor{gray!6}{0.0455} & \cellcolor{gray!6}{Activated}\\
 \addlinespace
-Parathyroid hormone synthesis, secretion and action & 0.63 & 1.4e-03 & 0.0464 & Activated\\
-\cellcolor{gray!6}{Salmonella infection} & \cellcolor{gray!6}{0.59} & \cellcolor{gray!6}{2.2e-03} & \cellcolor{gray!6}{0.0464} & \cellcolor{gray!6}{Activated}\\
-Human T-cell leukemia virus 1 infection & 0.62 & 2.3e-03 & 0.0464 & Activated\\
-\cellcolor{gray!6}{Pertussis} & \cellcolor{gray!6}{0.59} & \cellcolor{gray!6}{2.3e-03} & \cellcolor{gray!6}{0.0464} & \cellcolor{gray!6}{Activated}\\
-Yersinia infection & 0.62 & 2.3e-03 & 0.0464 & Activated\\
+Parathyroid hormone synthesis, secretion and action & 0.63 & 1.4e-03 & 0.0455 & Activated\\
+\cellcolor{gray!6}{Salmonella infection} & \cellcolor{gray!6}{0.59} & \cellcolor{gray!6}{2.1e-03} & \cellcolor{gray!6}{0.0455} & \cellcolor{gray!6}{Activated}\\
+Pertussis & 0.59 & 2.2e-03 & 0.0455 & Activated\\
+\cellcolor{gray!6}{Human T-cell leukemia virus 1 infection} & \cellcolor{gray!6}{0.62} & \cellcolor{gray!6}{2.2e-03} & \cellcolor{gray!6}{0.0455} & \cellcolor{gray!6}{Activated}\\
+Yersinia infection & 0.62 & 2.3e-03 & 0.0455 & Activated\\
 \addlinespace
-\cellcolor{gray!6}{Toxoplasmosis} & \cellcolor{gray!6}{0.63} & \cellcolor{gray!6}{2.4e-03} & \cellcolor{gray!6}{0.0464} & \cellcolor{gray!6}{Activated}\\
+\cellcolor{gray!6}{Toxoplasmosis} & \cellcolor{gray!6}{0.63} & \cellcolor{gray!6}{2.3e-03} & \cellcolor{gray!6}{0.0455} & \cellcolor{gray!6}{Activated}\\
 \bottomrule
 \end{tabular}}
 \end{table}

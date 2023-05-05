@@ -1,10 +1,10 @@
 \begin{figure}
 
-{\centering \includegraphics[width=1\linewidth]{sSNAPPY_paper_files/figure-latex/Figure1-1}
+{\centering \includegraphics[width=1\linewidth]{sSNAPPY_paper_files/figure-latex/Figure1}
 
 }
 
-\caption{Permuted perturbation scores of six randomly selected pathways. All sampled empirical distributions are approximately normally distributed with a mean of zero.}\label{fig:Figure1}
+\caption{Gene-wise standard deviations are plotted against the mean logCPM values with mean-variance trend modelled by a loess fit. Genes with low expression values tend to have a larger variance.}\label{fig:Figure1}
 \end{figure}
 \efloatseparator
  
@@ -14,17 +14,17 @@
 
 }
 
-\caption{Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, colored by (A) pathways’ predicted directions of changes and (B) pathways’ -log10(p-values). Pathways with a FDR < 0.05 in the moderated t-test were included.}\label{fig:Figure2}
+\caption{Permuted perturbation scores of six randomly selected pathways. All sampled empirical distributions are approximately normally distributed with a mean of zero.}\label{fig:Figure2}
 \end{figure}
 \efloatseparator
  
 \begin{figure}
 
-{\centering \includegraphics[width=0.8\linewidth]{sSNAPPY_paper_files/figure-latex/Figure3-1}
+{\centering \includegraphics[width=1\linewidth]{sSNAPPY_paper_files/figure-latex/Figure3-1}
 
 }
 
-\caption{Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, colored by community structures detected through the louvain algorithm. The two main biological processes perturbed by the chemo-therapy were endocrine- and immune-related.}\label{fig:Figure3}
+\caption{Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, colored by (A) pathways’ predicted directions of changes and (B) pathways’ -log10(p-values). Pathways with a FDR < 0.05 in the moderated t-test were included.}\label{fig:Figure3}
 \end{figure}
 \efloatseparator
  
@@ -34,15 +34,25 @@
 
 }
 
-\caption{Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, showing any genes in the top 500 ranked for differential expression, and which pathways they are likely contributing to. No genes in the top500 were found to be contributing to the perturbation of the AMPK signaling pathway.}\label{fig:Figure4}
+\caption{Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, colored by community structures detected through the louvain algorithm. The two main biological processes perturbed by the chemo-therapy were endocrine- and immune-related.}\label{fig:Figure4}
 \end{figure}
 \efloatseparator
  
 \begin{figure}
 
-{\centering \includegraphics[width=1\linewidth]{sSNAPPY_paper_files/figure-latex/Figure5-1}
+{\centering \includegraphics[width=0.8\linewidth]{sSNAPPY_paper_files/figure-latex/Figure5-1}
 
 }
 
-\caption{Gene-level perturbation scores of the top 20 genes in the "p53 signalling pathway" ranked by their average contribution to the perturbation score. Samples were annotated by the stages of cancers, along with robust Z-scores which indicate the extent of perturbation within each sample. The genes ATR and ATM were identified as possible key drivers of the activation of p53 signalling pathway, with downregulation of MDM4 also appearing likely to be playing a role.}\label{fig:Figure5}
+\caption{Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, showing any genes in the top 500 ranked for differential expression, and which pathways they are likely contributing to. No genes in the top500 were found to be contributing to the perturbation of the AMPK signaling pathway.}\label{fig:Figure5}
+\end{figure}
+\efloatseparator
+ 
+\begin{figure}
+
+{\centering \includegraphics[width=1\linewidth]{sSNAPPY_paper_files/figure-latex/Figure6-1}
+
+}
+
+\caption{Gene-level perturbation scores of the top 20 genes in the "p53 signalling pathway" ranked by their average contribution to the perturbation score. Samples were annotated by the stages of cancers, along with robust Z-scores which indicate the extent of perturbation within each sample. The genes ATR and ATM were identified as possible key drivers of the activation of p53 signalling pathway, with downregulation of MDM4 also appearing likely to be playing a role.}\label{fig:Figure6}
 \end{figure}

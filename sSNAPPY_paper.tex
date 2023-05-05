@@ -70,7 +70,7 @@
 %% added by MLS, this is not in the F1000 style by default %%
 
 \hypersetup{unicode=true,
-            pdftitle={sSNAPPY: a R/Bioconductor package for single-sample directional pathway perturbation analysis},
+            pdftitle={sSNAPPY: an R/Bioconductor package for single-sample directional pathway perturbation analysis},
             pdfkeywords={RNA-seq, pathway enrichment, R package, topology, KEGG, scRNA-seq},
             pdfborder={0 0 0},
             breaklinks=true}
@@ -102,19 +102,17 @@
 \begin{document}
 \pagestyle{front}
 
-\title{sSNAPPY: a R/Bioconductor package for single-sample directional pathway perturbation analysis}
+\title{sSNAPPY: an R/Bioconductor package for single-sample directional pathway perturbation analysis}
 
 \author[1]{Wenjun Liu\thanks{\ttfamily Corresponding Author wenjun.liu@adelaide.edu.au}}
-\author[2,3,4,5]{Ville-Petteri Mäkinen}
+\author[2,3]{Ville-Petteri Mäkinen}
 \author[1]{Wayne D. Tilley}
-\author[1,6,7]{Stephen M. Pederson}
+\author[1,4,5]{Stephen M. Pederson}
 \affil[1]{Dame Roma Mitchell Cancer Research Laboratories, Adelaide Medical School, Faculty of Health and Medical Sciences, University of Adelaide, Adelaide, Australia}
-\affil[2]{Australian Centre for Precision Health, Cancer Research Institute, University of South Australia, Adelaide, Australia}
-\affil[3]{Computational and Systems Biology Program, Precision Medicine Theme, South Australian Health and Medical Research Institute, Adelaide, Australia}
-\affil[4]{Computational Medicine, Faculty of Medicine, University of Oulu, Oulu, Finland}
-\affil[5]{Center for Life Course Health Research, Faculty of Medicine, University of Oulu, Oulu, Finland}
-\affil[6]{Black Ochre Data Laboratories, Telethon Kids Institute, Adelaide, Australia}
-\affil[7]{John Curtin School of Medical Research, Australian National University, Canberra, Australia}
+\affil[2]{Computational Medicine, Faculty of Medicine, University of Oulu, Oulu, Finland}
+\affil[3]{Center for Life Course Health Research, Faculty of Medicine, University of Oulu, Oulu, Finland}
+\affil[4]{Black Ochre Data Laboratories, Telethon Kids Institute, Adelaide, Australia}
+\affil[5]{John Curtin School of Medical Research, Australian National University, Canberra, Australia}
 
 \maketitle
 \thispagestyle{front}
@@ -130,11 +128,11 @@ RNA-seq, pathway enrichment, R package, topology, KEGG, scRNA-seq
 \clearpage
 \pagestyle{main}
 
-\textbf{R version}: R version 4.2.2 (2022-10-31)
+\textbf{R version}: R version 4.3.0 (2023-04-21)
 
-\textbf{Bioconductor version}: 3.16
+\textbf{Bioconductor version}: 3.17
 
-\textbf{Package}: 1.3.6
+\textbf{Package}: 1.4.1
 
 \hypertarget{introduction}{%
 \section{Introduction}\label{introduction}}
@@ -165,8 +163,18 @@ To run \emph{sSNAPPY}, the only required data is a log-transformed expression ma
 It is assumed that all pre-processing has been performed beforehand, such as the exclusion of low-signal genes or normalisation to minimise technical artefacts like GC-bias.
 The first step, performed internally by \emph{sSNAPPY}, is to estimate sample-specific log fold-change (\(\delta_{ghi} = \mu_{ghi} - \mu_{g0i}\)) for a treatment \(h\) across all genes \(g\) within each sample \(i\), by subtracting expression estimates for the baseline samples \(\hat\mu_{g0i}\) from those in the treatment group \(h\).
 Since it has been shown that in RNA-seq data, genes with lower expression tend to have larger variance and larger estimates of change\citep{Law2014}, we utilise a gene-level weighting strategy to de-emphasise logFC estimates for low-abundance genes.
-Gene-level weights \(w_g\) are obtained in a treatment-agnostic manner by fitting a loess curve through the relationship between observed gene-level variance (\(\widehat\sigma_g\)) and average signal (\(\bar\mu_{g\cdot\cdot}\)), and taking the inverse of the loess-predicted variance as the weight \(w_g = a / f(\bar\mu_{g\cdot\cdot})\), where \(f(\bar\mu_{g\cdot\cdot})\) is the predicted value from the loess curve and the constant \(a\) ensures \(\sum w_g = 1\).
+
+Gene-level weights \(w_g\) are obtained in a treatment-agnostic manner by fitting a loess curve through the relationship between observed gene-level variance (\(\widehat\sigma_g\)) and average signal (\(\bar\mu_{g\cdot\cdot}\))(Figure \ref{fig:Figure1}), and taking the inverse of the loess-predicted variance as the weight \(w_g = a / f(\bar\mu_{g\cdot\cdot})\), where \(f(\bar\mu_{g\cdot\cdot})\) is the predicted value from the loess curve and the constant \(a\) ensures \(\sum w_g = 1\).
 We then use these weighted estimates of logFC for calculation of all pathway perturbation scores.
+
+\begin{figure}
+
+{\centering \includegraphics[width=1\linewidth]{sSNAPPY_paper_files/figure-latex/Figure1} 
+
+}
+
+\caption{Gene-wise standard deviations are plotted against the mean logCPM values with mean-variance trend modelled by a loess fit. Genes with low expression values tend to have a larger variance.}\label{fig:Figure1}
+\end{figure}
 
 \emph{sSNAPPY} was built upon the group-level topology-based scoring algorithm initially proposed in R package SPIA\citep{Tarca2009} to propagate genes' changes in expression through pathway topologies to compute a perturbation score for each pathway.
 By modifying the algorithm to incorporate single-sample, weighted estimates of changes in expression we are able to quantify changes in a pathway within a given sample, and then model these across all samples within a treatment group.
@@ -203,7 +211,7 @@ In order to streamline this process we have implemented a convenience function, 
 To scale the single-sample pathway perturbation scores (\(S_{hip}\)) so they are comparable across pathways and to test for significance of individual scores, null distributions of perturbation scores for each pathway are generated through a sample permutation strategy, retaining the correct correlation structure between genes within a pathway.
 With each permutation, column names (i.e.~sample labels) for the logCPM matrix are randomly shuffled while the rest of the scoring algorithm remains unchanged.
 We recommend users to perform a minimum of 1000 permutations, requiring at least 8 unique samples.
-Subsequently, the median and median absolute deviation (MAD) of the permuted perturbation scores will be calculated and used to normalise the raw perturbation scores to robust \(Z\)-scores and obtain associated two-sided \emph{p}-values.
+Subsequently, the median and median absolute deviation (MAD) of the permuted perturbation scores will be calculated and used to normalise the raw perturbation scores to robust \(Z\)-scores (\(\frac{Test Score - Median}{MAD}\)) and obtain associated two-sided \emph{p}-values.
 Since the method is single sample-based, the permutation strategy remains applicable regardless of experimental design.
 
 Apart from assessing whether a pathway's activity changed significantly within an individual sample, users may also be interested in detecting changes at the group-level, which can be performed by modelling scores with regression models, incorporating Smyth's moderated \(t\)-statistics\citep{Smyth_2004} as implemented in \emph{limma}\citep{limma_2015}.
@@ -276,12 +284,51 @@ First we can read in the data, setting the treatment column in the metadata to b
 ## 6 EOC540_post-~ post-NACT EOC540     Omentum                62 IIIC    126 2
 \end{verbatim}
 
+\begin{Shaded}
+\begin{Highlighting}[]
+\DocumentationTok{\#\# Code for plotting figure 1 {-} sd vs mean relationship}
+\CommentTok{\# Figure\_1 \textless{}{-} logCPM \%\textgreater{}\%}
+\CommentTok{\#     mutate(}
+\CommentTok{\#         sd = apply(., 1, sd), }
+\CommentTok{\#         mean = apply(., 1, mean)}
+\CommentTok{\#         ) \%\textgreater{}\%}
+\CommentTok{\#     \# rownames\_to\_column("entrezid") \%\textgreater{}\%}
+\CommentTok{\#     \# pivot\_longer(}
+\CommentTok{\#     \#     cols = {-}c("entrezid", "sd"), }
+\CommentTok{\#     \#     names\_to = "sample", }
+\CommentTok{\#     \#     values\_to = "logCPM"}
+\CommentTok{\#     \# ) \%\textgreater{}\%}
+\CommentTok{\#     ggplot(}
+\CommentTok{\#         aes(mean, sd)}
+\CommentTok{\#     ) +}
+\CommentTok{\#     geom\_point() +}
+\CommentTok{\#     geom\_smooth(}
+\CommentTok{\#         method = "loess") +}
+\CommentTok{\#     labs(}
+\CommentTok{\#         x = expression(Gene{-}wise\textasciitilde{}average\textasciitilde{}expression\textasciitilde{}(bar(mu[g]))), }
+\CommentTok{\#         y = expression(Gene{-}wise\textasciitilde{}standard\textasciitilde{}deviation\textasciitilde{}(widehat(sigma[g])))}
+\CommentTok{\#     ) +}
+\CommentTok{\#     theme\_bw() +}
+\CommentTok{\#     theme(}
+\CommentTok{\#         panel.grid = element\_blank(), }
+\CommentTok{\#         axis.title = element\_text(size = 14)}
+\CommentTok{\#     )}
+\CommentTok{\# pdf(}
+\CommentTok{\#     here::here("sSNAPPY\_paper\_files/figure{-}latex/Figure1.pdf") ,}
+\CommentTok{\#     width = 8, }
+\CommentTok{\#     height = 6}
+\CommentTok{\#     )}
+\CommentTok{\# Figure\_1 }
+\CommentTok{\# dev.off()}
+\end{Highlighting}
+\end{Shaded}
+
 Note that to apply sSNAPPY, the rownames of the logCPM matrix must be in Entrez IDs.
 
 \hypertarget{retrieval-of-pathway-topology}{%
 \subsection{Retrieval of Pathway Topology}\label{retrieval-of-pathway-topology}}
 
-As important step, pathway topology information needs to be retrieved from a chosen database.
+As an important step, pathway topology information needs to be retrieved from a chosen database.
 Using KEGG as an example, the retrieved topology information will be stored as a list where each element corresponds to a pathway and the numbers in the matrices encode gene-gene interaction.
 
 \begin{Shaded}
@@ -383,7 +430,7 @@ Whilst permutations can be performed an a local machine, this strategy also allo
 \end{Shaded}
 
 Apart from pathways whose permuted perturbation scores are all zeros, the rest of the pathways' empirical distributions should be approximately normally distributed with means equal to zero.
-To demonstrate that, we randomly sampled 6 pathways and visualised the permuted perturbation scores as boxplots (Figure \ref{fig:Figure1}).
+To demonstrate that, we randomly sampled 6 pathways and visualised the permuted perturbation scores as boxplots (Figure \ref{fig:Figure2}).
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -411,11 +458,11 @@ To demonstrate that, we randomly sampled 6 pathways and visualised the permuted 
 
 \begin{figure}
 
-{\centering \includegraphics[width=1\linewidth]{sSNAPPY_paper_files/figure-latex/Figure1-1} 
+{\centering \includegraphics[width=1\linewidth]{sSNAPPY_paper_files/figure-latex/Figure2-1} 
 
 }
 
-\caption{Permuted perturbation scores of six randomly selected pathways. All sampled empirical distributions are approximately normally distributed with a mean of zero.}\label{fig:Figure1}
+\caption{Permuted perturbation scores of six randomly selected pathways. All sampled empirical distributions are approximately normally distributed with a mean of zero.}\label{fig:Figure2}
 \end{figure}
 
 Permuted distributions are then used to convert each pathway-level score into a scaled robust \(Z\)-score using the function normalise\_by\_permu.
@@ -442,7 +489,7 @@ In our example data, no pathways would be considered as significantly perturbed 
 ## 388  EOC136_post-NACT -0.0817379496 -2.974055 0.002938926 0.2392677
 ## 417  EOC136_post-NACT -0.0006237555 -2.933261 0.003354221 0.2392677
 ## 421  EOC136_post-NACT -0.0006237555 -2.933261 0.003354221 0.2392677
-## 1142 EOC349_post-NACT  0.0085037555  2.453872 0.014132724 0.9803990
+## 1142 EOC349_post-NACT  0.0085037555  2.453872 0.014132724 0.9830259
 ## 505  EOC153_post-NACT  0.0238610587  2.431973 0.015016823 0.7618825
 ## 1530 EOC443_post-NACT  0.0087762111  2.373890 0.017601798 1.0000000
 \end{verbatim}
@@ -493,19 +540,19 @@ Pathways with an FDR \textless{} 0.05 in the moderated t-test were considered to
 \toprule
 Pathway & Change & P.Value & FDR & Direction\\
 \midrule
-\cellcolor{gray!6}{AMPK signaling pathway} & \cellcolor{gray!6}{0.88} & \cellcolor{gray!6}{1.2e-05} & \cellcolor{gray!6}{0.0026} & \cellcolor{gray!6}{Activated}\\
-p53 signaling pathway & 0.88 & 2.4e-04 & 0.0190 & Activated\\
-\cellcolor{gray!6}{Progesterone-mediated oocyte maturation} & \cellcolor{gray!6}{-0.77} & \cellcolor{gray!6}{2.7e-04} & \cellcolor{gray!6}{0.0190} & \cellcolor{gray!6}{Inhibited}\\
-Pathogenic Escherichia coli infection & 0.66 & 5.7e-04 & 0.0303 & Activated\\
-\cellcolor{gray!6}{Cellular senescence} & \cellcolor{gray!6}{0.68} & \cellcolor{gray!6}{1.1e-03} & \cellcolor{gray!6}{0.0464} & \cellcolor{gray!6}{Activated}\\
+\cellcolor{gray!6}{AMPK signaling pathway} & \cellcolor{gray!6}{0.88} & \cellcolor{gray!6}{1.1e-05} & \cellcolor{gray!6}{0.0024} & \cellcolor{gray!6}{Activated}\\
+p53 signaling pathway & 0.88 & 2.4e-04 & 0.0186 & Activated\\
+\cellcolor{gray!6}{Progesterone-mediated oocyte maturation} & \cellcolor{gray!6}{-0.77} & \cellcolor{gray!6}{2.6e-04} & \cellcolor{gray!6}{0.0186} & \cellcolor{gray!6}{Inhibited}\\
+Pathogenic Escherichia coli infection & 0.66 & 5.3e-04 & 0.0286 & Activated\\
+\cellcolor{gray!6}{Cellular senescence} & \cellcolor{gray!6}{0.68} & \cellcolor{gray!6}{1.1e-03} & \cellcolor{gray!6}{0.0455} & \cellcolor{gray!6}{Activated}\\
 \addlinespace
-Parathyroid hormone synthesis, secretion and action & 0.63 & 1.4e-03 & 0.0464 & Activated\\
-\cellcolor{gray!6}{Salmonella infection} & \cellcolor{gray!6}{0.59} & \cellcolor{gray!6}{2.2e-03} & \cellcolor{gray!6}{0.0464} & \cellcolor{gray!6}{Activated}\\
-Human T-cell leukemia virus 1 infection & 0.62 & 2.3e-03 & 0.0464 & Activated\\
-\cellcolor{gray!6}{Pertussis} & \cellcolor{gray!6}{0.59} & \cellcolor{gray!6}{2.3e-03} & \cellcolor{gray!6}{0.0464} & \cellcolor{gray!6}{Activated}\\
-Yersinia infection & 0.62 & 2.3e-03 & 0.0464 & Activated\\
+Parathyroid hormone synthesis, secretion and action & 0.63 & 1.4e-03 & 0.0455 & Activated\\
+\cellcolor{gray!6}{Salmonella infection} & \cellcolor{gray!6}{0.59} & \cellcolor{gray!6}{2.1e-03} & \cellcolor{gray!6}{0.0455} & \cellcolor{gray!6}{Activated}\\
+Pertussis & 0.59 & 2.2e-03 & 0.0455 & Activated\\
+\cellcolor{gray!6}{Human T-cell leukemia virus 1 infection} & \cellcolor{gray!6}{0.62} & \cellcolor{gray!6}{2.2e-03} & \cellcolor{gray!6}{0.0455} & \cellcolor{gray!6}{Activated}\\
+Yersinia infection & 0.62 & 2.3e-03 & 0.0455 & Activated\\
 \addlinespace
-\cellcolor{gray!6}{Toxoplasmosis} & \cellcolor{gray!6}{0.63} & \cellcolor{gray!6}{2.4e-03} & \cellcolor{gray!6}{0.0464} & \cellcolor{gray!6}{Activated}\\
+\cellcolor{gray!6}{Toxoplasmosis} & \cellcolor{gray!6}{0.63} & \cellcolor{gray!6}{2.3e-03} & \cellcolor{gray!6}{0.0455} & \cellcolor{gray!6}{Activated}\\
 \bottomrule
 \end{tabular}}
 \end{table}
@@ -527,7 +574,7 @@ To do that through the moderated t-statistic strategy and extend the above analy
 In addition to performing the analysis, sSNAPPY provides various visualisation functions to assist in the interpretation of results.
 Biological pathways are not independent of each other with many genes playing a role across multiple pathways, and as such, visualising pathway analysis results as a network can be a powerful way to intuitively summarise the results, and also to facilitate interpretation of the underlying biology.
 The \texttt{plot\_gs\_network()} function allows users to easily convert a list of significantly perturbed biological pathways to a network where edges between pathway nodes represent overlapping genes.
-Defined by the colorBy parameter, pathway nodes can be coloured by either the pathways' predicted direction of changes or the significance levels (Figure \ref{fig:Figure2}).
+Defined by the colorBy parameter, pathway nodes can be coloured by either the pathways' predicted direction of changes or the significance levels (Figure \ref{fig:Figure3}).
 The returned plot is a ggplot2 \citep{Wickham2009} object, meaning that components of its theme could be customized just as any other ggplot objects.
 
 First we should obtain a subset of pathways to visualise.
@@ -573,21 +620,21 @@ In the following we'll inspect the most highly ranked pathways and then for visu
 
 \begin{figure}
 
-{\centering \includegraphics[width=1\linewidth]{sSNAPPY_paper_files/figure-latex/Figure2-1} 
+{\centering \includegraphics[width=1\linewidth]{sSNAPPY_paper_files/figure-latex/Figure3-1} 
 
 }
 
-\caption{Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, colored by (A) pathways’ predicted directions of changes and (B) pathways’ -log10(p-values). Pathways with a FDR < 0.05 in the moderated t-test were included.}\label{fig:Figure2}
+\caption{Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, colored by (A) pathways’ predicted directions of changes and (B) pathways’ -log10(p-values). Pathways with a FDR < 0.05 in the moderated t-test were included.}\label{fig:Figure3}
 \end{figure}
 
 By examining the network structure, we can see that many of the highly connected pathways playing a central role in the network may be immune-related.
-To summarise related pathways and further enable interpretation, we use community detection to group related pathways
+To summarise related pathways and further enable interpretation, we use community detection to group related pathways.
 Widely used in network analysis, community detection is a technique for identifying groups of nodes that are more densely connected than to any other nodes in the network\citep{Newman2004}.
 sSNAPPY's \texttt{plot\_community()} function is a one-stop shop for applying a community detection algorithm of the user's choice to the network structure and annotating identified communities by the most common pathway category, denoting the main biological processes perturbed in that community.
 Retrieved directly from the \href{https://www.genome.jp/kegg/pathway.html}{KEGG website}, we have curated the most recent categories for KEGG pathways and included this as part of sSNAPPY.
 Annotation of KEGG pathway communities will be automatically completed by calling the in-built data object.
 However, analyses involving other pathway databases will require user-provided pathway categories.
-In the current dataset, the Louvain method was applied to the network of biological pathways and revealed two primary communities, where one was annotated to be endocrine system related and the other one was clearly related to infectious diseases and the immune system (Figure \ref{fig:Figure2}).
+In the current dataset, the Louvain method was applied to the network of biological pathways and revealed two primary communities, where one was annotated to be endocrine system related and the other one was clearly related to infectious diseases and the immune system (Figure \ref{fig:Figure4}).
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -607,11 +654,11 @@ In the current dataset, the Louvain method was applied to the network of biologi
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.8\linewidth]{sSNAPPY_paper_files/figure-latex/Figure3-1} 
+{\centering \includegraphics[width=0.8\linewidth]{sSNAPPY_paper_files/figure-latex/Figure4-1} 
 
 }
 
-\caption{Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, colored by community structures detected through the louvain algorithm. The two main biological processes perturbed by the chemo-therapy were endocrine- and immune-related.}\label{fig:Figure3}
+\caption{Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, colored by community structures detected through the louvain algorithm. The two main biological processes perturbed by the chemo-therapy were endocrine- and immune-related.}\label{fig:Figure4}
 \end{figure}
 
 Inferred directly from the expression matrix, a key advantage of sSNAPPY is that it does not require the prior identification of differentially expressed genes, which is not always possible in clinical datasets.
@@ -619,7 +666,7 @@ However, knowing which genes are implicated in the perturbation of pathways, par
 Therefore, sSNAPPY presents another visualisation feature called \texttt{plot\_gs2gene}, which enables the inclusion of select genes from each pathway using network structures.
 Users can provide a vector of fold-change estimates to visualise genes within pathways, showing their estimated change in expression.
 As pathways often include hundreds of genes, we recommend to filter for genes most likely to be playing a significant role.
-In this example dataset, we chose to only include genes within the top 500 when ranking by the magnitude of the mean log fold-change (Figure \ref{fig:Figure3}).
+In this example dataset, we chose to only include genes within the top 500 when ranking by the magnitude of the mean log fold-change (Figure \ref{fig:Figure5}).
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -672,11 +719,11 @@ A data.frame converting Entrez IDs to ensemble gene names has been made availabl
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.8\linewidth]{sSNAPPY_paper_files/figure-latex/Figure4-1} 
+{\centering \includegraphics[width=0.8\linewidth]{sSNAPPY_paper_files/figure-latex/Figure5-1} 
 
 }
 
-\caption{Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, showing any genes in the top 500 ranked for differential expression, and which pathways they are likely contributing to. No genes in the top500 were found to be contributing to the perturbation of the AMPK signaling pathway.}\label{fig:Figure4}
+\caption{Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, showing any genes in the top 500 ranked for differential expression, and which pathways they are likely contributing to. No genes in the top500 were found to be contributing to the perturbation of the AMPK signaling pathway.}\label{fig:Figure5}
 \end{figure}
 
 \hypertarget{identify-key-gene-contributions}{%
@@ -685,7 +732,7 @@ A data.frame converting Entrez IDs to ensemble gene names has been made availabl
 To further investigate a specific pathway and elucidate the key genes that contribute to its perturbation, we can generate a heatmap via \texttt{plot\_gene\_contribution()} which shows the gene-level perturbation scores for the top-ranked members of a given pathway.
 Taking the average gene-level contribution to the perturbation score, we can show gene-level sample-specific perturbation scores.
 This function takes advantage of the plotting capabilities of the \texttt{pheatmap} package\citep{pheatmap}, and as such, other annotations are also able to be easily included, such as the tumour stage, or the general range of the normalised Z-Scores are in for each sample.
-By including the Z-Scores, we can assess the level of perturbation predicted in each sample and any corresponding changes in key genes (Figure \ref{fig:Figure5}).
+By including the Z-Scores, we can assess the level of perturbation predicted in each sample and any corresponding changes in key genes (Figure \ref{fig:Figure6}).
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -720,11 +767,11 @@ By including the Z-Scores, we can assess the level of perturbation predicted in 
 
 \begin{figure}
 
-{\centering \includegraphics[width=1\linewidth]{sSNAPPY_paper_files/figure-latex/Figure5-1} 
+{\centering \includegraphics[width=1\linewidth]{sSNAPPY_paper_files/figure-latex/Figure6-1} 
 
 }
 
-\caption{Gene-level perturbation scores of the top 20 genes in the "p53 signalling pathway" ranked by their average contribution to the perturbation score. Samples were annotated by the stages of cancers, along with robust Z-scores which indicate the extent of perturbation within each sample. The genes ATR and ATM were identified as possible key drivers of the activation of p53 signalling pathway, with downregulation of MDM4 also appearing likely to be playing a role.}\label{fig:Figure5}
+\caption{Gene-level perturbation scores of the top 20 genes in the "p53 signalling pathway" ranked by their average contribution to the perturbation score. Samples were annotated by the stages of cancers, along with robust Z-scores which indicate the extent of perturbation within each sample. The genes ATR and ATM were identified as possible key drivers of the activation of p53 signalling pathway, with downregulation of MDM4 also appearing likely to be playing a role.}\label{fig:Figure6}
 \end{figure}
 
 From this heatmap we can identify candidate genes which are likely to be making the biggest contribution to the activation of p53 Signaling Pathway upon chemotherapy, such as \emph{ART} and \emph{ATM}, along with the \emph{MDM4} and members of the GADD45 family.
@@ -738,7 +785,8 @@ ATR inhibitors, in particular, have shown promising results in clinical trials f
 In conclusion, we have presented and provided a demonstration for the R/Bioconductor package \emph{sSNAPPY} which offers a novel single-sample pathway perturbation testing approach, tailored for heterogeneous tissue samples where multiple samples are taken from the same source.
 In contrast to many common enrichment methods, sSNAPPY uses pathway topology information to compute perturbation scores which indicate the likely impact on the activity of a pathway, by predicting direction of change.
 Our approach addresses the limitations of alternative strategies that fail to account for gene-gene interactions encoded by pathway topologies or predict the directionality of pathway activities.
-In addition, the shared and divergent responses between individuals can be identified as possible clue to heterogeneous responses across clinical samples.
+In addition, the single-sample nature of the method can be utilised to address the increasing demand for personalised medicine.
+Through identifying shared and divergent responses between individuals, \emph{sSNAPPY} can provide valuable insights into the heterogeneous responses across clinical samples.
 
 By applying sSNAPPY to a public scRNA-seq data collected before and after HGSOC patients were subjected to chemotherapy, we demonstrated its ability to detect significant pathway perturbations of various interesting biological processes consistent with, and far beyond what was shown in the original study.
 Overall, we believe sSNAPPY represents a valuable addition to the existing body of pathway analysis methods.
