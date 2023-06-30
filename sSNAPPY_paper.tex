@@ -31,13 +31,13 @@
 \newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
 \newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
 \newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
-\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
 \newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
 \newcommand{\BuiltInTok}[1]{#1}
 \newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
 \newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
 \newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
-\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
 \newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
 \newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
 \newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
@@ -45,7 +45,7 @@
 \newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
 \newcommand{\ExtensionTok}[1]{#1}
 \newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
-\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
 \newcommand{\ImportTok}[1]{#1}
 \newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
 \newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
@@ -54,7 +54,7 @@
 \newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
 \newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
 \newcommand{\RegionMarkerTok}[1]{#1}
-\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
 \newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
 \newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
 \newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
@@ -118,7 +118,7 @@
 \thispagestyle{front}
 
 \begin{abstract}
-A common outcome of analysing RNA-Seq data is the detection of biological pathways with significantly altered activity between the conditions under investigation. The most common strategies test for over-representation within pre-defined gene-sets for genes showing changed expression\citep{Subramanian2005-lx, Young2010-jw}. These analyses typically do not account for gene-gene interactions encoded by pathway topologies, and are not able to directly predict the directional change of pathway activity. To address these issues, we have deloped a single-sample pathway perturbation analysis method \href{https://bioconductor.org/packages/sSNAPPY}{\emph{sSNAPPY}}, now available as an R/Bioconductor package, which leverages pathway topology information to compute pathway perturbation scores, and predicts the direction of change across a set of pathways. Here, we demonstrate the use of \emph{sSNAPPY} by applying the method to public scRNA-seq data, derived from ovarian cancer patient tissues collected before and after chemotherapy. Not only were we able to predict the directions of significant perturbations of pathways discussed in the original study, but \emph{sSNAPPY} was also able to detect significant changes of other biological processes, yielding far greater insight into the response to treatment. \emph{sSNAPPY} represents a novel pathway analysis strategy that takes into consideration of pathway topology to predict impacted biology pathways, both within related samples and across treatment groups. In addition to not relying on the detection of differentially expressed genes, the method and associated R package offer important flexibility and provide powerful visualisation tools.
+A common outcome of analysing RNA-Seq data is the detection of biological pathways with significantly altered activity between the conditions under investigation. Whilst many strategies test for over-representation within pre-defined gene-sets for genes showing changed expression, these analyses typically do not account for gene-gene interactions encoded by pathway topologies, and are not able to directly predict the directional change of pathway activity. To address these issues, we have deloped a single-sample pathway perturbation analysis method \href{https://bioconductor.org/packages/sSNAPPY}{\emph{sSNAPPY}}, now available as an R/Bioconductor package, which leverages pathway topology information to compute pathway perturbation scores, and predicts the direction of change across a set of pathways. Here, we demonstrate the use of \emph{sSNAPPY} by applying the method to public scRNA-seq data, derived from ovarian cancer patient tissues collected before and after chemotherapy. Not only were we able to predict the directions of significant perturbations of pathways discussed in the original study, but \emph{sSNAPPY} was also able to detect significant changes of other biological processes, yielding far greater insight into the response to treatment. \emph{sSNAPPY} represents a novel pathway analysis strategy that takes into consideration of pathway topology to predict impacted biology pathways, both within related samples and across treatment groups. In addition to not relying on the detection of differentially expressed genes, the method and associated R package offer important flexibility and provide powerful visualisation tools.
 \end{abstract}
 
 \section*{Keywords}
@@ -145,8 +145,8 @@ To fully utilise that additional information, the latest generation of pathway a
 Despite differences in the null hypotheses tested across these approaches, overall, they have demonstrated enhanced sensitivity and specificity due to their abilities to take gene-gene interconnections into account\citep{Nguyen2019-va, Ma2019}.
 Nevertheless, most topology-based methods focus only on comparing activities of pathways between two treatment groups and cannot be used to score individual samples (Figure \ref{fig:Figure1}).
 However, in heterogenous data where more than one factor may be influencing observations\citep{Hanzelmann2013}, incorporating scoring within paired samples may be desirable and may be able to reveal more nuanced insights.
-To address this gap, we present a Single-Sample Network and Pathway Perturbation analysis methodology called \href{https://bioconductor.org/packages/sSNAPPY}{\emph{sSNAPPY}}, available as an R/Bioconductor package.
-This article defines how \emph{sSNAPPY} computes changes in gene expression within paired samples, and propagates this through gene-set topologies to predict the perturbation in pathway activities within paired samples, before providing summarised results across an entire dataset which would include more robust levels of biological replication (Figure \ref{fig:Figure1}).
+To address this gap, we present a Single-Sample directioNAl Pathway Perturbation analYsis methodology called \href{https://bioconductor.org/packages/sSNAPPY}{\emph{sSNAPPY}}, available as an R/Bioconductor package.
+This article defines how \emph{sSNAPPY} computes changes in gene expression within paired samples, and propagates this through gene-set topologies to predict the perturbation in pathway activities within paired samples, before providing summarised results across an entire dataset (Figure \ref{fig:Figure1}).
 The practical usage of the \emph{sSNAPPY} R/Bioconductor package is illustrated through the analysis of a public scRNA-seq dataset using pseudo-bulk strategies.
 
 \begin{figure}
@@ -155,7 +155,7 @@ The practical usage of the \emph{sSNAPPY} R/Bioconductor package is illustrated 
 
 }
 
-\caption{Schematic illustration of the differences betweeen conventional pathway analysis methods and sSNAPPY. Instead of being limited to treatment-level analayses, \textit{sSNAPPY} allows the detection of pathway perturation in individual samples (Created with BioRender.com).}\label{fig:Figure1}
+\caption{Schematic illustration of the differences betweeen conventional pathway analysis methods and sSNAPPY. Instead of being limited to treatment-level analyses, \textit{sSNAPPY} allows the detection of pathway perturbation in individual samples by using sample-specific estimates of fold-change instead of experiment-wide estimates. (Created with BioRender.com).}\label{fig:Figure1}
 \end{figure}
 
 \hypertarget{methods}{%
@@ -170,11 +170,13 @@ This allows for the detection of pathway perturbations within all samples from a
 
 To run \emph{sSNAPPY}, the only required data is a log-transformed expression matrix (e.g.~logCPM) with matching sample metadata describing treatment groups and the nested structure.
 It is assumed that all pre-processing has been performed beforehand, such as the exclusion of low-signal genes or normalisation to minimise technical artefacts like GC-bias.
-The first step, performed internally by \emph{sSNAPPY}, is to estimate sample-specific log fold-change (\(\delta_{ghi} = \mu_{ghi} - \mu_{g0i}\)) for a treatment \(h\) across all genes \(g\) within each sample \(i\), by subtracting expression estimates for the baseline samples \(\hat\mu_{g0i}\) from those in the treatment group \(h\).
-Since it has been shown that in RNA-seq data, genes with lower expression tend to have larger variance and larger estimates of change\citep{Law2014}, we utilise a gene-level weighting strategy to de-emphasise logFC estimates for low-abundance genes.
+The first step, performed internally by \emph{sSNAPPY}, is to estimate sample-specific log fold-change (\(\delta_{gi} = \mu_{gi} - \mu_{gi'}\)) across all genes \(g\) within each treated sample \(i\), by subtracting expression estimates for the corresponding baseline samples \(\mu_{gi'}\) from those in the treated groups.
+\emph{sSNAPPY} supports any number of treatment levels and the numbers of samples in each treatment group do not have to be identical.
+As long as a treated sample is matched to a corresponding control, the sample-specific log fold-changes will be computed for that sample.
 
-Gene-level weights \(w_g\) are obtained in a treatment-agnostic manner by fitting a loess curve through the relationship between observed gene-level variance (\(\widehat\sigma_g\)) and average signal (\(\bar\mu_{g\cdot\cdot}\))(Figure \ref{fig:Figure2}), and taking the inverse of the loess-predicted variance as the weight \(w_g = a / f(\bar\mu_{g\cdot\cdot})\), where \(f(\bar\mu_{g\cdot\cdot})\) is the predicted value from the loess curve and the constant \(a\) ensures \(\sum w_g = 1\).
-We then use these weighted estimates of logFC for calculation of all pathway perturbation scores.
+Since it has been shown that in RNA-seq data, genes with lower expression tend to have larger variance and larger estimates of change\citep{Law2014}, we utilise a gene-level weighting strategy to de-emphasise logFC estimates for low-abundance genes.
+Gene-level weights \(w_g\) are obtained in a treatment-agnostic manner by fitting a loess curve through the relationship between observed gene-level variance (\(\sigma_g\)) and average signal (\(\bar\mu_{g\cdot\cdot}\))(Figure \ref{fig:Figure2}), and taking the inverse of the loess-predicted variance as the weight \(w_g = a / f(\bar\mu_{g\cdot\cdot})\), where \(f(\bar\mu_{g\cdot\cdot})\) is the predicted value from the loess curve and the constant \(a\) ensures \(\sum w_g = 1\).
+We then use these weighted estimates of logFC (\(\delta_{gi}^* = w_g\delta_{gi}\)) in the calculation of all pathway perturbation scores.
 
 \begin{figure}
 
@@ -185,14 +187,15 @@ We then use these weighted estimates of logFC for calculation of all pathway per
 \caption{Gene-wise standard deviations are plotted against the mean logCPM values with mean-variance trend modelled by a loess fit. Genes with low expression values tend to have a larger variance.}\label{fig:Figure2}
 \end{figure}
 
-\emph{sSNAPPY} was built upon the group-level topology-based scoring algorithm initially proposed in R package SPIA\citep{Tarca2009} to propagate genes' changes in expression through pathway topologies to compute a perturbation score for each pathway.
+\emph{sSNAPPY} was built upon the group-level topology-based scoring algorithm initially proposed in SPIA\citep{Tarca2009} to propagate genes' changes in expression through pathway topologies to compute a perturbation score for each pathway.
+In contrast to SPIA, which requires pre-selection of differentially expressed genes, \emph{sSNAPPY} utilises the full expression matrix.
 By modifying the algorithm to incorporate single-sample, weighted estimates of changes in expression we are able to quantify changes in a pathway within a given sample, and then model these across all samples within a treatment group.
-Thus, we define the single-sample perturbation score (\(S_{hip}\)) for a given pathway \(p\), sample \(i\) and treatment \(h\):
+Thus, we define the single-sample perturbation score (\(S_{ip}\)) for a given pathway \(p\) in a treated sample \(i\):
 
 \[
 \begin{aligned}
-S_{hip} = \sum_{g \in G_p} \lbrack S_{ghip} - \delta_{ghi}^*\rbrack \text{, where} \\
-S_{ghip} = \delta_{ghi}^* + \sum_{g' \in U_{gp}} \beta_{gg'p} \frac{S_{g'hip}}{N_{g'p}} 
+S_{ip} = \sum_{g \in G_p} \lbrack S_{gip} - \delta_{gi}^*\rbrack \text{, where} \\
+S_{gip} = \delta_{gi}^* + \sum_{g' \in U_{gp}} \beta_{gg'p} \frac{S_{g'ip}}{N_{g'p}} 
 \end{aligned}
 \]
 where:
@@ -201,9 +204,9 @@ where:
 \item
   \(G_p\) represents the set of genes in pathway \(p\), such that \(g \in G_p\)
 \item
-  \(S_{ghip}\) is the gene-, treatment- and sample-specific perturbation score for pathway \(p\)
+  \(S_{gip}\) is the gene- and sample-specific perturbation score for pathway \(p\)
 \item
-  \(\delta_{ghi}^* = w_g\delta_{ghi}\) is the weighted logFC of gene \(g\) as described above
+  \(\delta_{gi}^* = w_g\delta_{gi}\) is the weighted logFC of gene \(g\) in sample \(i\) as described above
 \item
   \(U_{gp}\) is the subset of \(G_p\) containing only the genes directly upstream of gene \(g\)
 \item
@@ -211,17 +214,17 @@ where:
 \item
   \(N_{gp}\) is the number of downstream genes from any gene \(g\)
 \item
-  \(S_{hip}\) is the accumulated pathway perturbation score for pathway \(p\) in treatment \(h\) for sample \(i\)
+  \(S_{ip}\) is the accumulated pathway perturbation score for pathway \(p\) in sample \(i\)
 \end{itemize}
 
 The Bioconductor package graphite\citep{Sales2012} provides functions that can be used to retrieve pathway topologies from a database and convert topology information to adjacency matrices.
-In order to streamline this process we have implemented a convenience function, where users only need to provide the name of the desired database to retrieve all topology information in the format required by the scoring algorithm with the correct type of gene identifiers (ie. Entrez ID).
+In order to streamline this process we have implemented a convenience function, where users only need to provide the name of the desired database and species to retrieve all topology information in the format required by the scoring algorithm with the correct type of gene identifiers (ie. Entrez ID).
 
-To scale the single-sample pathway perturbation scores (\(S_{hip}\)) so they are comparable across pathways and to test for significance of individual scores, null distributions of perturbation scores for each pathway are generated through a sample permutation strategy, retaining the correct correlation structure between genes within a pathway.
-With each permutation, column names (i.e.~sample labels) for the logCPM matrix are randomly shuffled while the rest of the scoring algorithm remains unchanged.
+To scale the single-sample pathway perturbation scores (\(S_{ip}\)) so they are comparable across pathways and to test for significance of individual scores, null distributions of perturbation scores for each pathway are generated through a sample permutation strategy, retaining the correct correlation structure between genes within a pathway.
 We recommend users to perform a minimum of 1000 permutations, requiring at least 8 unique samples.
-Subsequently, the median and median absolute deviation (MAD) of the permuted perturbation scores will be calculated and used to normalise the raw perturbation scores to robust \(Z\)-scores (\(\frac{Test Score - Median}{MAD}\)) and obtain associated two-sided \emph{p}-values.
-Since the method is single sample-based, the permutation strategy remains applicable regardless of experimental design.
+Subsequently, the median and median absolute deviation (MAD) of the permuted perturbation scores will be calculated and used to normalise the raw perturbation scores to robust \(Z\)-scores (\(Z_{ip} = \frac{S_{ip} - median_{n \in N, i \in I}({S_{i^np}})}{MAD_{n \in N, i \in I}({S_{i^np}})}\)) and obtain associated two-sided \emph{p}-values.
+With each permutation, for example the \(n\)-th round, column names (i.e.~sample labels) for the expression matrix are randomly shuffled while the rest of the scoring algorithm remains unchanged, resulting in one permuted score being computed for each pathway \(p\) in each permuted sample \(i^n\).
+Performing a total of \(N\) rounds of permutations on a dataset where the total number of treated sample equals \(I\), \(N \times I\) permutated scores will be generated for each pathway \(p\).
 
 Apart from assessing whether a pathway's activity changed significantly within an individual sample, users may also be interested in detecting changes at the group-level, which can be performed by modelling scores with regression models, incorporating Smyth's moderated \(t\)-statistic\citep{Smyth_2004} as implemented in \emph{limma}\citep{limma_2015}.
 The single-sample nature of \emph{sSNAPPY}'s pathway perturbation scores is particularly helpful for datasets with complex experimental designs or known confounding factors as these can also be incorporated into the final regression models.
@@ -247,7 +250,7 @@ The package has been tested on all operating systems, requiring R \textgreater{}
 
 To demonstrate the application of \emph{sSNAPPY}, we used pre-processed counts from a publicly available scRNA-seq dataset, retrieved from Gene Expression Omnibus (GEO) with accession code GSE165897.
 This dataset consists of 11 high-grade serous ovarian cancer (HGSOC) patients samples taken before and after chemotherapy\citep{Zhang2022}.
-\emph{sSNAPPY} was used to re-analyse data from the epithelial cells as they were what the original study primarily focused on.
+\emph{sSNAPPY} was used to re-analyse data from the epithelial cells as they were the primary focus of the original study.
 Since \emph{sSNAPPY} was designed for bulk RNA-seq data, counts of epithelial cells from the same samples were first summed into pseudo-bulk profiles, giving rise to a total of 22 samples.
 We considered a gene detectable if we observed \textgreater1.5 counts per million in \textgreater11 samples out of 22, representing all samples from a complete treatment group.
 11,101 (33.8\%) of the 32,847 annotated genes passed this selection criteria and were included for downstream analyses.
@@ -267,10 +270,14 @@ The following packages are required for this workflow
 \FunctionTok{library}\NormalTok{(AnnotationHub) }
 \FunctionTok{library}\NormalTok{(edgeR)}
 \FunctionTok{library}\NormalTok{(patchwork)}
+\FunctionTok{library}\NormalTok{(colorspace)}
 \end{Highlighting}
 \end{Shaded}
 
-First we can read in the data, setting the treatment column in the metadata to be a factor.
+Before running the \emph{sSNAPPY} workflow, we need to load our expression matrix and define our sample-level metadata, then download any pathway information.
+Firstly we can read in the data, setting the treatment column in the metadata to be a factor.
+Importantly, to run sSNAPPY, the row names of the expression matrix must be specified as Entrez IDs, for compatibility with pathway databases.
+Genes without Entrez IDs were excluded, leaving 10,098 genes in the example expression matrix.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -293,12 +300,10 @@ First we can read in the data, setting the treatment column in the metadata to b
 ## 6 EOC540_post-~ post-NACT EOC540     Omentum                62 IIIC    126 2
 \end{verbatim}
 
-Note that to apply sSNAPPY, the rownames of the logCPM matrix must be in Entrez IDs.
-
 \hypertarget{retrieval-of-pathway-topology}{%
 \subsection{Retrieval of Pathway Topology}\label{retrieval-of-pathway-topology}}
 
-As an important step, pathway topology information needs to be retrieved from a chosen database.
+Next, pathway topology information needs to be retrieved from a chosen database.
 Using KEGG as an example, the retrieved topology information will be stored as a list where each element corresponds to a pathway and the numbers in the matrices encode gene-gene interaction.
 
 \begin{Shaded}
@@ -319,7 +324,7 @@ In the following we'll use the keywords `metabolism' and `estrogen' to only retu
 \end{Highlighting}
 \end{Shaded}
 
-In addition to working with a single database, users can choose multiple databases for more comprehensive analyses, albeit with an increased analytic and download time.
+In addition to working with a single database, users can also choose multiple databases for more comprehensive analyses, albeit with an increased analytic and download time.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -331,8 +336,8 @@ In addition to working with a single database, users can choose multiple databas
 \hypertarget{score-single-sample-pathway-perturbation}{%
 \subsection{Score Single-Sample Pathway Perturbation}\label{score-single-sample-pathway-perturbation}}
 
-To compute the single-sample expression changes (logFC) needed for perturbation scores, samples must be in matched pairs.
-For instance, biopsies derived pre- vs post-treatment and untreated vs treated cell lines.
+To compute the single-sample expression changes (i.e.~logFC) needed for perturbation scores, samples must be in matched pairs.
+For instance, biopsies derived pre- vs post-treatment or untreated vs treated cell lines.
 The factor defining the paired structure needs to be passed to the \texttt{weight\_ss\_fc()} function through the \texttt{groupBy} parameter.
 In our example dataset, pre- and post-treatment samples are matched by patient IDs.
 Additionally, the sample metadata must include the treatment of all samples. The treatment column must be a factor with the reference level set to be the control treatment.
@@ -357,11 +362,11 @@ Additionally, the sample metadata must include the treatment of all samples. The
 The output of \texttt{weight\_ss\_fc()} is a \texttt{list} where one element is a matrix of weighted single-sample logFCs (\(\delta_{ghi}^*\)), with rows corresponding to genes and columns to samples, and the other element is the vector of gene-wise weights (\(w_g\)) used to calculate the weighted logFC (\(\delta_{ghi}^*\)), as described above.
 
 The matrix of \(\delta_{ghi}^*\) values are then passed to pathway topologies to compute the gene-wise perturbation scores for all genes included in a pathway, before being summed into a single score for each pathway.
-Character string \texttt{ENTREZID} was added to all row names of the \(\delta_{ghi}^*\) matrix to align with the format that pathway topologies were retrieved in.
+The string \texttt{ENTREZID:} was also added to all row names of the \(\delta_{ghi}^*\) matrix to be compatible with the format pathway topologies were retrieved in.
 These gene-wise perturbation scores can also be used in downstream analysis to identify genes playing the most significant roles in each pathway, as will be demonstrated in the visualisation section below.
 The pathway-level perturbation scores (\(S_{hip}\)) are returned as a data.frame containing sample and gene-set names.
 In the following steps, we first calculate the gene-level contributions to each pathway (\(S_{ghip}\)) using the function \texttt{raw\_gene\_pert()} and then obtain pathway-level summaries using \texttt{pathway\_pert()}.
-Pathways with zero perturbatio scorse across all genes and samples will be dropped at this stage.
+Pathways with zero perturbation scores across all genes and samples will be dropped at this stage.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -384,9 +389,9 @@ Pathways with zero perturbatio scorse across all genes and samples will be dropp
 \hypertarget{sample-permutation-for-normalisation-and-significance-testing}{%
 \subsection{Sample Permutation for Normalisation and Significance Testing}\label{sample-permutation-for-normalisation-and-significance-testing}}
 
-The values obtained from each pathway will vary greatly due to the variability in topologies.
+The values obtained from each pathway will vary greatly due to the variability in topology structures.
 To determine the significance of individual scores and transform scores to ensure they are comparable across pathways, sSNAPPY utilises a sample-permutation strategy to simulate the null distributions of perturbation scores.
-Since sample labels will be permuted randomly, sample metadata is not required by the generate\_permuted \_scores function, instead, users only need to specify the number of treatment groups in the study, including the control level.
+Since sample labels will be permuted randomly, sample metadata is not required by the \texttt{generate\_permuted\ \_scores()} function, instead, users only need to specify the number of treatment groups in the study, including the control level.
 Since permutation requires a large amount of computational time and memory, sSNAPPY utilises the BiocParallel backend\citep{BiocParallel}, also allowing for customisation by the user.
 Paralleled with 8 cores, permutating 1000 times took approximately 30 minutes to complete on a local laptop.
 Whilst permutations can be performed an a local machine, this strategy also allows for performing the permutation steps on a HPC cluster or similar.
@@ -397,11 +402,12 @@ Whilst permutations can be performed an a local machine, this strategy also allo
 \NormalTok{permutedScore }\OtherTok{\textless{}{-}} \FunctionTok{generate\_permuted\_scores}\NormalTok{(}
     \FunctionTok{as.matrix}\NormalTok{(logCPM), }\AttributeTok{numOfTreat =} \DecValTok{2}\NormalTok{, }\AttributeTok{NB =} \DecValTok{1000}\NormalTok{, }
     \AttributeTok{gsTopology =}\NormalTok{ gsTopology, }\AttributeTok{weight =}\NormalTok{ weightedFC}\SpecialCharTok{$}\NormalTok{weight}
+\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
-Apart from pathways whose permuted perturbation scores are all zeros, the rest of the pathways' empirical distributions should be approximately normally distributed with means equal to zero.
-To demonstrate that, we randomly sampled 6 pathways and visualised the permuted perturbation scores as boxplots (Figure \ref{fig:Figure3}).
+Apart from pathways whose permuted perturbation scores are all zero, the rest of the pathways' empirical distributions should be approximately normally distributed with means equal to zero.
+To demonstrate that, we randomly selected 6 pathways and visualised the permuted perturbation scores as boxplots (Figure \ref{fig:Figure3}).
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -424,9 +430,10 @@ To demonstrate that, we randomly sampled 6 pathways and visualised the permuted 
     \FunctionTok{labs}\NormalTok{(}\AttributeTok{x =} \StringTok{"Pathway"}\NormalTok{, }\AttributeTok{y =} \StringTok{"Permuted Perturbation Score"}\NormalTok{) }\SpecialCharTok{+}
     \FunctionTok{theme\_bw}\NormalTok{() }\SpecialCharTok{+} 
     \FunctionTok{theme}\NormalTok{(}
-        \AttributeTok{legend.position =} \StringTok{"none"}\NormalTok{, }
-        \AttributeTok{axis.title =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =}\DecValTok{16}\NormalTok{), }
-        \AttributeTok{axis.text =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =}\DecValTok{14}\NormalTok{))}
+      \AttributeTok{legend.position =} \StringTok{"none"}\NormalTok{, }
+      \AttributeTok{axis.title =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{16}\NormalTok{), }
+      \AttributeTok{axis.text =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{14}\NormalTok{)}
+\NormalTok{    )}
 \end{Highlighting}
 \end{Shaded}
 
@@ -439,9 +446,9 @@ To demonstrate that, we randomly sampled 6 pathways and visualised the permuted 
 \caption{Permuted perturbation scores of six randomly selected pathways. All sampled empirical distributions are approximately normally distributed with a mean of zero.}\label{fig:Figure3}
 \end{figure}
 
-Permuted distributions are used to convert each pathway-level score into a scaled robust \(Z\)-score using the function normalise\_by\_permu.
+Permuted distributions are used to convert each pathway-level score into a scaled robust \(Z\)-score using the function \texttt{normalise\_by\_permu()}.
 Robust Z-scores can in turn be transformed into two-sided p-values and corrected for multiple testing using any of the available methods, and returning the FDR adjusted values by default.
-In our example data, no pathways would be considered as significantly perturbed at the single-sample level using an FDR adjustment with \(\alpha\) = 0.05.
+In our brief example data, no pathways would be considered as significantly perturbed at the single-sample level using an FDR adjustment with \(\alpha\) = 0.05.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -490,7 +497,7 @@ For our use case here, no design matrix is required and a simple t-test is appro
 \end{Shaded}
 
 Pathways with an FDR \textless{} 0.05 in the moderated t-test were considered to be significantly perturbed at the group level.
-22 out of the 315 tested KEGG pathways passed the selection threshold (Table \ref{tab:Table1}).
+11 out of the 315 tested KEGG pathways passed the selection threshold (Table \ref{tab:Table1}).
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -533,24 +540,24 @@ Yersinia infection & 0.62 & 2.3e-03 & 0.0455 & Activated\\
 \end{table}
 
 For enrichment analysis in the original study\citep{Zhang2022}, unsupervised clustering was performed on all cells labelled as cancer cells.
-Identified cancer clusters were labelled by performing pathway enrichment testing on cluster marker genes.
-Two clusters, associated with proliferative DNA repair signatures and stress-related markers, contained significantly higher numbers of post-chemotherapy cells then pre-treatment ones (Ta in \citep{Zhang2022}).
-The representative pathways enriched in the stress-associated cluster were \emph{IL6-mediated signaling events}, \emph{TNF signaling pathway}, and \emph{cellular responses to stress}, characterized by marker genes JUN, FOS, IL6, TNF, CXCR4, SNAI1, VIM, GADD45B, and MCL1.
-Among the stress-related marker genes reported, 6 of them(CXCR4, FOS, GADD45B, IL6, JUN, and TNF) were implicated in pathways that were considered to be significantly impacted by sSNAPPY.
+Clusters were then annotated manually by performing pathway enrichment testing on cluster marker genes.
+Two clusters, associated with proliferative DNA repair signatures and stress-related markers, contained significantly higher numbers of post-chemotherapy cells than pre-treatment ones\citep{Zhang2022}.
+The representative pathways enriched in the stress-associated cluster were \emph{IL6-mediated signaling events}, \emph{TNF signaling pathway}, and \emph{cellular responses to stress}, characterized by marker genes \emph{JUN}, \emph{FOS}, \emph{IL6}, \emph{TNF}, \emph{CXCR4}, \emph{SNAI1}, \emph{VIM}, \emph{GADD45B}, and \emph{MCL1.}
+Among the stress-related marker genes reported, 6 of them(\emph{CXCR4}, \emph{FOS}, \emph{GADD45B}, \emph{IL6}, \emph{JUN}, and \emph{TNF}) were implicated in pathways that were considered to be significantly impacted by sSNAPPY.
 The other post-chemotherapy cell dominated cluster in the original study was enriched for pathways associated with cell proliferation and DNA repair, such as the Cell cycle, DNA repair, Homology directed repair (HDR) through homologous recombination, and Fanconi anaemia pathway.
-A key gene involved in those pathways was CHEK1, which was also found in significantly perturbed pathways detected by sSNAPPY: the p53 signaling pathway, Cellular senescence and the Human T-cell leukaemia virus 1 infection pathway.
+A key gene involved in those pathways was \emph{CHEK1}, which was also found in significantly perturbed pathways detected by sSNAPPY: the p53 signaling pathway, Cellular senescence and the Human T-cell leukaemia virus 1 infection pathway.
 
 Apart from considering all treated samples as biological replicates, users may elect to perform an analysis incorporating other phenotypic traits that affect patients' responses to chemotherapy, such as disease stages or tumour grades.
 To do that through the moderated t-statistic strategy and extend the above analysis, all that is required is an appropriate design matrix in the \texttt{lmFit} step, or subsetting the samples accordingly
 
-\hypertarget{visualise-perturbed-pathways-as-networks}{%
-\subsection{Visualise Perturbed Pathways as Networks}\label{visualise-perturbed-pathways-as-networks}}
+\hypertarget{visualising-perturbed-pathways-as-networks}{%
+\subsection{Visualising Perturbed Pathways as Networks}\label{visualising-perturbed-pathways-as-networks}}
 
 A valuable feature of sSNAPPY is the provision of various visualisation functions to assist in the interpretation of results.
 Biological pathways are not independent of each other with many genes playing a role across multiple pathways, and as such, visualising pathway analysis results as a network can be a powerful way to intuitively summarise the results and facilitate interpretation of the underlying biology.
-The \texttt{plot\_gs\_network()} function allows users to easily convert a list of significantly perturbed biological pathways to a network where edges between pathway nodes represent overlapping genes.
+The \texttt{plot\_gs\_network()} function allows users to easily convert a list of perturbed biological pathways to a network where edges between pathway nodes represent overlapping genes.
 Defined by the colorBy parameter, pathway nodes can be coloured by either the pathways' predicted direction of changes or the significance levels (Figure \ref{fig:Figure4}).
-The returned plot is a ggplot2 \citep{Wickham2009} object, meaning that components of its theme could be customized just as any other ggplot objects.
+The returned plot is a ggplot2 \citep{Wickham2009} object, meaning that components of the plotting theme and other parameters can be customized as for any other ggplot2 objects.
 
 First we should obtain a subset of pathways to visualise.
 In the following example, the most highly ranked pathways were inspected, which involved three steps to prepare the data: 1) create a categorical variable with the pathway status, 2) rename the logFC column to reflect the true meaning of the value and, 3) transform the p-values for simpler visualisation.
@@ -577,9 +584,7 @@ In the following example, the most highly ranked pathways were inspected, which 
 \FunctionTok{set.seed}\NormalTok{(}\DecValTok{123}\NormalTok{)}
 \CommentTok{\# Plot the network structure}
 \NormalTok{p1 }\OtherTok{\textless{}{-}} \FunctionTok{plot\_gs\_network}\NormalTok{(}
-  \AttributeTok{normalisedScores =}\NormalTok{ sigPathway, }\AttributeTok{gsTopology =}\NormalTok{ gsTopology, }
-  \AttributeTok{colorBy =} \StringTok{"status"}\NormalTok{, }\AttributeTok{gsNameSize =} \DecValTok{8}\NormalTok{, }
-  \AttributeTok{nodeSizeScale =} \FunctionTok{c}\NormalTok{(}\DecValTok{8}\NormalTok{, }\DecValTok{12}\NormalTok{)}
+  \AttributeTok{normalisedScores =}\NormalTok{ sigPathway, }\AttributeTok{gsTopology =}\NormalTok{ gsTopology, }\AttributeTok{colorBy =} \StringTok{"status"}
 \NormalTok{) }\SpecialCharTok{+}
   \FunctionTok{scale\_colour\_manual}\NormalTok{(}\AttributeTok{values =} \FunctionTok{c}\NormalTok{(}\StringTok{"red"}\NormalTok{, }\StringTok{"blue"}\NormalTok{, }\StringTok{"grey30"}\NormalTok{)) }\SpecialCharTok{+}
   \FunctionTok{theme\_void}\NormalTok{()}
@@ -588,18 +593,11 @@ In the following example, the most highly ranked pathways were inspected, which 
   \AttributeTok{normalisedScores =}\NormalTok{ sigPathway,}
   \AttributeTok{gsTopology =}\NormalTok{ gsTopology, }
   \AttributeTok{colorBy  =} \StringTok{"{-}log10(p)"}\NormalTok{, }
-  \AttributeTok{color\_lg\_title =} \FunctionTok{expression}\NormalTok{(}\FunctionTok{paste}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{log[}\DecValTok{10}\NormalTok{], }\StringTok{"p"}\NormalTok{)),}
-  \AttributeTok{gsNameSize =} \DecValTok{8}\NormalTok{, }
-  \AttributeTok{nodeSizeScale =} \FunctionTok{c}\NormalTok{(}\DecValTok{8}\NormalTok{, }\DecValTok{12}\NormalTok{)}
+  \AttributeTok{color\_lg\_title =} \FunctionTok{expression}\NormalTok{(}\FunctionTok{paste}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{log[}\DecValTok{10}\NormalTok{], }\StringTok{"p"}\NormalTok{))}
 \NormalTok{) }\SpecialCharTok{+}
   \FunctionTok{scale\_colour\_viridis\_c}\NormalTok{() }\SpecialCharTok{+}
   \FunctionTok{theme\_void}\NormalTok{()}
-\NormalTok{p1 }\SpecialCharTok{+}\NormalTok{ p2 }\SpecialCharTok{+} \FunctionTok{plot\_annotation}\NormalTok{(}\AttributeTok{tag\_levels =} \StringTok{"A"}\NormalTok{) }\SpecialCharTok{\&}
-    \FunctionTok{theme}\NormalTok{(}
-        \AttributeTok{text =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{18}\NormalTok{),}
-        \AttributeTok{plot.tag =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{22}\NormalTok{, }\AttributeTok{face =} \StringTok{"bold"}\NormalTok{ ), }
-        \AttributeTok{legend.key.size =} \FunctionTok{unit}\NormalTok{(}\DecValTok{1}\NormalTok{, }\StringTok{"cm"}\NormalTok{)}
-\NormalTok{    )}
+\NormalTok{p1 }\SpecialCharTok{+}\NormalTok{ p2 }\SpecialCharTok{+} \FunctionTok{plot\_annotation}\NormalTok{(}\AttributeTok{tag\_levels =} \StringTok{"A"}\NormalTok{) }
 \end{Highlighting}
 \end{Shaded}
 
@@ -613,8 +611,7 @@ In the following example, the most highly ranked pathways were inspected, which 
 \end{figure}
 
 By examining the network structure, we can see that many of the highly connected pathways playing a central role in the network are immune-related (Figure \ref{fig:Figure4}).
-To summarise related pathways and further enable interpretation, we applied community detection to group related pathways.
-Community detection is a technique widely used in network analysis for identifying groups of nodes that are more densely connected than other nodes in the network\citep{Newman2004}.
+To summarise related pathways and further enable interpretation, we can apply community detection\citep{Newman2004} in order to group related pathways into `communities'.
 sSNAPPY's \texttt{plot\_community()} function is a one-stop shop for applying a community detection algorithm of the user's choice to the network structure and annotating identified communities by the most common pathway category, denoting the main biological processes perturbed in that community.
 The most recent categories for KEGG pathways were curated from the \href{https://www.genome.jp/kegg/pathway.html}{KEGG website} and included as part of sSNAPPY.
 Annotation of KEGG pathway communities is automatically completed by calling the in-built data object.
@@ -627,29 +624,16 @@ In the current dataset, the Louvain method was applied to the network of biologi
 \FunctionTok{plot\_community}\NormalTok{(}
     \AttributeTok{normalisedScores =}\NormalTok{ sigPathway,}
     \AttributeTok{gsTopology =}\NormalTok{ gsTopology, }
-    \AttributeTok{colorBy =} \StringTok{"status"}\NormalTok{, }
-    \AttributeTok{lb\_size =} \DecValTok{8}\NormalTok{, }
-    \AttributeTok{label.fontsize =} \DecValTok{20}\NormalTok{,}
-    \AttributeTok{nodeSizeScale =} \FunctionTok{c}\NormalTok{(}\DecValTok{8}\NormalTok{, }\DecValTok{12}\NormalTok{), }
+    \AttributeTok{colorBy =} \StringTok{"status"}
     
 \NormalTok{) }\SpecialCharTok{+}
     \FunctionTok{scale\_colour\_manual}\NormalTok{(}\AttributeTok{values =} \FunctionTok{c}\NormalTok{(}\StringTok{"red"}\NormalTok{, }\StringTok{"blue"}\NormalTok{)) }\SpecialCharTok{+}
     \FunctionTok{scale\_fill\_viridis\_d}\NormalTok{() }\SpecialCharTok{+}
     \FunctionTok{scale\_x\_continuous}\NormalTok{(}\AttributeTok{expand =} \FunctionTok{expansion}\NormalTok{(}\FloatTok{0.25}\NormalTok{)) }\SpecialCharTok{+}
     \FunctionTok{scale\_y\_continuous}\NormalTok{(}\AttributeTok{expand =} \FunctionTok{expansion}\NormalTok{(}\FloatTok{0.25}\NormalTok{)) }\SpecialCharTok{+}
-    \FunctionTok{theme\_void}\NormalTok{() }\SpecialCharTok{+}
-    \FunctionTok{theme}\NormalTok{(}
-        \AttributeTok{text =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{18}\NormalTok{),}
-        \AttributeTok{plot.tag =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{22}\NormalTok{, }\AttributeTok{face =} \StringTok{"bold"}\NormalTok{ ), }
-        \AttributeTok{legend.key.size =} \FunctionTok{unit}\NormalTok{(}\DecValTok{1}\NormalTok{, }\StringTok{"cm"}\NormalTok{)}
-\NormalTok{    )}
+    \FunctionTok{theme\_void}\NormalTok{() }
 \end{Highlighting}
 \end{Shaded}
-
-\begin{verbatim}
-## Warning in mark_method(aes(x = x, y = y, fill = Community, label = Community),
-## : Ignoring unknown parameters: `nodeSizeScale`
-\end{verbatim}
 
 \begin{figure}
 
@@ -660,12 +644,13 @@ In the current dataset, the Louvain method was applied to the network of biologi
 \caption{Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, colored by community structures detected through the louvain algorithm. The main biological processes perturbed by the chemo-therapy were shown.}\label{fig:Figure5}
 \end{figure}
 
-A key advantage of sSNAPPY is that it does not require the prior identification of differentially expressed genes, which is not always possible in clinical datasets.
+A key advantage of sSNAPPY is that it does not require the prior identification of differentially expressed genes, as this is not always possible in clinical datasets.
 However, knowing which genes are implicated in the perturbation of pathways, particularly those which influence multiple pathways, can provide valuable insights for hypotheses generation about underlying biological mechanisms.
 Therefore, sSNAPPY provides another visualisation feature called \texttt{plot\_gs2gene}, which enables the inclusion of select genes from each pathway using network structures.
 Users can provide a vector of fold-change estimates to visualise genes within pathways, showing their estimated change in expression.
 As pathways often include hundreds of genes, it is recommended to filter for genes most likely to be playing a significant role.
 In this example dataset, only genes within the top 500 when ranking by the magnitude of the mean log fold-change were included (Figure \ref{fig:Figure6}).
+An alternative strategy will be to select genes based on test-statistics, however, this decision is up to the individual researcher.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -675,9 +660,8 @@ In this example dataset, only genes within the top 500 when ranking by the magni
 \end{Highlighting}
 \end{Shaded}
 
-Since KEGG pathway topologies were retrieved using EntrezIDs, a mapping object for IDs to gene names can be provided.
-Users can also provide a data.frame mapping Entrez IDs to their chosen identifiers through the mapRownameTo parameter.
-A data.frame converting Entrez IDs to ensemble gene names has been made available as part of the package.
+Since KEGG pathway topologies were retrieved using EntrezIDs, users can provide a data.frame mapping Entrez IDs to their chosen identifiers, such as gene names, through the mapEntrezID parameter to make the visualisations more informative.
+A data.frame converting Entrez IDs to ensemble gene names was derived from the Ensembl Release 101\citep{Ensembl2022} and has been made available as part of the package.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -708,18 +692,12 @@ A data.frame converting Entrez IDs to ensemble gene names has been made availabl
     \AttributeTok{mapEntrezID =}\NormalTok{ entrez2name, }
     \AttributeTok{geneFC =}\NormalTok{ meanFC[top500], }
     \AttributeTok{edgeAlpha =} \DecValTok{1}\NormalTok{, }
-    \AttributeTok{gsNameSize =} \DecValTok{10}\NormalTok{, }
-    \AttributeTok{gsNodeSize =} \DecValTok{8}\NormalTok{, }
-    \AttributeTok{geneNodeSize =} \DecValTok{6}\NormalTok{, }
-    \AttributeTok{geneNameSize =} \DecValTok{8}
+    \AttributeTok{gsNameSize =} \DecValTok{4}\NormalTok{, }
+    \AttributeTok{gsNodeSize =} \DecValTok{4}
 \NormalTok{) }\SpecialCharTok{+}
     \FunctionTok{scale\_colour\_gradient2}\NormalTok{(}\AttributeTok{name =} \StringTok{"logFC"}\NormalTok{) }\SpecialCharTok{+}
     \FunctionTok{scale\_fill\_manual}\NormalTok{(}\AttributeTok{values =} \FunctionTok{c}\NormalTok{(}\StringTok{"red"}\NormalTok{, }\StringTok{"blue"}\NormalTok{, }\StringTok{"grey50"}\NormalTok{)) }\SpecialCharTok{+}
-    \FunctionTok{theme\_void}\NormalTok{() }\SpecialCharTok{+}
-    \FunctionTok{theme}\NormalTok{(}
-        \AttributeTok{text =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{18}\NormalTok{),}
-        \AttributeTok{plot.tag =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{22}\NormalTok{, }\AttributeTok{face =} \StringTok{"bold"}\NormalTok{ )}
-\NormalTok{    )}
+    \FunctionTok{theme\_void}\NormalTok{() }
 \end{Highlighting}
 \end{Shaded}
 
@@ -732,11 +710,10 @@ A data.frame converting Entrez IDs to ensemble gene names has been made availabl
 \caption{Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, showing any genes in the top 500 ranked for differential expression, and which pathways they are likely contributing to. No genes in the top500 were found to contribute to the perturbation of the AMPK signaling pathway.}\label{fig:Figure6}
 \end{figure}
 
-\hypertarget{identify-key-gene-contributions}{%
-\subsection{Identify Key Gene Contributions}\label{identify-key-gene-contributions}}
+\hypertarget{identifying-key-gene-contributions}{%
+\subsection{Identifying Key Gene Contributions}\label{identifying-key-gene-contributions}}
 
 To further investigate a specific pathway and elucidate the key genes that contribute to its perturbation, we can generate a heatmap via \texttt{plot\_gene\_contribution()} which shows the gene-level perturbation scores for the top-ranked members of a given pathway.
-Taking the average gene-level contribution to the perturbation score, we can show gene-level sample-specific perturbation scores.
 This function takes advantage of the plotting capabilities of the \texttt{pheatmap} package\citep{pheatmap}, and as such, other annotations are also able to be easily included, such as the disease stage, or which general ranges the pathway-level normalised Z-Scores are in.
 Inclusion of the Z-Scores enabled the assessment of the level of perturbation predicted in each sample and key genes involved (Figure \ref{fig:Figure7}).
 
@@ -762,7 +739,9 @@ Inclusion of the Z-Scores enabled the assessment of the level of perturbation pr
 \NormalTok{)}
 \FunctionTok{plot\_gene\_contribution}\NormalTok{(}
     \AttributeTok{genePertMatr =}\NormalTok{ genePertScore}\SpecialCharTok{$}\StringTok{\textasciigrave{}}\AttributeTok{kegg.p53 signaling pathway}\StringTok{\textasciigrave{}} \SpecialCharTok{\%\textgreater{}\%}
-        \FunctionTok{set\_colnames}\NormalTok{(}\FunctionTok{str\_remove\_all}\NormalTok{(}\FunctionTok{colnames}\NormalTok{(.), }\StringTok{"\_post{-}NACT"}\NormalTok{)), }
+        \FunctionTok{set\_colnames}\NormalTok{(}\FunctionTok{str\_remove\_all}\NormalTok{(}\FunctionTok{colnames}\NormalTok{(.), }\StringTok{"\_post{-}NACT"}\NormalTok{)),}
+    \AttributeTok{color =} \FunctionTok{rev}\NormalTok{(colorspace}\SpecialCharTok{::}\FunctionTok{divergex\_hcl}\NormalTok{(}\DecValTok{100}\NormalTok{, }\AttributeTok{palette =} \StringTok{"RdBu"}\NormalTok{)),}
+    \AttributeTok{breaks =} \FunctionTok{seq}\NormalTok{(}\SpecialCharTok{{-}}\FloatTok{0.0015}\NormalTok{, }\FloatTok{0.0015}\NormalTok{, }\AttributeTok{length.out =} \DecValTok{100}\NormalTok{), }
     \AttributeTok{annotation\_df =}\NormalTok{  annotation\_df, }
     \AttributeTok{topGene =} \DecValTok{20}\NormalTok{, }\AttributeTok{filterBy =} \StringTok{"mean"}\NormalTok{, }
     \AttributeTok{mapEntrezID =}\NormalTok{ entrez2name,}

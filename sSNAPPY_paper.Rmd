@@ -17,7 +17,7 @@ author:
     - John Curtin School of Medical Research, Australian National University, Canberra, Australia
 abstract: 
  A common outcome of analysing RNA-Seq data is the detection of biological pathways with significantly altered activity between the conditions under investigation. 
- Whilst many strategies test for over-representation within pre-defined gene-sets for genes showing changed expression[@Subramanian2005-lx; @Young2010-jw], these analyses typically do not account for gene-gene interactions encoded by pathway topologies, and are not able to directly predict the directional change of pathway activity. 
+ Whilst many strategies test for over-representation within pre-defined gene-sets for genes showing changed expression, these analyses typically do not account for gene-gene interactions encoded by pathway topologies, and are not able to directly predict the directional change of pathway activity. 
  To address these issues, we have deloped a single-sample pathway perturbation analysis method  [*sSNAPPY*](https://bioconductor.org/packages/sSNAPPY), now available as an R/Bioconductor package, which leverages pathway topology information to compute pathway perturbation scores, and predicts the direction of change across a set of pathways. 
  Here, we demonstrate the use of *sSNAPPY* by applying the method to public scRNA-seq data, derived from ovarian cancer patient tissues collected before and after chemotherapy. 
  Not only were we able to predict the directions of significant perturbations of pathways discussed in the original study, but *sSNAPPY* was also able to detect significant changes of other biological processes, yielding far greater insight into the response to treatment.
@@ -34,9 +34,6 @@ header-includes:
   - \usepackage{longtable}
 ---
 
-<!-- Are we meant to exclude references from the Abstract? (Had to comment down here, sorry...)-->
-<!---I was also trying to avoid using 'common' near the start of the the first two sentences-->
-
 **R version**: `r R.version.string`
 
 **Bioconductor version**: `r BiocManager::version()`
@@ -50,12 +47,11 @@ Many existing methods tend to view pathways simply as a collection of gene names
 However, databases such as the Kyoto Encyclopaedia of Genes and Genomes (KEGG)[@OgataKEGGKyotoEncyclopediaa] and WikiPathways[@Martens2021] capture not only which genes are implicated in a certain biological process but also their interactions, activating or inhibitory roles, and their relative importance within the pathway, all of which are overlooked in ORA- and FCS-based approaches. 
 
 To fully utilise that additional information, the latest generation of pathway analysis approaches include many which are topology-based such as SPIA[@Tarca2009], DEGraph[@Jacob2012], NetGSA[@Ma2016] and PRS[@Ibrahim2012], as well as others which explicitly model inter-gene correlations[@Wu2012].
-<!-- I wonder if we need to demonstrate that SPIA cant find the same results as sSNAPPY? -->
 Despite differences in the null hypotheses tested across these approaches, overall, they have demonstrated enhanced sensitivity and specificity due to their abilities to take gene-gene interconnections into account[@Nguyen2019-va; @Ma2019]. 
 Nevertheless, most topology-based methods focus only on comparing activities of pathways between two treatment groups and cannot be used to score individual samples (Figure \@ref(fig:Figure1)). 
 However, in heterogenous data where more than one factor may be influencing observations[@Hanzelmann2013], incorporating scoring within paired samples may be desirable and may be able to reveal more nuanced insights. 
-To address this gap, we present a Single-Sample Network and Pathway Perturbation analysis methodology called [*sSNAPPY*](https://bioconductor.org/packages/sSNAPPY), available as an R/Bioconductor package.
-This article defines how *sSNAPPY* computes changes in gene expression within paired samples, and propagates this through gene-set topologies to predict the perturbation in pathway activities within paired samples, before providing summarised results across an entire dataset which would include more robust levels of biological replication (Figure \@ref(fig:Figure1)). 
+To address this gap, we present a Single-Sample directioNAl Pathway Perturbation analYsis methodology called [*sSNAPPY*](https://bioconductor.org/packages/sSNAPPY), available as an R/Bioconductor package.
+This article defines how *sSNAPPY* computes changes in gene expression within paired samples, and propagates this through gene-set topologies to predict the perturbation in pathway activities within paired samples, before providing summarised results across an entire dataset (Figure \@ref(fig:Figure1)). 
 The practical usage of the *sSNAPPY* R/Bioconductor package is illustrated through the analysis of a public scRNA-seq dataset using pseudo-bulk strategies.
 
 ```{r Figure1, out.width='100%',fig.cap="Schematic illustration of the differences betweeen conventional pathway analysis methods and sSNAPPY. Instead of being limited to treatment-level analyses, \\textit{sSNAPPY} allows the detection of pathway perturbation in individual samples by using sample-specific estimates of fold-change instead of experiment-wide estimates. (Created with BioRender.com).", echo=FALSE}
@@ -63,8 +59,6 @@ knitr::include_graphics(
     here::here("sSNAPPY_paper_files/figure-latex/Figure1.pdf")
 )
 ```
-
-<!-- I'm also wondering if we change logFC to 'fold-change' or 'effects'. Reality is the logFC is just log-transformed (i.e. a convenient mathematical transformation of) fold-change -->
 
 # Methods
 
@@ -76,11 +70,13 @@ This allows for the detection of pathway perturbations within all samples from a
 
 To run *sSNAPPY*, the only required data is a log-transformed expression matrix (e.g. logCPM) with matching sample metadata describing treatment groups and the nested structure.
 It is assumed that all pre-processing has been performed beforehand, such as the exclusion of low-signal genes or normalisation to minimise technical artefacts like GC-bias.
-The first step, performed internally by *sSNAPPY*, is to estimate sample-specific log fold-change ($\delta_{ghi} = \mu_{ghi} - \mu_{g0i}$) for a treatment $h$ across all genes $g$ within each sample $i$, by subtracting expression estimates for the baseline samples $\hat\mu_{g0i}$ from those in the treatment group $h$.
+The first step, performed internally by *sSNAPPY*, is to estimate sample-specific log fold-change ($\delta_{gi} = \mu_{gi} - \mu_{gi'}$) across all genes $g$ within each treated sample $i$, by subtracting expression estimates for the corresponding baseline samples $\mu_{gi'}$ from those in the treated groups.
+*sSNAPPY* supports any number of treatment levels and the numbers of samples in each treatment group do not have to be identical. 
+As long as a treated sample is matched to a corresponding control, the sample-specific log fold-changes will be computed for that sample.
 
 Since it has been shown that in RNA-seq data, genes with lower expression tend to have larger variance and larger estimates of change[@Law2014], we utilise a gene-level weighting strategy to de-emphasise logFC estimates for low-abundance genes.
-Gene-level weights $w_g$ are obtained in a treatment-agnostic manner by fitting a loess curve through the relationship between observed gene-level variance ($\widehat\sigma_g$) and average signal ($\bar\mu_{g\cdot\cdot}$)(Figure \@ref(fig:Figure2)), and taking the inverse of the loess-predicted variance as the weight $w_g = a / f(\bar\mu_{g\cdot\cdot})$, where $f(\bar\mu_{g\cdot\cdot})$ is the predicted value from the loess curve and the constant $a$ ensures $\sum w_g = 1$.
-We then use these weighted estimates of logFC ($\delta_{ghi}^* = w_g\delta_{ghi}$) in the calculation of all pathway perturbation scores.
+Gene-level weights $w_g$ are obtained in a treatment-agnostic manner by fitting a loess curve through the relationship between observed gene-level variance ($\sigma_g$) and average signal ($\bar\mu_{g\cdot\cdot}$)(Figure \@ref(fig:Figure2)), and taking the inverse of the loess-predicted variance as the weight $w_g = a / f(\bar\mu_{g\cdot\cdot})$, where $f(\bar\mu_{g\cdot\cdot})$ is the predicted value from the loess curve and the constant $a$ ensures $\sum w_g = 1$.
+We then use these weighted estimates of logFC ($\delta_{gi}^* = w_g\delta_{gi}$) in the calculation of all pathway perturbation scores.
 
 ```{r Figure2, out.width='100%',fig.cap="Gene-wise standard deviations are plotted against the mean logCPM values with mean-variance trend modelled by a loess fit. Genes with low expression values tend to have a larger variance.", echo=FALSE}
 knitr::include_graphics(
@@ -89,35 +85,34 @@ knitr::include_graphics(
 ```
 
 *sSNAPPY* was built upon the group-level topology-based scoring algorithm initially proposed in  SPIA[@Tarca2009] to propagate genes' changes in expression through pathway topologies to compute a perturbation score for each pathway.
+In contrast to SPIA, which requires pre-selection of differentially expressed genes, *sSNAPPY* utilises the full expression matrix. 
 By modifying the algorithm to incorporate single-sample, weighted estimates of changes in expression we are able to quantify changes in a pathway within a given sample, and then model these across all samples within a treatment group.
-Thus, we define the single-sample perturbation score ($S_{hip}$) for a given pathway $p$, sample $i$ and treatment $h$:
-
+Thus, we define the single-sample perturbation score ($S_{ip}$) for a given pathway $p$ in a treated sample $i$:
 
 $$
 \begin{aligned}
-S_{hip} = \sum_{g \in G_p} \lbrack S_{ghip} - \delta_{ghi}^*\rbrack \text{, where} \\
-S_{ghip} = \delta_{ghi}^* + \sum_{g' \in U_{gp}} \beta_{gg'p} \frac{S_{g'hip}}{N_{g'p}} 
+S_{ip} = \sum_{g \in G_p} \lbrack S_{gip} - \delta_{gi}^*\rbrack \text{, where} \\
+S_{gip} = \delta_{gi}^* + \sum_{g' \in U_{gp}} \beta_{gg'p} \frac{S_{g'ip}}{N_{g'p}} 
 \end{aligned}
 $$
 where:
 
 * $G_p$ represents the set of genes in pathway $p$, such that $g \in G_p$
-* $S_{ghip}$ is the gene-, treatment- and sample-specific perturbation score for pathway $p$
-* $\delta_{ghi}^* = w_g\delta_{ghi}$ is the weighted logFC of gene $g$ in treatment $h$ as described above
+* $S_{gip}$ is the gene- and sample-specific perturbation score for pathway $p$
+* $\delta_{gi}^* = w_g\delta_{gi}$ is the weighted logFC of gene $g$ in sample $i$ as described above
 * $U_{gp}$ is the subset of $G_p$ containing only the genes directly upstream of gene $g$
 * $\beta_{gg'p}$ is the pair-wise gene-gene interactions[@Tarca2009] encoded by the topology matrix for genes $g$ and $g'$
 * $N_{gp}$ is the number of downstream genes from any gene $g$
-* $S_{hip}$ is the accumulated pathway perturbation score for pathway $p$ in treatment $h$ for sample $i$
+* $S_{ip}$ is the accumulated pathway perturbation score for pathway $p$ in sample $i$
 
 The Bioconductor package graphite[@Sales2012] provides functions that can be used to retrieve pathway topologies from a database and convert topology information to adjacency matrices.
-In order to streamline this process we have implemented a convenience function, where users only need to provide the name of the desired database to retrieve all topology information in the format required by the scoring algorithm with the correct type of gene identifiers (ie. Entrez ID).
+In order to streamline this process we have implemented a convenience function, where users only need to provide the name of the desired database and species to retrieve all topology information in the format required by the scoring algorithm with the correct type of gene identifiers (ie. Entrez ID).
 
-To scale the single-sample pathway perturbation scores ($S_{hip}$) so they are comparable across pathways and to test for significance of individual scores, null distributions of perturbation scores for each pathway are generated through a sample permutation strategy, retaining the correct correlation structure between genes within a pathway.
-With each permutation, column names (i.e. sample labels) for the expression matrix are randomly shuffled while the rest of the scoring algorithm remains unchanged.
+To scale the single-sample pathway perturbation scores ($S_{ip}$) so they are comparable across pathways and to test for significance of individual scores, null distributions of perturbation scores for each pathway are generated through a sample permutation strategy, retaining the correct correlation structure between genes within a pathway.
 We recommend users to perform a minimum of 1000 permutations, requiring at least 8 unique samples.
-Subsequently, the median and median absolute deviation (MAD) of the permuted perturbation scores will be calculated and used to normalise the raw perturbation scores to robust $Z$-scores ($\frac{Test Score - Median}{MAD}$) and obtain associated two-sided *p*-values.
-<!-- The above line needs to be a better more formal equation, using $Z_{hip}$ & $S_{hip}$. Perhaps you should even define the set of permuted values formally. -->
-Since the method is single sample-based, the permutation strategy remains applicable regardless of experimental design.
+Subsequently, the median and median absolute deviation (MAD) of the permuted perturbation scores will be calculated and used to normalise the raw perturbation scores to robust $Z$-scores ($Z_{ip} = \frac{S_{ip} - median_{n \in N, i \in I}({S_{i^np}})}{MAD_{n \in N, i \in I}({S_{i^np}})}$) and obtain associated two-sided *p*-values. 
+With each permutation, for example the $n$-th round, column names (i.e. sample labels) for the expression matrix are randomly shuffled while the rest of the scoring algorithm remains unchanged, resulting in one permuted score being computed for each pathway $p$ in each permuted sample $i^n$. 
+Performing a total of $N$ rounds of permutations on a dataset where the total number of treated sample equals $I$, $N \times I$ permutated scores will be generated for each pathway $p$.
 
 Apart from assessing whether a pathway's activity changed significantly within an individual sample, users may also be interested in detecting changes at the group-level, which can be performed by modelling scores with regression models, incorporating Smyth's moderated $t$-statistic[@Smyth_2004] as implemented in *limma*[@limma_2015].
 The single-sample nature of *sSNAPPY*'s pathway perturbation scores is particularly helpful for datasets with complex experimental designs or known confounding factors as these can also be incorporated into the final regression models.
@@ -158,11 +153,13 @@ library(kableExtra)
 library(AnnotationHub) 
 library(edgeR)
 library(patchwork)
+library(colorspace)
 ```
 
 Before running the *sSNAPPY* workflow, we need to load our expression matrix and define our sample-level metadata, then download any pathway information.
 Firstly we can read in the data, setting the treatment column in the metadata to be a factor.
 Importantly, to run sSNAPPY, the row names of the expression matrix must be specified as Entrez IDs, for compatibility with pathway databases. 
+Genes without Entrez IDs were excluded, leaving 10,098 genes in the example expression matrix. 
 
 ```{r, message=FALSE}
 logCPM <- read_tsv(here::here("data/logCPM.tsv")) %>%
@@ -172,16 +169,16 @@ head(sample_meta)
 ```
 
 ```{r, echo=FALSE}
-## Code for plotting figure 2 - sd vs mean relationship
+# # Code for plotting figure 2 - sd vs mean relationship
 # Figure_2 <- logCPM %>%
 #     mutate(
-#         sd = apply(., 1, sd), 
+#         sd = apply(., 1, sd),
 #         mean = apply(., 1, mean)
 #         ) %>%
 #     # rownames_to_column("entrezid") %>%
 #     # pivot_longer(
-#     #     cols = -c("entrezid", "sd"), 
-#     #     names_to = "sample", 
+#     #     cols = -c("entrezid", "sd"),
+#     #     names_to = "sample",
 #     #     values_to = "logCPM"
 #     # ) %>%
 #     ggplot(
@@ -191,20 +188,20 @@ head(sample_meta)
 #     geom_smooth(
 #         method = "loess") +
 #     labs(
-#         x = expression(Gene-wise~average~expression~(bar(mu[g]))), 
-#         y = expression(Gene-wise~standard~deviation~(widehat(sigma[g])))
+#         x = expression(Gene-wise~average~expression~(bar(mu[g]))),
+#         y = expression(Gene-wise~standard~deviation~(sigma[g]))
 #     ) +
 #     theme_bw() +
 #     theme(
-#         panel.grid = element_blank(), 
+#         panel.grid = element_blank(),
 #         axis.title = element_text(size = 14)
 #     )
 # pdf(
 #     here::here("sSNAPPY_paper_files/figure-latex/Figure2.pdf") ,
-#     width = 8, 
+#     width = 8,
 #     height = 6
 #     )
-# Figure_2 
+# Figure_2
 # dev.off()
 ```
 
@@ -249,8 +246,6 @@ weightedFC <- weight_ss_fc(as.matrix(logCPM), metadata = sample_meta,
 glimpse(weightedFC)
 ```
 
-<!-- The above numbers produce 10098 genes whilst the earlier text says 11101. Is this a problem? -->
-
 The output of `weight_ss_fc()` is a `list` where one element is a matrix of weighted single-sample logFCs ($\delta_{ghi}^*$), with rows corresponding to genes and columns to samples, and the other element is the vector of gene-wise weights ($w_g$) used to calculate the weighted logFC ($\delta_{ghi}^*$), as described above.
 
 The matrix of $\delta_{ghi}^*$ values are then passed to pathway topologies to compute the gene-wise perturbation scores for all genes included in a pathway, before being summed into a single score for each pathway. 
@@ -270,7 +265,7 @@ head(ssPertScore)
 
 The values obtained from each pathway will vary greatly due to the variability in topology structures.
 To determine the significance of individual scores and transform scores to ensure they are comparable across pathways, sSNAPPY utilises a sample-permutation strategy to simulate the null distributions of perturbation scores. 
-Since sample labels will be permuted randomly, sample metadata is not required by the generate_permuted _scores function, instead, users only need to specify the number of treatment groups in the study, including the control level. 
+Since sample labels will be permuted randomly, sample metadata is not required by the `generate_permuted _scores()` function, instead, users only need to specify the number of treatment groups in the study, including the control level. 
 Since permutation requires a large amount of computational time and memory, sSNAPPY utilises the BiocParallel backend[@BiocParallel], also allowing for customisation by the user. 
 Paralleled with 8 cores, permutating 1000 times took approximately 30 minutes to complete on a local laptop. 
 Whilst permutations can be performed an a local machine, this strategy also allows for performing the permutation steps on a HPC cluster or similar.
@@ -348,8 +343,7 @@ top_table <- topTable(z_fits, number = Inf) %>%
 ```
 
 Pathways with an FDR < 0.05 in the moderated t-test were considered to be significantly perturbed at the group level. 
-22 out of the 315 tested KEGG pathways passed the selection threshold (Table \@ref(tab:Table1)).
-<!-- I don't understand this. The table has 11 pathways. Did you use a different threshold? -->
+11 out of the 315 tested KEGG pathways passed the selection threshold (Table \@ref(tab:Table1)).
 
 ```{r}
 table1 <- top_table %>%
@@ -394,7 +388,7 @@ A valuable feature of sSNAPPY is the provision of various visualisation function
 Biological pathways are not independent of each other with many genes playing a role across multiple pathways, and as such, visualising pathway analysis results as a network can be a powerful way to intuitively summarise the results and facilitate interpretation of the underlying biology. 
 The `plot_gs_network()` function allows users to easily convert a list of perturbed biological pathways to a network where edges between pathway nodes represent overlapping genes. 
 Defined by the colorBy parameter, pathway nodes can be coloured by either the pathways’ predicted direction of changes or the significance levels (Figure \@ref(fig:Figure4)). 
-The returned plot is a ggplot2 [@Wickham2009] object, meaning that components of the plotting theme and other parameters can be customized as for any other ggplot objects.
+The returned plot is a ggplot2 [@Wickham2009] object, meaning that components of the plotting theme and other parameters can be customized as for any other ggplot2 objects.
 
 First we should obtain a subset of pathways to visualise.
 In the following example, the most highly ranked pathways were inspected, which involved three steps to prepare the data: 1) create a categorical variable with the pathway status, 2) rename the logFC column to reflect the true meaning of the value and, 3) transform the p-values for simpler visualisation.
@@ -414,15 +408,11 @@ sigPathway <- topTable(z_fits, number = 8) %>%
   )
 ```
 
-<!-- The size of the legends & their text needs to be increased to match the rest of the figure -->
-<!-- Why not just make the figure smaller? 18 x 10 seems very large -->
-```{r Figure4, out.width='100%', fig.width = 18, fig.height = 10, fig.cap = "Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, colored by (A) pathways’ predicted direction of changes and (B) pathways’ -log10(p-values). Pathways with a FDR < 0.05 in the moderated t-test were included."}
+```{r Figure4, out.width='100%', fig.width = 12, fig.height = 5, fig.cap = "Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, colored by (A) pathways’ predicted direction of changes and (B) pathways’ -log10(p-values). Pathways with a FDR < 0.05 in the moderated t-test were included."}
 set.seed(123)
 # Plot the network structure
 p1 <- plot_gs_network(
-  normalisedScores = sigPathway, gsTopology = gsTopology, 
-  colorBy = "status", gsNameSize = 8, 
-  nodeSizeScale = c(8, 12)
+  normalisedScores = sigPathway, gsTopology = gsTopology, colorBy = "status"
 ) +
   scale_colour_manual(values = c("red", "blue", "grey30")) +
   theme_void()
@@ -431,18 +421,11 @@ p2 <- plot_gs_network(
   normalisedScores = sigPathway,
   gsTopology = gsTopology, 
   colorBy  = "-log10(p)", 
-  color_lg_title = expression(paste(-log[10], "p")),
-  gsNameSize = 8, 
-  nodeSizeScale = c(8, 12)
+  color_lg_title = expression(paste(-log[10], "p"))
 ) +
   scale_colour_viridis_c() +
   theme_void()
-p1 + p2 + plot_annotation(tag_levels = "A") &
-    theme(
-        text = element_text(size = 18),
-        plot.tag = element_text(size = 22, face = "bold" ), 
-        legend.key.size = unit(1, "cm")
-    )
+p1 + p2 + plot_annotation(tag_levels = "A") 
 ```
 
 
@@ -454,34 +437,21 @@ Annotation of KEGG pathway communities is automatically completed by calling the
 Analyses involving other pathway databases will require user-provided pathway categories. 
 In the current dataset, the Louvain method was applied to the network of biological pathways and revealed two primary communities, where one was annotated to be endocrine system related and the other one was most closely related to infectious diseases and the immune system (Figure \@ref(fig:Figure5)). 
 
-<!-- Isn't the Louvain method a layout? Or is it a strategy for community detection? -->
-<!-- Again, setting these figures to be so large leads to legends which are unreadable. -->
-<!-- This does need to be rectified, either by setting their size or by shrinking the size of the pdf -->
-
-```{r Figure5, out.width='80%', fig.width = 16, fig.height = 10, fig.cap = 'Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, colored by community structures detected through the louvain algorithm. The main biological processes perturbed by the chemo-therapy were shown.'}
+```{r Figure5, out.width='80%', fig.width = 10, fig.height = 6.5,fig.cap = 'Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, colored by community structures detected through the louvain algorithm. The main biological processes perturbed by the chemo-therapy were shown.'}
 set.seed(123)
 plot_community(
     normalisedScores = sigPathway,
     gsTopology = gsTopology, 
-    colorBy = "status", 
-    lb_size = 8, 
-    label.fontsize = 20,
-    nodeSizeScale = c(8, 12), 
+    colorBy = "status"
     
 ) +
     scale_colour_manual(values = c("red", "blue")) +
     scale_fill_viridis_d() +
     scale_x_continuous(expand = expansion(0.25)) +
     scale_y_continuous(expand = expansion(0.25)) +
-    theme_void() +
-    theme(
-        text = element_text(size = 18),
-        plot.tag = element_text(size = 22, face = "bold" ), 
-        legend.key.size = unit(1, "cm")
-    )
+    theme_void() 
 ```
 
-<!-- I can see a weird error in the pdf here! -->
 
 A key advantage of sSNAPPY is that it does not require the prior identification of differentially expressed genes, as this is not always possible in clinical datasets. 
 However, knowing which genes are implicated in the perturbation of pathways, particularly those which influence multiple pathways, can provide valuable insights for hypotheses generation about underlying biological mechanisms. 
@@ -489,7 +459,7 @@ Therefore, sSNAPPY provides another visualisation feature called `plot_gs2gene`,
 Users can provide a vector of fold-change estimates to visualise genes within pathways, showing their estimated change in expression. 
 As pathways often include hundreds of genes, it is recommended to filter for genes most likely to be playing a significant role.
 In this example dataset, only genes within the top 500 when ranking by the magnitude of the mean log fold-change were included (Figure \@ref(fig:Figure6)). 
-An alternative strategy may obviously be to select genes based on test-statistics, however, this decision is up to the individual researcher.
+An alternative strategy will be to select genes based on test-statistics, however, this decision is up to the individual researcher.
 
 ```{r}
 meanFC <- rowMeans(weightedFC$logFC) / weightedFC$weight
@@ -497,19 +467,15 @@ top500 <- rank(1/abs(meanFC)) <= 500
 dirFC <- ifelse(meanFC > 0, "Up-Regulated", "Down-Regulated")
 ```
 
-Since KEGG pathway topologies were retrieved using EntrezIDs, a mapping object for IDs to gene names can be provided.
-Users can also provide a data.frame mapping Entrez IDs to their chosen identifiers through the mapRownameTo parameter. 
-A data.frame converting Entrez IDs to ensemble gene names has been made available as part of the package. 
-<!-- Do we need to specify which annotation build this is derived from? -->
+Since KEGG pathway topologies were retrieved using EntrezIDs, users can provide a data.frame mapping Entrez IDs to their chosen identifiers, such as gene names, through the mapEntrezID parameter to make the visualisations more informative. 
+A data.frame converting Entrez IDs to ensemble gene names was derived from the Ensembl Release 101[@Ensembl2022] and has been made available as part of the package. 
 
 ```{r}
 load(system.file("extdata", "entrez2name.rda", package = "sSNAPPY"))
 head(entrez2name)
 ```
 
-<!-- Again the legend sizes are too small -->
-
-```{r Figure6, out.width='80%', fig.width = 16, fig.height = 12, fig.cap = 'Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, showing any genes in the top 500 ranked for differential expression, and which pathways they are likely contributing to. No genes in the top500 were found to contribute to the perturbation of the AMPK signaling pathway.'}
+```{r Figure6, out.width='80%', fig.width = 9.6, fig.height = 8, fig.cap = 'Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, showing any genes in the top 500 ranked for differential expression, and which pathways they are likely contributing to. No genes in the top500 were found to contribute to the perturbation of the AMPK signaling pathway.'}
 set.seed(123)
 plot_gs2gene(
     normalisedScores = sigPathway, 
@@ -518,31 +484,19 @@ plot_gs2gene(
     mapEntrezID = entrez2name, 
     geneFC = meanFC[top500], 
     edgeAlpha = 1, 
-    gsNameSize = 10, 
-    gsNodeSize = 8, 
-    geneNodeSize = 6, 
-    geneNameSize = 8
+    gsNameSize = 4, 
+    gsNodeSize = 4
 ) +
     scale_colour_gradient2(name = "logFC") +
     scale_fill_manual(values = c("red", "blue", "grey50")) +
-    theme_void() +
-    theme(
-        text = element_text(size = 18),
-        plot.tag = element_text(size = 22, face = "bold" )
-    )
+    theme_void() 
 ```
 
 ## Identifying Key Gene Contributions
 
 To further investigate a specific pathway and elucidate the key genes that contribute to its perturbation, we can generate a heatmap via `plot_gene_contribution()` which shows the gene-level perturbation scores for the top-ranked members of a given pathway.
-Taking the average gene-level contribution to the perturbation score, we can show gene-level sample-specific perturbation scores.
 This function takes advantage of the plotting capabilities of the `pheatmap` package[@pheatmap], and as such, other annotations are also able to be easily included, such as the disease stage, or which general ranges the pathway-level normalised Z-Scores are in.
 Inclusion of the Z-Scores enabled the assessment of the level of perturbation predicted in each sample and key genes involved (Figure \@ref(fig:Figure7)).
-
-<!-- For the following figure, is that legend centred correctly?  -->
-<!-- It looks like zero is in the blue end of the range.  -->
-<!-- This can be a a bit of an issue with pheatmap, but is very fixable and fixing this should be done in the function. -->
-<!-- And yeah, I'd consider it a bugfix -->
 
 ```{r Figure7, out.width='100%', fig.width = 12, fig.height = 7, fig.cap = 'Gene-level perturbation scores of the top 20 genes in the \"p53 signalling pathway\" ranked by their average contribution to the perturbation score. Samples were annotated by the stage of cancers, along with robust Z-scores which indicate the extent of perturbation within each sample. The genes ATR and ATM were identified as possible key drivers of the activation of p53 signalling pathway, with downregulation of MDM4 also appearing likely to be playing a role.'}
 annotation_df <- normalisedScores %>%
@@ -565,7 +519,9 @@ annotation_col <- list(
 )
 plot_gene_contribution(
     genePertMatr = genePertScore$`kegg.p53 signaling pathway` %>%
-        set_colnames(str_remove_all(colnames(.), "_post-NACT")), 
+        set_colnames(str_remove_all(colnames(.), "_post-NACT")),
+    color = rev(colorspace::divergex_hcl(100, palette = "RdBu")),
+    breaks = seq(-0.0015, 0.0015, length.out = 100), 
     annotation_df =  annotation_df, 
     topGene = 20, filterBy = "mean", 
     mapEntrezID = entrez2name,
