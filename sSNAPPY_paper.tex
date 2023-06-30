@@ -175,7 +175,7 @@ The first step, performed internally by \emph{sSNAPPY}, is to estimate sample-sp
 As long as a treated sample is matched to a corresponding control, the sample-specific log fold-changes will be computed for that sample.
 
 Since it has been shown that in RNA-seq data, genes with lower expression tend to have larger variance and larger estimates of change\citep{Law2014}, we utilise a gene-level weighting strategy to de-emphasise logFC estimates for low-abundance genes.
-Gene-level weights \(w_g\) are obtained in a treatment-agnostic manner by fitting a loess curve through the relationship between observed gene-level variance (\(\sigma_g\)) and average signal (\(\bar\mu_{g\cdot\cdot}\))(Figure \ref{fig:Figure2}), and taking the inverse of the loess-predicted variance as the weight \(w_g = a / f(\bar\mu_{g\cdot\cdot})\), where \(f(\bar\mu_{g\cdot\cdot})\) is the predicted value from the loess curve and the constant \(a\) ensures \(\sum w_g = 1\).
+Gene-level weights \(w_g\) are obtained in a treatment-agnostic manner by fitting a loess curve through the relationship between observed gene-level variance (\(\sigma_g\)) and average signal (\(\bar\mu_{g}\))(Figure \ref{fig:Figure2}), and taking the inverse of the loess-predicted variance as the weight \(w_g = a / f(\bar\mu_{g})\), where \(f(\bar\mu_{g})\) is the predicted value from the loess curve and the constant \(a\) ensures \(\sum w_g = 1\).
 We then use these weighted estimates of logFC (\(\delta_{gi}^* = w_g\delta_{gi}\)) in the calculation of all pathway perturbation scores.
 
 \begin{figure}
@@ -224,7 +224,7 @@ To scale the single-sample pathway perturbation scores (\(S_{ip}\)) so they are 
 We recommend users to perform a minimum of 1000 permutations, requiring at least 8 unique samples.
 Subsequently, the median and median absolute deviation (MAD) of the permuted perturbation scores will be calculated and used to normalise the raw perturbation scores to robust \(Z\)-scores (\(Z_{ip} = \frac{S_{ip} - median_{n \in N, i \in I}({S_{i^np}})}{MAD_{n \in N, i \in I}({S_{i^np}})}\)) and obtain associated two-sided \emph{p}-values.
 With each permutation, for example the \(n\)-th round, column names (i.e.~sample labels) for the expression matrix are randomly shuffled while the rest of the scoring algorithm remains unchanged, resulting in one permuted score being computed for each pathway \(p\) in each permuted sample \(i^n\).
-Performing a total of \(N\) rounds of permutations on a dataset where the total number of treated sample equals \(I\), \(N \times I\) permutated scores will be generated for each pathway \(p\).
+Performing \(N\) rounds of permutations on a dataset where the total number of treated sample equals \(I\), \(N \times I\) permutated scores will be generated for each pathway \(p\).
 
 Apart from assessing whether a pathway's activity changed significantly within an individual sample, users may also be interested in detecting changes at the group-level, which can be performed by modelling scores with regression models, incorporating Smyth's moderated \(t\)-statistic\citep{Smyth_2004} as implemented in \emph{limma}\citep{limma_2015}.
 The single-sample nature of \emph{sSNAPPY}'s pathway perturbation scores is particularly helpful for datasets with complex experimental designs or known confounding factors as these can also be incorporated into the final regression models.
@@ -276,7 +276,7 @@ The following packages are required for this workflow
 
 Before running the \emph{sSNAPPY} workflow, we need to load our expression matrix and define our sample-level metadata, then download any pathway information.
 Firstly we can read in the data, setting the treatment column in the metadata to be a factor.
-Importantly, to run sSNAPPY, the row names of the expression matrix must be specified as Entrez IDs, for compatibility with pathway databases.
+Importantly, to run \emph{sSNAPPY}, the row names of the expression matrix must be specified as Entrez IDs, for compatibility with pathway databases.
 Genes without Entrez IDs were excluded, leaving 10,098 genes in the example expression matrix.
 
 \begin{Shaded}
@@ -359,13 +359,13 @@ Additionally, the sample metadata must include the treatment of all samples. The
 ##   .. ..$ : chr [1:11] "EOC372_post-NACT" "EOC443_post-NACT" "EOC540_post-NACT" "EOC3_post-NACT" ...
 \end{verbatim}
 
-The output of \texttt{weight\_ss\_fc()} is a \texttt{list} where one element is a matrix of weighted single-sample logFCs (\(\delta_{ghi}^*\)), with rows corresponding to genes and columns to samples, and the other element is the vector of gene-wise weights (\(w_g\)) used to calculate the weighted logFC (\(\delta_{ghi}^*\)), as described above.
+The output of \texttt{weight\_ss\_fc()} is a \texttt{list} where one element is a matrix of weighted single-sample logFCs (\(\delta_{gi}^*\)), with rows corresponding to genes and columns to samples, and the other element is the vector of gene-wise weights (\(w_g\)) used to calculate the weighted logFC (\(\delta_{gi}^*\)), as described above.
 
-The matrix of \(\delta_{ghi}^*\) values are then passed to pathway topologies to compute the gene-wise perturbation scores for all genes included in a pathway, before being summed into a single score for each pathway.
-The string \texttt{ENTREZID:} was also added to all row names of the \(\delta_{ghi}^*\) matrix to be compatible with the format pathway topologies were retrieved in.
+The matrix of \(\delta_{gi}^*\) values are then passed to pathway topologies to compute the gene-wise perturbation scores for all genes included in a pathway, before being summed into a single score for each pathway.
+The string \texttt{ENTREZID:} was also added to all row names of the \(\delta_{gi}^*\) matrix to be compatible with the format pathway topologies were retrieved in.
 These gene-wise perturbation scores can also be used in downstream analysis to identify genes playing the most significant roles in each pathway, as will be demonstrated in the visualisation section below.
-The pathway-level perturbation scores (\(S_{hip}\)) are returned as a data.frame containing sample and gene-set names.
-In the following steps, we first calculate the gene-level contributions to each pathway (\(S_{ghip}\)) using the function \texttt{raw\_gene\_pert()} and then obtain pathway-level summaries using \texttt{pathway\_pert()}.
+The pathway-level perturbation scores (\(S_{ip}\)) are returned as a data.frame containing sample and gene-set names.
+In the following steps, we first calculate the gene-level contributions to each pathway (\(S_{gip}\)) using the function \texttt{raw\_gene\_pert()} and then obtain pathway-level summaries using \texttt{pathway\_pert()}.
 Pathways with zero perturbation scores across all genes and samples will be dropped at this stage.
 
 \begin{Shaded}
