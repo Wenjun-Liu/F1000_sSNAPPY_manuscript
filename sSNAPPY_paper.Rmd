@@ -70,13 +70,15 @@ This allows for the detection of pathway perturbations within all samples from a
 
 To run *sSNAPPY*, the only required data is a log-transformed expression matrix (e.g. logCPM) with matching sample metadata describing treatment groups and the nested structure.
 It is assumed that all pre-processing has been performed beforehand, such as the exclusion of low-signal genes or normalisation to minimise technical artefacts like GC-bias.
-The first step, performed internally by *sSNAPPY*, is to estimate sample-specific log fold-change ($\delta_{gi} = \mu_{gi} - \mu_{gi'}$) across all genes $g$ within each treated sample $i$, by subtracting expression estimates for the corresponding baseline samples $\mu_{gi'}$ from those in the treated groups.
-*sSNAPPY* supports any number of treatment levels and the numbers of samples in each treatment group do not have to be identical. 
+The first step, performed internally by *sSNAPPY*, is to estimate sample-specific log fold-change ($\delta_{ghi} = \mu_{ghi} - \mu_{g0i}$) for a treatment $h$ across all genes $g$ within each patient $i$, by subtracting expression estimates for the baseline samples $\mu_{g0i}$ from those in the treatment group $h$.
+Here, we gave an example of nesting samples by patients, but *sSNAPPY* could be applied to any data with matched-pair design. 
+For example, RNA-seq data of treated and untreated cells from several passages, in which case the parameter $i$ would denote the passages.
+It should also be noted that *sSNAPPY* supports any number of treatment/condition levels and the numbers of samples in each treatment group do not have to be identical. 
 As long as a treated sample is matched to a corresponding control, the sample-specific log fold-changes will be computed for that sample.
 
 Since it has been shown that in RNA-seq data, genes with lower expression tend to have larger variance and larger estimates of change[@Law2014], we utilise a gene-level weighting strategy to de-emphasise logFC estimates for low-abundance genes.
 Gene-level weights $w_g$ are obtained in a treatment-agnostic manner by fitting a loess curve through the relationship between observed gene-level variance ($\sigma_g$) and average signal ($\bar\mu_{g}$)(Figure \@ref(fig:Figure2)), and taking the inverse of the loess-predicted variance as the weight $w_g = a / f(\bar\mu_{g})$, where $f(\bar\mu_{g})$ is the predicted value from the loess curve and the constant $a$ ensures $\sum w_g = 1$.
-We then use these weighted estimates of logFC ($\delta_{gi}^* = w_g\delta_{gi}$) in the calculation of all pathway perturbation scores.
+We then use these weighted estimates of logFC ($\delta_{ghi}^* = w_g\delta_{ghi}$) in the calculation of all pathway perturbation scores.
 
 ```{r Figure2, out.width='100%',fig.cap="Gene-wise standard deviations are plotted against the mean logCPM values with mean-variance trend modelled by a loess fit. Genes with low expression values tend to have a larger variance.", echo=FALSE}
 knitr::include_graphics(
@@ -87,33 +89,38 @@ knitr::include_graphics(
 *sSNAPPY* was built upon the group-level topology-based scoring algorithm initially proposed in  SPIA[@Tarca2009] to propagate genes' changes in expression through pathway topologies to compute a perturbation score for each pathway.
 In contrast to SPIA, which requires pre-selection of differentially expressed genes, *sSNAPPY* utilises the full expression matrix. 
 By modifying the algorithm to incorporate single-sample, weighted estimates of changes in expression we are able to quantify changes in a pathway within a given sample, and then model these across all samples within a treatment group.
-Thus, we define the single-sample perturbation score ($S_{ip}$) for a given pathway $p$ in a treated sample $i$:
+Thus, we define the single-sample perturbation score ($S_{hip}$) for a given pathway $p$, patient $i$ and treatment $h$:
+
 
 $$
 \begin{aligned}
-S_{ip} = \sum_{g \in G_p} \lbrack S_{gip} - \delta_{gi}^*\rbrack \text{, where} \\
-S_{gip} = \delta_{gi}^* + \sum_{g' \in U_{gp}} \beta_{gg'p} \frac{S_{g'ip}}{N_{g'p}} 
+S_{hip} = \sum_{g \in G_p} \lbrack S_{ghip} - \delta_{ghi}^*\rbrack \text{, where} \\
+S_{ghip} = \delta_{ghi}^* + \sum_{g' \in U_{gp}} \beta_{gg'p} \frac{S_{g'hip}}{N_{g'p}} 
 \end{aligned}
 $$
 where:
 
 * $G_p$ represents the set of genes in pathway $p$, such that $g \in G_p$
-* $S_{gip}$ is the gene- and sample-specific perturbation score for pathway $p$
-* $\delta_{gi}^* = w_g\delta_{gi}$ is the weighted logFC of gene $g$ in sample $i$ as described above
+* $S_{ghip}$ is the gene-, treatment- and patient-specific perturbation score for pathway $p$
+* $\delta_{ghi}^* = w_g\delta_{ghi}$ is the weighted logFC of gene $g$ as described above
 * $U_{gp}$ is the subset of $G_p$ containing only the genes directly upstream of gene $g$
 * $\beta_{gg'p}$ is the pair-wise gene-gene interactions[@Tarca2009] encoded by the topology matrix for genes $g$ and $g'$
 * $N_{gp}$ is the number of downstream genes from any gene $g$
-* $S_{ip}$ is the accumulated pathway perturbation score for pathway $p$ in sample $i$
+* $S_{hip}$ is the accumulated pathway perturbation score for pathway $p$ in treatment $h$ for patient $i$
 
 The Bioconductor package graphite[@Sales2012] provides functions that can be used to retrieve pathway topologies from a database and convert topology information to adjacency matrices.
 In order to streamline this process we have implemented a convenience function, where users only need to provide the name of the desired database and species to retrieve all topology information in the format required by the scoring algorithm with the correct type of gene identifiers (ie. Entrez ID).
 
-To scale the single-sample pathway perturbation scores ($S_{ip}$) so they are comparable across pathways and to test for significance of individual scores, null distributions of perturbation scores for each pathway are generated through a sample permutation strategy, retaining the correct correlation structure between genes within a pathway.
+To scale the single-sample pathway perturbation scores ($S_{hip}$) so they are comparable across pathways and to test for significance of individual scores, null distributions of perturbation scores for each pathway are generated through a sample permutation strategy, retaining the correct correlation structure between genes within a pathway.
 We recommend users to perform a minimum of 1000 permutations, requiring at least 8 unique samples.
-Subsequently, the median and median absolute deviation (MAD) of the permuted perturbation scores will be calculated and used to normalise the raw perturbation scores to robust $Z$-scores ($Z_{ip} = \frac{S_{ip} - median_{n \in N, i \in I}({S_{i^np}})}{MAD_{n \in N, i \in I}({S_{i^np}})}$) and obtain associated two-sided *p*-values. 
-With each permutation, for example the $n$-th round, column names (i.e. sample labels) for the expression matrix are randomly shuffled while the rest of the scoring algorithm remains unchanged, resulting in one permuted score being computed for each pathway $p$ in each permuted sample $i^n$. 
-Performing $N$ rounds of permutations on a dataset where the total number of treated sample equals $I$, $N \times I$ permutated scores will be generated for each pathway $p$.
+Subsequently, the median and median absolute deviation (MAD) of the permuted perturbation scores will be calculated and used to normalise the raw perturbation scores to robust $Z$-scores, which is defined as: 
 
+$$
+Z_{hip} = \frac{S_{hip} - median_{n \in N}({S_{h^ni^np}})}{MAD_{n \in N}({S_{h^ni^np}})}
+$$
+With each permutation, column names (i.e. sample labels) for the expression matrix are randomly shuffled while the rest of the scoring algorithm remains unchanged.
+The permuted pathway perturbation score for pathway $p$ in a sample that is assigned to be of treatment $h$ and patient $i$ in the $n$-th round of permutation is represented as $S_{h^ni^np}$, and $N$ is the total rounds of permutation performed.
+Following the computation of robust $Z$-scores, two-sided *p*-values are derived to assess whether a pathway is significantly perturbed at sample-specific level.
 Apart from assessing whether a pathway's activity changed significantly within an individual sample, users may also be interested in detecting changes at the group-level, which can be performed by modelling scores with regression models, incorporating Smyth's moderated $t$-statistic[@Smyth_2004] as implemented in *limma*[@limma_2015].
 The single-sample nature of *sSNAPPY*'s pathway perturbation scores is particularly helpful for datasets with complex experimental designs or known confounding factors as these can also be incorporated into the final regression models.
 
@@ -246,13 +253,13 @@ weightedFC <- weight_ss_fc(as.matrix(logCPM), metadata = sample_meta,
 glimpse(weightedFC)
 ```
 
-The output of `weight_ss_fc()` is a `list` where one element is a matrix of weighted single-sample logFCs ($\delta_{gi}^*$), with rows corresponding to genes and columns to samples, and the other element is the vector of gene-wise weights ($w_g$) used to calculate the weighted logFC ($\delta_{gi}^*$), as described above.
+The output of `weight_ss_fc()` is a `list` where one element is a matrix of weighted single-sample logFCs ($\delta_{ghi}^*$), with rows corresponding to genes and columns to samples, and the other element is the vector of gene-wise weights ($w_g$) used to calculate the weighted logFC ($\delta_{ghi}^*$), as described above.
 
-The matrix of $\delta_{gi}^*$ values are then passed to pathway topologies to compute the gene-wise perturbation scores for all genes included in a pathway, before being summed into a single score for each pathway. 
-The string `ENTREZID:` was also added to all row names of the $\delta_{gi}^*$ matrix to be compatible with the format pathway topologies were retrieved in. 
+The matrix of $\delta_{ghi}^*$ values are then passed to pathway topologies to compute the gene-wise perturbation scores for all genes included in a pathway, before being summed into a single score for each pathway. 
+The string `ENTREZID:` was also added to all row names of the $\delta_{ghi}^*$ matrix to be compatible with the format pathway topologies were retrieved in. 
 These gene-wise perturbation scores can also be used in downstream analysis to identify genes playing the most significant roles in each pathway, as will be demonstrated in the visualisation section below.
-The pathway-level perturbation scores ($S_{ip}$) are returned as a data.frame containing sample and gene-set names. 
-In the following steps, we first calculate the gene-level contributions to each pathway ($S_{gip}$) using the function `raw_gene_pert()` and then obtain pathway-level summaries using `pathway_pert()`.
+The pathway-level perturbation scores ($S_{hip}$) are returned as a data.frame containing sample and gene-set names. 
+In the following steps, we first calculate the gene-level contributions to each pathway ($S_{ghip}$) using the function `raw_gene_pert()` and then obtain pathway-level summaries using `pathway_pert()`.
 Pathways with zero perturbation scores across all genes and samples will be dropped at this stage. 
 
 ```{r}
