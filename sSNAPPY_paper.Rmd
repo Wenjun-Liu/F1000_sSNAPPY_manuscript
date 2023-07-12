@@ -112,21 +112,29 @@ The Bioconductor package graphite[@Sales2012] provides functions that can be use
 In order to streamline this process we have implemented a convenience function, where users only need to provide the name of the desired database and species to retrieve all topology information in the format required by the scoring algorithm with the correct type of gene identifiers (ie. Entrez ID).
 
 To scale the single-sample pathway perturbation scores ($S_{hip}$) so they are comparable across pathways and to test for significance of individual scores, null distributions of perturbation scores for each pathway are generated through a sample permutation strategy, retaining the correct correlation structure between genes within a pathway.
-We recommend users to perform a minimum of 1000 permutations, requiring at least 8 unique samples.
-Subsequently, the median and median absolute deviation (MAD) of the permuted perturbation scores will be calculated and used to normalise the raw perturbation scores to robust $Z$-scores, which is defined as: 
+In the permutation, all sample labels will be randomly shuffled and assigned to permuted pairs. 
+Subsequently, permuted single-sample logFCs will be calculated for each pair of permuted samples while the rest of the scoring algorithm remains unchanged.
+The median and median absolute deviation (MAD) of the permuted perturbation scores will be calculated within each pathway and used to normalise the raw perturbation scores to robust $Z$-scores, which is defined as: 
+
 
 $$
-Z_{hip} = \frac{S_{hip} - median_{n \in N}({S_{h^ni^np}})}{MAD_{n \in N}({S_{h^ni^np}})}
+Z_{hip} = \frac{S_{hip} - median_{n \in N}({S_{np}})}{MAD_{n \in N}({S_{np}})}
 $$
-With each permutation, column names (i.e. sample labels) for the expression matrix are randomly shuffled while the rest of the scoring algorithm remains unchanged.
-The permuted pathway perturbation score for pathway $p$ in a sample that is assigned to be of treatment $h$ and patient $i$ in the $n$-th round of permutation is represented as $S_{h^ni^np}$, and $N$ is the total rounds of permutation performed.
+where $n$ represents each permuted pairs of samples. 
+All permuted pairs possible will be constructed in this step by default unless otherwise specified. 
+In a data with $I$ total samples, the maximum number of unique permuted pairs $N$ is ${}^IP_2 = \frac{{I!}}{{(I-2)!}} = I \times (I-1)$. 
+
+
 Following the computation of robust $Z$-scores, two-sided *p*-values are derived to assess whether a pathway is significantly perturbed at sample-specific level.
+When the sample size is small, the p-values derived from individual robust z-scores should be interpreted with caution. 
+The MAD and median derived from the permuted scores are more likely to be accurately estimated when the number of permuted scores computed for each pathway is above 100, requiring at least 11 samples. 
+
 Apart from assessing whether a pathway's activity changed significantly within an individual sample, users may also be interested in detecting changes at the group-level, which can be performed by modelling scores with regression models, incorporating Smyth's moderated $t$-statistic[@Smyth_2004] as implemented in *limma*[@limma_2015].
 The single-sample nature of *sSNAPPY*'s pathway perturbation scores is particularly helpful for datasets with complex experimental designs or known confounding factors as these can also be incorporated into the final regression models.
 
 
 ## Operation
-The package has been tested on all operating systems, requiring R > 4.2.0, and can be installed using BiocManager as follows. 
+The package has been tested on all operating systems, requiring R > 4.3.0, and can be installed using BiocManager as follows. 
 
 ```{r eval=FALSE}
 if (!requireNamespace("BiocManager", quietly = TRUE))
@@ -272,16 +280,14 @@ head(ssPertScore)
 
 The values obtained from each pathway will vary greatly due to the variability in topology structures.
 To determine the significance of individual scores and transform scores to ensure they are comparable across pathways, sSNAPPY utilises a sample-permutation strategy to simulate the null distributions of perturbation scores. 
-Since sample labels will be permuted randomly, sample metadata is not required by the `generate_permuted _scores()` function, instead, users only need to specify the number of treatment groups in the study, including the control level. 
-Since permutation requires a large amount of computational time and memory, sSNAPPY utilises the BiocParallel backend[@BiocParallel], also allowing for customisation by the user. 
-Paralleled with 8 cores, permutating 1000 times took approximately 30 minutes to complete on a local laptop. 
-Whilst permutations can be performed an a local machine, this strategy also allows for performing the permutation steps on a HPC cluster or similar.
+Since sample labels will be permuted randomly to put samples into pairs, sample metadata is not required by the `generate_permuted _scores()` function.
+All the possible random pairs between samples will be constructed by default, unless otherwise specified by the `NB` parameter. 
+In this example dataset with a total of 22 samples, 462 (i.e. 22 $\times$ 21) permuted scores will be computed for each pathway., 
 
 ```{r calc-permuted-score, eval=FALSE}
 set.seed(123)
 permutedScore <- generate_permuted_scores(
-    as.matrix(logCPM), numOfTreat = 2, NB = 1000, 
-    gsTopology = gsTopology, weight = weightedFC$weight
+    as.matrix(logCPM), gsTopology = gsTopology, weight = weightedFC$weight
 )
 ```
 
@@ -350,7 +356,7 @@ top_table <- topTable(z_fits, number = Inf) %>%
 ```
 
 Pathways with an FDR < 0.05 in the moderated t-test were considered to be significantly perturbed at the group level. 
-11 out of the 315 tested KEGG pathways passed the selection threshold (Table \@ref(tab:Table1)).
+8 out of the 315 tested KEGG pathways passed the selection threshold (Table \@ref(tab:Table1)).
 
 ```{r}
 table1 <- top_table %>%
@@ -382,9 +388,9 @@ For enrichment analysis in the original study[@Zhang2022], unsupervised clusteri
 Clusters were then annotated manually by performing pathway enrichment testing on cluster marker genes. 
 Two clusters, associated with proliferative DNA repair signatures and stress-related markers, contained significantly higher numbers of post-chemotherapy cells than pre-treatment ones[@Zhang2022].
 The representative pathways enriched in the stress-associated cluster were *IL6-mediated signaling events*, *TNF signaling pathway*, and *cellular responses to stress*,  characterized by marker genes *JUN*, *FOS*, *IL6*, *TNF*, *CXCR4*, *SNAI1*, *VIM*, *GADD45B*, and *MCL1.* 
-Among the stress-related marker genes reported, 6 of them(*CXCR4*, *FOS*, *GADD45B*, *IL6*, *JUN*, and *TNF*) were implicated in pathways that were considered to be significantly impacted by sSNAPPY.
+Among the stress-related marker genes reported, 5 of them(*FOS*, *GADD45B*, *IL6*, *JUN*, and *TNF*) were implicated in pathways that were considered to be significantly impacted by sSNAPPY.
 The other post-chemotherapy cell dominated cluster in the original study was enriched for pathways associated with cell proliferation and DNA repair, such as the Cell cycle, DNA repair, Homology directed repair (HDR) through homologous recombination, and Fanconi anaemia pathway. 
-A key gene involved in those pathways was *CHEK1*, which was also found in significantly perturbed pathways detected by sSNAPPY: the p53 signaling pathway, Cellular senescence and the Human T-cell leukaemia virus 1 infection pathway.
+A key gene involved in those pathways was *CHEK1*, which was also found in significantly perturbed pathways detected by sSNAPPY: the p53 signaling pathway and Cellular senescence pathway.
 
 Apart from considering all treated samples as biological replicates, users may elect to perform an analysis incorporating other phenotypic traits that affect patients’ responses to chemotherapy, such as disease stages or tumour grades. 
 To do that through the moderated t-statistic strategy and extend the above analysis, all that is required is an appropriate design matrix in the `lmFit` step, or subsetting the samples accordingly
@@ -398,17 +404,15 @@ Defined by the colorBy parameter, pathway nodes can be coloured by either the pa
 The returned plot is a ggplot2 [@Wickham2009] object, meaning that components of the plotting theme and other parameters can be customized as for any other ggplot2 objects.
 
 First we should obtain a subset of pathways to visualise.
-In the following example, the most highly ranked pathways were inspected, which involved three steps to prepare the data: 1) create a categorical variable with the pathway status, 2) rename the logFC column to reflect the true meaning of the value and, 3) transform the p-values for simpler visualisation.
+In the following example, the most highly ranked pathways were inspected, which involved three steps to prepare the data: 1)  rename the logFC column to reflect the true meaning of the value and, 2) create a categorical variable with the pathway status, 3) transform the p-values for simpler visualisation.
 
 ```{r}
-sigPathway <- topTable(z_fits, number = 8) %>% 
-  rownames_to_column("gs_name") %>% 
+sigPathway <- top_table %>%
+  dplyr::filter(adj.P.Val < 0.05) %>% 
   dplyr::rename(Z = logFC) %>% 
   mutate(
-    status = case_when(
-      adj.P.Val > 0.05 ~ "Unchanged",
-      Z > 0 ~ "Activated", 
-      Z < 0 ~ "Inhibited"
+    status = ifelse(
+        Z > 0, "Activated", "Inhibited"
     ),
     status = as.factor(status),
     `-log10(p)` = -log10(P.Value)
@@ -436,13 +440,13 @@ p1 + p2 + plot_annotation(tag_levels = "A")
 ```
 
 
-By examining the network structure, we can see that many of the highly connected pathways playing a central role in the network are immune-related (Figure \@ref(fig:Figure4)). 
+By examining the network structure, we can see that many of the highly connected pathways playing a central role in the network are infection-related (Figure \@ref(fig:Figure4)). 
 To summarise related pathways and further enable interpretation, we can apply community detection[@Newman2004] in order to group related pathways into 'communities'.
 sSNAPPY’s `plot_community()` function is a one-stop shop for applying a community detection algorithm of the user’s choice to the network structure and annotating identified communities by the most common pathway category, denoting the main biological processes perturbed in that community. 
 The most recent categories for KEGG pathways were curated from the [KEGG website](https://www.genome.jp/kegg/pathway.html) and included as part of sSNAPPY. 
 Annotation of KEGG pathway communities is automatically completed by calling the in-built data object.
 Analyses involving other pathway databases will require user-provided pathway categories. 
-In the current dataset, the Louvain method was applied to the network of biological pathways and revealed two primary communities, where one was annotated to be endocrine system related and the other one was most closely related to infectious diseases and the immune system (Figure \@ref(fig:Figure5)). 
+In the current dataset, the Louvain method was applied to the network of biological pathways and revealed two primary communities, where one was annotated to be cell cycle and endocrine system related and the other one was most closely related to infectious diseases (Figure \@ref(fig:Figure5)). 
 
 ```{r Figure5, out.width='80%', fig.width = 10, fig.height = 6.5,fig.cap = 'Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, colored by community structures detected through the louvain algorithm. The main biological processes perturbed by the chemo-therapy were shown.'}
 set.seed(123)
@@ -482,7 +486,7 @@ load(system.file("extdata", "entrez2name.rda", package = "sSNAPPY"))
 head(entrez2name)
 ```
 
-```{r Figure6, out.width='80%', fig.width = 9.6, fig.height = 8, fig.cap = 'Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, showing any genes in the top 500 ranked for differential expression, and which pathways they are likely contributing to. No genes in the top500 were found to contribute to the perturbation of the AMPK signaling pathway.'}
+```{r Figure6, out.width='80%', fig.width = 9.6, fig.height = 8, fig.cap = 'Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, showing any genes in the top 500 ranked for magnitudes of changes in expressions, and which pathways they are likely contributing to. No genes in the top500 were found to contribute to the perturbation of the AMPK signaling pathway or the Toxoplasmosis pathway.'}
 set.seed(123)
 plot_gs2gene(
     normalisedScores = sigPathway, 

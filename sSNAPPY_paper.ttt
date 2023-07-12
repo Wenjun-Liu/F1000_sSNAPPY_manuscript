@@ -7,19 +7,15 @@
 \toprule
 Pathway & Change & P.Value & FDR & Direction\\
 \midrule
-\cellcolor{gray!6}{AMPK signaling pathway} & \cellcolor{gray!6}{0.88} & \cellcolor{gray!6}{1.1e-05} & \cellcolor{gray!6}{0.0024} & \cellcolor{gray!6}{Activated}\\
-p53 signaling pathway & 0.88 & 2.4e-04 & 0.0186 & Activated\\
-\cellcolor{gray!6}{Progesterone-mediated oocyte maturation} & \cellcolor{gray!6}{-0.77} & \cellcolor{gray!6}{2.6e-04} & \cellcolor{gray!6}{0.0186} & \cellcolor{gray!6}{Inhibited}\\
-Pathogenic Escherichia coli infection & 0.66 & 5.3e-04 & 0.0286 & Activated\\
-\cellcolor{gray!6}{Cellular senescence} & \cellcolor{gray!6}{0.68} & \cellcolor{gray!6}{1.1e-03} & \cellcolor{gray!6}{0.0455} & \cellcolor{gray!6}{Activated}\\
+\cellcolor{gray!6}{AMPK signaling pathway} & \cellcolor{gray!6}{0.86} & \cellcolor{gray!6}{1.6e-05} & \cellcolor{gray!6}{0.0035} & \cellcolor{gray!6}{Activated}\\
+Progesterone-mediated oocyte maturation & -0.77 & 2.9e-04 & 0.0220 & Inhibited\\
+\cellcolor{gray!6}{p53 signaling pathway} & \cellcolor{gray!6}{0.86} & \cellcolor{gray!6}{3.1e-04} & \cellcolor{gray!6}{0.0220} & \cellcolor{gray!6}{Activated}\\
+Pathogenic Escherichia coli infection & 0.66 & 5.1e-04 & 0.0272 & Activated\\
+\cellcolor{gray!6}{Cellular senescence} & \cellcolor{gray!6}{0.71} & \cellcolor{gray!6}{7.8e-04} & \cellcolor{gray!6}{0.0334} & \cellcolor{gray!6}{Activated}\\
 \addlinespace
-Parathyroid hormone synthesis, secretion and action & 0.63 & 1.4e-03 & 0.0455 & Activated\\
-\cellcolor{gray!6}{Salmonella infection} & \cellcolor{gray!6}{0.59} & \cellcolor{gray!6}{2.1e-03} & \cellcolor{gray!6}{0.0455} & \cellcolor{gray!6}{Activated}\\
-Pertussis & 0.59 & 2.2e-03 & 0.0455 & Activated\\
-\cellcolor{gray!6}{Human T-cell leukemia virus 1 infection} & \cellcolor{gray!6}{0.62} & \cellcolor{gray!6}{2.2e-03} & \cellcolor{gray!6}{0.0455} & \cellcolor{gray!6}{Activated}\\
-Yersinia infection & 0.62 & 2.3e-03 & 0.0455 & Activated\\
-\addlinespace
-\cellcolor{gray!6}{Toxoplasmosis} & \cellcolor{gray!6}{0.63} & \cellcolor{gray!6}{2.3e-03} & \cellcolor{gray!6}{0.0455} & \cellcolor{gray!6}{Activated}\\
+Parathyroid hormone synthesis, secretion and action & 0.65 & 1.1e-03 & 0.0386 & Activated\\
+\cellcolor{gray!6}{Yersinia infection} & \cellcolor{gray!6}{0.64} & \cellcolor{gray!6}{1.8e-03} & \cellcolor{gray!6}{0.0496} & \cellcolor{gray!6}{Activated}\\
+Toxoplasmosis & 0.65 & 1.9e-03 & 0.0496 & Activated\\
 \bottomrule
 \end{tabular}}
 \end{table}
