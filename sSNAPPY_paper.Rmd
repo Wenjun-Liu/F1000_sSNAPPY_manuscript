@@ -65,31 +65,33 @@ knitr::include_graphics(
 ## Implementation
 
 *sSNAPPY* is an R package that has been reviewed and published on the open-source bioinformatics software platform [Bioconductor](https://bioconductor.org/packages/release/bioc/html/*sSNAPPY*.html) with all source code available via GitHub.
-The methodology itself is topology-based, designed to compute directional, single-sample, pathway perturbation scores in gene expression datasets with a matched-pair, or nested design (eg. samples collected before and after treatment).
+The methodology itself is topology-based, designed to compute directional, single-sample, pathway perturbation scores for gene expression datasets with a matched-pair, or nested design (eg. samples collected before and after treatment).
 This allows for the detection of pathway perturbations within all samples from a treatment group, but also within individual samples.
 
 To run *sSNAPPY*, the only required data is a log-transformed expression matrix (e.g. logCPM) with matching sample metadata describing treatment groups and the nested structure.
 It is assumed that all pre-processing has been performed beforehand, such as the exclusion of low-signal genes or normalisation to minimise technical artefacts like GC-bias.
-The first step, performed internally by *sSNAPPY*, is to estimate sample-specific log fold-change ($\delta_{ghi} = \mu_{ghi} - \mu_{g0i}$) for a treatment $h$ across all genes $g$ within each patient $i$, by subtracting expression estimates for the baseline samples $\mu_{g0i}$ from those in the treatment group $h$.
-Here, we gave an example of nesting samples by patients, but *sSNAPPY* could be applied to any data with matched-pair design. 
-For example, RNA-seq data of treated and untreated cells from several passages, in which case the parameter $i$ would denote the passages.
-It should also be noted that *sSNAPPY* supports any number of treatment/condition levels and the numbers of samples in each treatment group do not have to be identical. 
-As long as a treated sample is matched to a corresponding control, the sample-specific log fold-changes will be computed for that sample.
+The first step performed by *sSNAPPY*, is to estimate sample-specific log fold-change ($\delta_{ghi} = \mu_{ghi} - \mu_{g0i}$) across all genes $g$ for each treatment $h$ within each set of nested replicates $i$, by subtracting expression estimates for the baseline samples $\mu_{g0i}$ from those in the treatment group $h$.
+Each set of nested replicates may be drawn from treated or control samples within cell-line passages, or from treatments applied to the same donor tissue.
+<!-- Here, we gave an example of nesting samples by patients, but *sSNAPPY* could be applied to any data with matched-pair design.  -->
+<!-- For example, RNA-seq data of treated and untreated cells from several passages, in which case the parameter $i$ would denote the passages. -->
+It should also be noted that *sSNAPPY* is applicable to any number of treatment/condition levels and sample numbers within each treatment group are not required to be balanced. 
+<!-- As long as a treated sample is matched to a corresponding control, the sample-specific log fold-changes will be computed for that sample. -->
 
-Since it has been shown that in RNA-seq data, genes with lower expression tend to have larger variance and larger estimates of change[@Law2014], we utilise a gene-level weighting strategy to de-emphasise logFC estimates for low-abundance genes.
-Gene-level weights $w_g$ are obtained in a treatment-agnostic manner by fitting a loess curve through the relationship between observed gene-level variance ($\sigma_g$) and average signal ($\bar\mu_{g}$)(Figure \@ref(fig:Figure2)), and taking the inverse of the loess-predicted variance as the weight $w_g = a / f(\bar\mu_{g})$, where $f(\bar\mu_{g})$ is the predicted value from the loess curve and the constant $a$ ensures $\sum w_g = 1$.
+It is well known that in RNA-seq data, genes with lower expression tend to have greater variability in signal and more broadly spread estimates of change[@Law2014].
+As such, we utilise a gene-level weighting strategy to down-weight fold-change estimates for low-abundance genes prior to passing these estimates to sSNAPPY.
+Gene-level weights $w_g$ are obtained in a treatment-agnostic manner by fitting a loess curve through the relationship between observed gene-level variance ($\sigma^2_g$) and average signal ($\bar\mu_{g}$)(Figure \@ref(fig:Figure2)), and taking the inverse of the loess-predicted variance as the weight $w_g = a / f(\bar\mu_{g})$, where $f(\bar\mu_{g})$ is the predicted value from the loess curve and the constant $a$ ensures $\sum w_g = 1$.
 We then use these weighted estimates of logFC ($\delta_{ghi}^* = w_g\delta_{ghi}$) in the calculation of all pathway perturbation scores.
 
-```{r Figure2, out.width='100%',fig.cap="Gene-wise standard deviations are plotted against the mean logCPM values with mean-variance trend modelled by a loess fit. Genes with low expression values tend to have a larger variance.", echo=FALSE}
+```{r Figure2, out.width='100%',fig.cap="Gene-wise standard deviations are plotted against the mean logCPM values with mean-variance trend modelled by a loess fit. Whilst standard deviations are shown here for the purposes of visualisation, gene-level weights are calculated using variances at this stage of the sSNAPPY algorithm.", echo=FALSE}
 knitr::include_graphics(
     here::here("sSNAPPY_paper_files/figure-latex/Figure2.pdf")
 )
 ```
 
-*sSNAPPY* was built upon the group-level topology-based scoring algorithm initially proposed in  SPIA[@Tarca2009] to propagate genes' changes in expression through pathway topologies to compute a perturbation score for each pathway.
-In contrast to SPIA, which requires pre-selection of differentially expressed genes, *sSNAPPY* utilises the full expression matrix. 
-By modifying the algorithm to incorporate single-sample, weighted estimates of changes in expression we are able to quantify changes in a pathway within a given sample, and then model these across all samples within a treatment group.
-Thus, we define the single-sample perturbation score ($S_{hip}$) for a given pathway $p$, patient $i$ and treatment $h$:
+*sSNAPPY* extends the topology-based scoring algorithm initially proposed in  SPIA[@Tarca2009] which propagates fold-change estimates from genes considered as differentially expressed through pathway topologies, to compute a perturbation score for each pathway.
+In contrast to SPIA, *sSNAPPY* uses fold-change estimates from all detected genes. 
+By modifying the algorithm to incorporate single-sample, weighted estimates of fold-change, we are able to numerically represent changes in a pathway within a given sample, and subsequently model these across all samples within a treatment group.
+Thus, we define the single-sample perturbation score ($S_{hip}$) for a given pathway $p$ and treatment $h$ for a set of nested samples $i$:
 
 
 $$
@@ -101,28 +103,39 @@ $$
 where:
 
 * $G_p$ represents the set of genes in pathway $p$, such that $g \in G_p$
-* $S_{ghip}$ is the gene-, treatment- and patient-specific perturbation score for pathway $p$
+* $S_{ghip}$ is the gene-, treatment- and sample-specific perturbation score for pathway $p$
 * $\delta_{ghi}^* = w_g\delta_{ghi}$ is the weighted logFC of gene $g$ as described above
 * $U_{gp}$ is the subset of $G_p$ containing only the genes directly upstream of gene $g$
 * $\beta_{gg'p}$ is the pair-wise gene-gene interactions[@Tarca2009] encoded by the topology matrix for genes $g$ and $g'$
 * $N_{gp}$ is the number of downstream genes from any gene $g$
-* $S_{hip}$ is the accumulated pathway perturbation score for pathway $p$ in treatment $h$ for patient $i$
+* $S_{hip}$ is the accumulated pathway perturbation score for pathway $p$ in treatment $h$ within sample $i$
 
-The Bioconductor package graphite[@Sales2012] provides functions that can be used to retrieve pathway topologies from a database and convert topology information to adjacency matrices.
-In order to streamline this process we have implemented a convenience function, where users only need to provide the name of the desired database and species to retrieve all topology information in the format required by the scoring algorithm with the correct type of gene identifiers (ie. Entrez ID).
 
 To scale the single-sample pathway perturbation scores ($S_{hip}$) so they are comparable across pathways and to test for significance of individual scores, null distributions of perturbation scores for each pathway are generated through a sample permutation strategy, retaining the correct correlation structure between genes within a pathway.
-We recommend users to perform a minimum of 1000 permutations, requiring at least 8 unique samples.
-Subsequently, the median and median absolute deviation (MAD) of the permuted perturbation scores will be calculated and used to normalise the raw perturbation scores to robust $Z$-scores, which is defined as: 
+We recommend users to perform $K \geq 1000$ permutations, requiring N $\geq 8$ samples in total, as minimally represented by $I = 4$ pairs of treated and control samples (i.e. $H = 1$).
+<!-- Does this return K*I individual permutation scores? You had this number last time... -->
+<!-- I've modified the formula below but I'm really not sure how you want to denote permutations. -->
+<!-- I'm obviously a bit far away from this, but I assume nesting and treatment labels are ignored during permutations? -->
+Subsequently, the median and median absolute deviation (MAD) of the permuted perturbation scores will be calculated for each pathway, and used to normalise the raw perturbation scores $S_{hip}$ to robust $Z$-scores, $Z_{hip}$.
 
-$$
-Z_{hip} = \frac{S_{hip} - median_{n \in N}({S_{h^ni^np}})}{MAD_{n \in N}({S_{h^ni^np}})}
-$$
+<!-- Yeah, I'm confused by this formula. Let's leave it out. -->
+<!-- The way you had it was to have sample & treatment specific permutations, which I didn't think was correct -->
+<!-- $$ -->
+<!-- Z_{hip} = \frac{S_{hip} - median_{k \in K}({S_{kp}})}{MAD_{k \in K}({S_{kp}})} -->
+<!-- $$ -->
+
 With each permutation, column names (i.e. sample labels) for the expression matrix are randomly shuffled while the rest of the scoring algorithm remains unchanged.
+<!-- I really don't understand this. How are permutations sample & treatment specific if we've shuffled labels? -->
+<!-- Isn't it just a set of numbers which is agnostic to these categories? -->
+<!-- Dont we obtain a reference set & subtract these values from all $S_{hip}$ values? -->
+<!-- I'm just really confused by the following sentence -->
 The permuted pathway perturbation score for pathway $p$ in a sample that is assigned to be of treatment $h$ and patient $i$ in the $n$-th round of permutation is represented as $S_{h^ni^np}$, and $N$ is the total rounds of permutation performed.
 Following the computation of robust $Z$-scores, two-sided *p*-values are derived to assess whether a pathway is significantly perturbed at sample-specific level.
 Apart from assessing whether a pathway's activity changed significantly within an individual sample, users may also be interested in detecting changes at the group-level, which can be performed by modelling scores with regression models, incorporating Smyth's moderated $t$-statistic[@Smyth_2004] as implemented in *limma*[@limma_2015].
 The single-sample nature of *sSNAPPY*'s pathway perturbation scores is particularly helpful for datasets with complex experimental designs or known confounding factors as these can also be incorporated into the final regression models.
+
+The Bioconductor package graphite[@Sales2012] provides functions that can be used to retrieve pathway topologies from a database and convert topology information to adjacency matrices.
+In order to streamline this process we have implemented a convenience function, where users only need to provide the name of the desired database and species to retrieve all topology information in the format required by the scoring algorithm with the correct type of gene identifiers (ie. Entrez ID).
 
 
 ## Operation
