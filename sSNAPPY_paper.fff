@@ -14,7 +14,7 @@
 
 }
 
-\caption{Gene-wise standard deviations are plotted against the mean logCPM values with mean-variance trend modelled by a loess fit. Genes with low expression values tend to have a larger variance.}\label{fig:Figure2}
+\caption{Gene-wise standard deviations are plotted against the mean logCPM values with mean-variance trend modelled by a loess fit. Whilst standard deviations are shown here for the purposes of visualisation, gene-level weights are calculated using variances at this stage of the sSNAPPY algorithm.}\label{fig:Figure2}
 \end{figure}
 \efloatseparator
  
@@ -44,7 +44,7 @@
 
 }
 
-\caption{Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, colored by community structures detected through the louvain algorithm. The main biological processes perturbed by the chemo-therapy were shown.}\label{fig:Figure5}
+\caption{Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, colored by community structures detected through the louvain algorithm. The main biological processes perturbed by the chemotherapy were shown.}\label{fig:Figure5}
 \end{figure}
 \efloatseparator
  
