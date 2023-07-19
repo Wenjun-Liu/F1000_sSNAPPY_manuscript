@@ -344,14 +344,14 @@ For our use case here, no design matrix is required and a simple t-test is appro
 
 
 ```{r}
-z_matrix <- normalisedScores %>%
-  dplyr::select(robustZ, gs_name, sample) %>%
-  pivot_wider(names_from = "sample", values_from = "robustZ") %>%
+score_matrix <- normalisedScores %>%
+  dplyr::select(score, gs_name, sample) %>%
+  pivot_wider(names_from = "sample", values_from = "score") %>%
   column_to_rownames("gs_name") %>%
   as.matrix()
-z_fits <- lmFit(z_matrix, design = rep(1, ncol(z_matrix))) %>% 
+score_fits <- lmFit(score_matrix, design = rep(1, ncol(score_matrix))) %>% 
   eBayes(trend = FALSE)
-top_table <- topTable(z_fits, number = Inf) %>%
+top_table <- topTable(score_fits, number = Inf) %>%
   as_tibble(rownames = "gs_name")
 ```
 
