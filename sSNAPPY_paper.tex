@@ -118,7 +118,7 @@
 \thispagestyle{front}
 
 \begin{abstract}
-A common outcome of analysing RNA-Seq data is the detection of biological pathways with significantly altered activity between the conditions under investigation. Whilst many strategies test for over-representation within pre-defined gene-sets for genes showing changed expression, these analyses typically do not account for gene-gene interactions encoded by pathway topologies, and are not able to directly predict the directional change of pathway activity. To address these issues, we have deloped a single-sample pathway perturbation analysis method \href{https://bioconductor.org/packages/sSNAPPY}{\emph{sSNAPPY}}, now available as an R/Bioconductor package, which leverages pathway topology information to compute pathway perturbation scores, and predicts the direction of change across a set of pathways. Here, we demonstrate the use of \emph{sSNAPPY} by applying the method to public scRNA-seq data, derived from ovarian cancer patient tissues collected before and after chemotherapy. Not only were we able to predict the directions of significant perturbations of pathways discussed in the original study, but \emph{sSNAPPY} was also able to detect significant changes of other biological processes, yielding far greater insight into the response to treatment. \emph{sSNAPPY} represents a novel pathway analysis strategy that takes into consideration of pathway topology to predict impacted biology pathways, both within related samples and across treatment groups. In addition to not relying on the detection of differentially expressed genes, the method and associated R package offer important flexibility and provide powerful visualisation tools.
+A common outcome of analysing RNA-Seq data is the detection of biological pathways with significantly altered activity between the conditions under investigation. Whilst many strategies test for over-representation within pre-defined gene-sets for genes showing changed expression, these analyses typically do not account for gene-gene interactions encoded by pathway topologies, and are not able to directly predict the directional change of pathway activity. To address these issues, we have developed a single-sample pathway perturbation analysis method \href{https://bioconductor.org/packages/sSNAPPY}{\emph{sSNAPPY}}, now available as an R/Bioconductor package, which leverages pathway topology information to compute pathway perturbation scores, and predicts the direction of change across a set of pathways. Here, we demonstrate the use of \emph{sSNAPPY} by applying the method to public scRNA-seq data, derived from ovarian cancer patient tissues collected before and after chemotherapy. Not only were we able to predict the directions of significant perturbations of pathways discussed in the original study, but \emph{sSNAPPY} was also able to detect significant changes of other biological processes, yielding far greater insight into the response to treatment. \emph{sSNAPPY} represents a novel pathway analysis strategy that takes into consideration of pathway topology to predict impacted biology pathways, both within related samples and across treatment groups. In addition to not relying on the detection of differentially expressed genes, the method and associated R package offer important flexibility and provide powerful visualisation tools.
 \end{abstract}
 
 \section*{Keywords}
@@ -128,11 +128,11 @@ RNA-seq, pathway enrichment, R package, topology, KEGG, scRNA-seq
 \clearpage
 \pagestyle{main}
 
-\textbf{R version}: R version 4.3.1 (2023-06-16)
+\textbf{R version}: R version 4.3.0 (2023-04-21)
 
 \textbf{Bioconductor version}: 3.17
 
-\textbf{Package}: 1.4.1
+\textbf{Package}: 1.5.1
 
 \hypertarget{introduction}{%
 \section{Introduction}\label{introduction}}
@@ -147,7 +147,7 @@ Nevertheless, most topology-based methods focus only on comparing activities of 
 However, in heterogenous data where more than one factor may be influencing observations\citep{Hanzelmann2013}, incorporating scoring within paired samples may be desirable and may be able to reveal more nuanced insights.
 To address this gap, we present a Single-Sample directioNAl Pathway Perturbation analYsis methodology called \href{https://bioconductor.org/packages/sSNAPPY}{\emph{sSNAPPY}}, available as an R/Bioconductor package.
 This article defines how \emph{sSNAPPY} computes changes in gene expression within paired samples, and propagates this through gene-set topologies to predict the perturbation in pathway activities within paired samples, before providing summarised results across an entire dataset (Figure \ref{fig:Figure1}).
-The practical usage of the \emph{sSNAPPY} R/Bioconductor package is illustrated through the analysis of a public scRNA-seq dataset using pseudo-bulk strategies.
+The practical usage of the \emph{sSNAPPY} R/Bioconductor package is illustrated through the analysis of a public scRNA-seq dataset using the pseudo-bulk strategy.
 
 \begin{figure}
 
@@ -223,10 +223,8 @@ During permutation, all sample labels are randomly shuffled and permuted pseudo-
 Single-sample fold-changes are then calculated for each pseudo-pair of permuted samples while the rest of the scoring algorithm remains unchanged.
 The median and median absolute deviation (MAD) are calculated from the set of permuted perturbation scores within each pathway, and used to normalise the raw perturbation scores to robust \(Z\)-scores.
 All possible permuted pseudo-pairs are sampled unless otherwise specified, such that in an experiment with \(I\) total samples, the maximum number of unique permuted pairs is \({}^IP_2 = \frac{{I!}}{{(I-2)!}} = I \times (I-1)\).
-
-Robust Z-scores can then be used at the single-sample level to determine approximate significance within each sample.
-However, it should be noted that when the total number of samples is small, and the number of possible permutations is limited, robust Z-Scores should be interpreted with caution.
-
+Permutation p-value for individual scores indicating the approximate significance of pathway perturbation at the single-sample level will be derived by assessing the proportion of permuted scores with absolute values that are as or more extreme than the absolute value of test perturbation within each pathway\citep{Theo2009}.
+Since the smallest achievebale permutation p-value is 1/\(NP\), where \(NP\) is the number of permuted pairs, accurate estimation of small p-value requires a large number of permutation that is only feasible in data with large sample size.
 Apart from assessing whether a pathway's activity changed significantly within an individual sample, users may also be interested in detecting changes across all samples within a treatment, which can be performed by modelling scores with regression models, incorporating Smyth's moderated \(t\)-statistic\citep{Smyth_2004} as implemented in \emph{limma}\citep{limma_2015}.
 The single-sample nature of \emph{sSNAPPY}'s pathway perturbation scores is particularly helpful for datasets with complex experimental designs or known confounding factors as these can also be incorporated into the final regression models.
 
@@ -351,7 +349,7 @@ Pathways with zero perturbation scores across all genes and samples will be drop
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{genePertScore }\OtherTok{\textless{}{-}} \FunctionTok{raw\_gene\_pert}\NormalTok{(weightedFC}\SpecialCharTok{$}\NormalTok{logFC, gsTopology)}
+\NormalTok{genePertScore }\OtherTok{\textless{}{-}} \FunctionTok{raw\_gene\_pert}\NormalTok{(weightedFC}\SpecialCharTok{$}\NormalTok{weighted\_logFC, gsTopology)}
 \NormalTok{ssPertScore }\OtherTok{\textless{}{-}} \FunctionTok{pathway\_pert}\NormalTok{(genePertScore)}
 \FunctionTok{head}\NormalTok{(ssPertScore)}
 \end{Highlighting}
@@ -386,12 +384,12 @@ In this example dataset with a total of 22 samples, 462 (i.e.~22 \(\times\) 21) 
 \end{Shaded}
 
 Apart from pathways whose permuted perturbation scores are consistently zero, the empirical distributions of remaining pathways should be approximately normally distributed with \(\mu = 0\), with the scale of the distributions heavily impacted by the number of genes within each pathway along with the topology.
-To demonstrate this, we randomly selected 6 pathways and visualised the permuted perturbation scores as boxplots (Figure \ref{fig:Figure3}).
+To demonstrate this, we randomly selected 6 pathways to demonstrate their quantile-quantile (q-q) plot and visualised the distributions of their permuted perturbation scores as boxplots (Figure \ref{fig:Figure3}).
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \FunctionTok{set.seed}\NormalTok{(}\DecValTok{234}\NormalTok{)}
-\NormalTok{permutedScore }\SpecialCharTok{\%\textgreater{}\%}
+\NormalTok{random\_pathways }\OtherTok{\textless{}{-}}\NormalTok{ permutedScore }\SpecialCharTok{\%\textgreater{}\%}
     \FunctionTok{keep}\NormalTok{(}\SpecialCharTok{\textasciitilde{}}\FunctionTok{all}\NormalTok{(.}\SpecialCharTok{!=}\DecValTok{0}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%}
 \NormalTok{    .[}\FunctionTok{sample}\NormalTok{(}\FunctionTok{seq\_along}\NormalTok{(.), }\DecValTok{6}\NormalTok{)] }\SpecialCharTok{\%\textgreater{}\%}
     \FunctionTok{as.data.frame}\NormalTok{() }\SpecialCharTok{\%\textgreater{}\%}
@@ -401,7 +399,19 @@ To demonstrate this, we randomly selected 6 pathways and visualised the permuted
     \FunctionTok{mutate}\NormalTok{(}
         \AttributeTok{gs\_name =} \FunctionTok{str\_replace\_all}\NormalTok{(gs\_name, }\StringTok{"}\SpecialCharTok{\textbackslash{}\textbackslash{}}\StringTok{."}\NormalTok{, }\StringTok{" "}\NormalTok{),}
         \AttributeTok{gs\_name =} \FunctionTok{str\_remove\_all}\NormalTok{(gs\_name, }\StringTok{"kegg "}\NormalTok{)}
-\NormalTok{    ) }\SpecialCharTok{\%\textgreater{}\%}
+\NormalTok{    ) }
+\NormalTok{p1 }\OtherTok{\textless{}{-}}\NormalTok{ random\_pathways }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ggplot}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{sample =}\NormalTok{ score, }\AttributeTok{colour =}\NormalTok{ gs\_name)) }\SpecialCharTok{+}
+  \FunctionTok{stat\_qq}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{stat\_qq\_line}\NormalTok{(}\AttributeTok{colour =} \StringTok{"black"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{facet\_wrap}\NormalTok{(}\SpecialCharTok{\textasciitilde{}}\FunctionTok{str\_wrap}\NormalTok{(gs\_name, }\AttributeTok{width =} \DecValTok{25}\NormalTok{), }\AttributeTok{scales=} \StringTok{"free"}\NormalTok{) }\SpecialCharTok{+} 
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{y =} \StringTok{"Permuted Perturbation Score"}\NormalTok{, }\AttributeTok{x =} \StringTok{"Theoretical Quantiles"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{theme\_bw}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{theme}\NormalTok{(}
+      \AttributeTok{legend.position =} \StringTok{"none"}\NormalTok{, }
+      \AttributeTok{text =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{14}\NormalTok{), }
+      \AttributeTok{strip.text =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{16}\NormalTok{))}
+\NormalTok{p2 }\OtherTok{\textless{}{-}}\NormalTok{ random\_pathways }\SpecialCharTok{\%\textgreater{}\%}
     \FunctionTok{ggplot}\NormalTok{(}\FunctionTok{aes}\NormalTok{(gs\_name, score, }\AttributeTok{fill =}\NormalTok{ gs\_name)) }\SpecialCharTok{+}
     \FunctionTok{geom\_boxplot}\NormalTok{() }\SpecialCharTok{+}
     \FunctionTok{scale\_x\_discrete}\NormalTok{(}\AttributeTok{labels =} \ControlFlowTok{function}\NormalTok{(x) }\FunctionTok{str\_wrap}\NormalTok{(x, }\AttributeTok{width =} \DecValTok{10}\NormalTok{)) }\SpecialCharTok{+}
@@ -413,6 +423,9 @@ To demonstrate this, we randomly selected 6 pathways and visualised the permuted
       \AttributeTok{axis.title =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{16}\NormalTok{), }
       \AttributeTok{axis.text =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{14}\NormalTok{)}
 \NormalTok{    )}
+\NormalTok{(p1 }\SpecialCharTok{/}\NormalTok{ p2) }\SpecialCharTok{+}
+    \FunctionTok{plot\_annotation}\NormalTok{(}\AttributeTok{tag\_levels =} \StringTok{"A"}\NormalTok{) }\SpecialCharTok{+}
+    \FunctionTok{plot\_layout}\NormalTok{(}\AttributeTok{heights =} \FunctionTok{c}\NormalTok{(}\FloatTok{0.6}\NormalTok{, }\FloatTok{0.4}\NormalTok{))}
 \end{Highlighting}
 \end{Shaded}
 
@@ -422,11 +435,11 @@ To demonstrate this, we randomly selected 6 pathways and visualised the permuted
 
 }
 
-\caption{Permuted perturbation scores of six randomly selected pathways. All sampled empirical distributions are approximately normally distributed with a mean of zero.}\label{fig:Figure3}
+\caption{(A) Q-Q plot and (B) distributions of permuted perturbation scores of six randomly selected pathways. All sampled empirical distributions are approximately normally distributed with a mean of zero.}\label{fig:Figure3}
 \end{figure}
 
 The distributions obtained from label permutations are then used to convert each pathway-level score into a scaled robust \(Z\)-score using the function \texttt{normalise\_by\_permu()}.
-Robust Z-scores can in turn be transformed into two-sided p-values and corrected for multiple testing using any of the available methods, and returning the FDR adjusted values by default.
+Two-sided p-values for individual scores will be computed based on how extreme the test scores are in comparison to permuted scores for each pathway, and corrected for multiple testing using any of the available methods, returning the FDR-adjusted values by default.
 In our brief example data, no pathways would be considered as significantly perturbed at the single-sample level using an FDR adjustment with \(\alpha\) = 0.05.
 
 \begin{Shaded}
@@ -438,20 +451,20 @@ In our brief example data, no pathways would be considered as significantly pert
 \end{Shaded}
 
 \begin{verbatim}
-##               MAD MEDIAN                                       gs_name
-## 388  0.0274269216      0             kegg.Epstein-Barr virus infection
-## 417  0.0002129708      0               kegg.Autoimmune thyroid disease
-## 421  0.0002129708      0                      kegg.Allograft rejection
-## 287  0.0142815123      0               kegg.JAK-STAT signaling pathway
-## 1142 0.0034839083      0 kegg.C-type lectin receptor signaling pathway
-## 505  0.0099700991      0                kegg.Th17 cell differentiation
-##                sample         score   robustZ      pvalue adjPvalue
-## 388  EOC136_post-NACT -0.0817379496 -2.980209 0.002880521 0.2427042
-## 417  EOC136_post-NACT -0.0006237555 -2.928831 0.003402395 0.2427042
-## 421  EOC136_post-NACT -0.0006237555 -2.928831 0.003402395 0.2427042
-## 287  EOC136_post-NACT -0.0366880290 -2.568918 0.010201670 0.5457893
-## 1142 EOC349_post-NACT  0.0085037555  2.440867 0.014652066 0.9834071
-## 505  EOC153_post-NACT  0.0238610587  2.393262 0.016699314 0.7836214
+##              MAD MEDIAN                           gs_name           sample
+## 388 2.742692e-02      0 kegg.Epstein-Barr virus infection EOC136_post-NACT
+## 422 7.010664e-05      0    kegg.Graft-versus-host disease EOC136_post-NACT
+## 449 4.341132e-03      0       kegg.FoxO signaling pathway EOC153_post-NACT
+## 256 6.962610e-03      0                  kegg.Necroptosis EOC136_post-NACT
+## 417 2.129708e-04      0   kegg.Autoimmune thyroid disease EOC136_post-NACT
+## 421 2.129708e-04      0          kegg.Allograft rejection EOC136_post-NACT
+##             score   robustZ      pvalue adjPvalue
+## 388 -0.0817379496 -2.980209 0.008658009 0.6948052
+## 422 -0.0001616702 -2.306061 0.008658009 0.6948052
+## 449 -0.0086249854 -1.986806 0.012987013 0.7629234
+## 256 -0.0159170052 -2.286069 0.017316017 0.6948052
+## 417 -0.0006237555 -2.928831 0.017316017 0.6948052
+## 421 -0.0006237555 -2.928831 0.017316017 0.6948052
 \end{verbatim}
 
 A key question of interest in our example dataset is to identify which biological processes were impacted by chemotherapy across the entire group of patients.
@@ -534,7 +547,7 @@ Defined by the colorBy parameter, pathway nodes can be coloured by either the pr
 The returned plot is a ggplot2 \citep{Wickham2009} object, meaning that components of the plotting theme and other parameters can be customized as for any other ggplot2 objects.
 
 First we should obtain a subset of pathways to visualise.
-In the following example, the most highly ranked pathways were inspected, which involved three steps to prepare the data: 1) rename the logFC column to reflect the true meaning of the value and, 2) create a categorical variable with the pathway status, 3) transform the p-values for simpler visualisation.
+In the following example, pathways that were considered to be significantly perturbed at group-level were inspected, which involved three steps to prepare the data: 1) rename the logFC column to reflect the true meaning of the value and, 2) create a categorical variable with the pathway status, 3) transform the p-values for simpler visualisation.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -561,7 +574,7 @@ In the following example, the most highly ranked pathways were inspected, which 
 \NormalTok{) }\SpecialCharTok{+}
   \FunctionTok{scale\_colour\_manual}\NormalTok{(}\AttributeTok{values =} \FunctionTok{c}\NormalTok{(}\StringTok{"red"}\NormalTok{, }\StringTok{"blue"}\NormalTok{, }\StringTok{"grey30"}\NormalTok{)) }\SpecialCharTok{+}
   \FunctionTok{theme\_void}\NormalTok{() }\SpecialCharTok{+}
-  \FunctionTok{theme}\NormalTok{(}\AttributeTok{legend.text =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{12}\NormalTok{)) }
+  \FunctionTok{theme}\NormalTok{(}\AttributeTok{legend.text =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{10}\NormalTok{)) }
 \FunctionTok{set.seed}\NormalTok{(}\DecValTok{123}\NormalTok{)}
 \NormalTok{p2 }\OtherTok{\textless{}{-}} \FunctionTok{plot\_gs\_network}\NormalTok{(}
   \AttributeTok{normalisedScores =}\NormalTok{ sigPathway,}
@@ -573,10 +586,10 @@ In the following example, the most highly ranked pathways were inspected, which 
   \FunctionTok{scale\_colour\_viridis\_c}\NormalTok{() }\SpecialCharTok{+}
   \FunctionTok{theme\_void}\NormalTok{() }\SpecialCharTok{+}
   \FunctionTok{theme}\NormalTok{(}
-    \AttributeTok{legend.text =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{12}\NormalTok{),}
-    \AttributeTok{legend.title =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{12}\NormalTok{)}
+    \AttributeTok{legend.text =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{8}\NormalTok{),}
+    \AttributeTok{legend.title =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{10}\NormalTok{)}
 \NormalTok{  ) }
-\NormalTok{p1 }\SpecialCharTok{+}\NormalTok{ p2 }\SpecialCharTok{+} \FunctionTok{plot\_annotation}\NormalTok{(}\AttributeTok{tag\_levels =} \StringTok{"A"}\NormalTok{) }
+\NormalTok{p1 }\SpecialCharTok{|}\NormalTok{ p2 }\SpecialCharTok{+} \FunctionTok{plot\_annotation}\NormalTok{(}\AttributeTok{tag\_levels =} \StringTok{"A"}\NormalTok{) }
 \end{Highlighting}
 \end{Shaded}
 
@@ -637,7 +650,7 @@ An alternative strategy will be to select genes based on test-statistics, howeve
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{meanFC }\OtherTok{\textless{}{-}} \FunctionTok{rowMeans}\NormalTok{(weightedFC}\SpecialCharTok{$}\NormalTok{logFC) }\SpecialCharTok{/}\NormalTok{ weightedFC}\SpecialCharTok{$}\NormalTok{weight}
+\NormalTok{meanFC }\OtherTok{\textless{}{-}} \FunctionTok{rowMeans}\NormalTok{(weightedFC}\SpecialCharTok{$}\NormalTok{weighted\_logFC) }\SpecialCharTok{/}\NormalTok{ weightedFC}\SpecialCharTok{$}\NormalTok{weight}
 \NormalTok{top500 }\OtherTok{\textless{}{-}} \FunctionTok{rank}\NormalTok{(}\DecValTok{1}\SpecialCharTok{/}\FunctionTok{abs}\NormalTok{(meanFC)) }\SpecialCharTok{\textless{}=} \DecValTok{500}
 \NormalTok{dirFC }\OtherTok{\textless{}{-}} \FunctionTok{ifelse}\NormalTok{(meanFC }\SpecialCharTok{\textgreater{}} \DecValTok{0}\NormalTok{, }\StringTok{"Up{-}Regulated"}\NormalTok{, }\StringTok{"Down{-}Regulated"}\NormalTok{)}
 \end{Highlighting}
@@ -746,7 +759,7 @@ Inclusion of the Z-Scores enabled the assessment of the level of perturbation pr
 
 }
 
-\caption{Gene-level perturbation scores of the top 20 genes in the "p53 signalling pathway" ranked by their average contribution to the perturbation score. Samples were annotated by the stage of cancers, along with robust Z-scores which indicate the extent of perturbation within each sample. The genes ATR and ATM were identified as possible key drivers of the activation of p53 signalling pathway, with downregulation of MDM4 also appearing likely to be playing a role.}\label{fig:Figure7}
+\caption{Gene-level perturbation scores of the top 20 genes in the "p53 signalling pathway" ranked by their average contribution to the perturbation score. Samples were annotated by the stage of cancers, along with robust Z-scores which indicate the extent of perturbation within each sample. The genes ATR and ATM were identified as possible key drivers of the activation of p53 signalling pathway, with MDM4 appearing likely to be playing an antagonistic role.}\label{fig:Figure7}
 \end{figure}
 
 From this heatmap we can identify candidate genes which are likely to be making the biggest contribution to the activation of p53 Signaling Pathway upon chemotherapy, such as \emph{ART} and \emph{ATM}, along with the \emph{MDM4} and members of the GADD45 family.
@@ -794,9 +807,6 @@ No competing interests were disclosed
 \section{Grant information}\label{grant-information}}
 
 This work was supported by funding from the National Health and Medical Research Council of Australia (ID 1186647 to W.D. Tilley) and the National Breast Cancer Foundation Australia (ID IIRS-23-069 to W.D. Tilley).
-
-\hypertarget{acknowledgements}{%
-\section{Acknowledgements}\label{acknowledgements}}
 
 \renewcommand\refname{References}
 {\small\bibliography{sample.bib}}
