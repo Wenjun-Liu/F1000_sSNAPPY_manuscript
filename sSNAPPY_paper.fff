@@ -4,17 +4,17 @@
 
 }
 
-\caption{Gene-wise standard deviations are plotted against the mean logCPM values with mean-variance trend modelled by a loess fit. Genes with low expression values tend to have a larger variance.}\label{fig:Figure1}
+\caption{Schematic illustration of the differences betweeen conventional pathway analysis methods and sSNAPPY. Instead of being limited to treatment-level analyses, \textit{sSNAPPY} allows the detection of pathway perturbation in individual samples by using sample-specific estimates of fold-change instead of experiment-wide estimates. (Created with BioRender.com).}\label{fig:Figure1}
 \end{figure}
 \efloatseparator
  
 \begin{figure}
 
-{\centering \includegraphics[width=1\linewidth]{sSNAPPY_paper_files/figure-latex/Figure2-1}
+{\centering \includegraphics[width=1\linewidth]{sSNAPPY_paper_files/figure-latex/Figure2}
 
 }
 
-\caption{Permuted perturbation scores of six randomly selected pathways. All sampled empirical distributions are approximately normally distributed with a mean of zero.}\label{fig:Figure2}
+\caption{Gene-wise standard deviations are plotted against the mean logCPM values with mean-variance trend modelled by a loess fit. Whilst standard deviations are shown here for the purposes of visualisation, gene-level weights are calculated using variances at this stage of the sSNAPPY algorithm.}\label{fig:Figure2}
 \end{figure}
 \efloatseparator
  
@@ -24,17 +24,17 @@
 
 }
 
-\caption{Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, colored by (A) pathways’ predicted directions of changes and (B) pathways’ -log10(p-values). Pathways with a FDR < 0.05 in the moderated t-test were included.}\label{fig:Figure3}
+\caption{(A) Q-Q plot and (B) distributions of permuted perturbation scores of six randomly selected pathways. All sampled empirical distributions are approximately normally distributed with a mean of zero.}\label{fig:Figure3}
 \end{figure}
 \efloatseparator
  
 \begin{figure}
 
-{\centering \includegraphics[width=0.8\linewidth]{sSNAPPY_paper_files/figure-latex/Figure4-1}
+{\centering \includegraphics[width=1\linewidth]{sSNAPPY_paper_files/figure-latex/Figure4-1}
 
 }
 
-\caption{Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, colored by community structures detected through the louvain algorithm. The two main biological processes perturbed by the chemo-therapy were endocrine- and immune-related.}\label{fig:Figure4}
+\caption{Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, colored by (A) pathways’ predicted direction of changes and (B) pathways’ -log10(p-values). Pathways with a FDR < 0.05 in the moderated t-test were included.}\label{fig:Figure4}
 \end{figure}
 \efloatseparator
  
@@ -44,15 +44,25 @@
 
 }
 
-\caption{Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, showing any genes in the top 500 ranked for differential expression, and which pathways they are likely contributing to. No genes in the top500 were found to be contributing to the perturbation of the AMPK signaling pathway.}\label{fig:Figure5}
+\caption{Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, colored by community structures detected through the louvain algorithm. The main biological processes perturbed by the chemotherapy were shown.}\label{fig:Figure5}
 \end{figure}
 \efloatseparator
  
 \begin{figure}
 
-{\centering \includegraphics[width=1\linewidth]{sSNAPPY_paper_files/figure-latex/Figure6-1}
+{\centering \includegraphics[width=0.8\linewidth]{sSNAPPY_paper_files/figure-latex/Figure6-1}
 
 }
 
-\caption{Gene-level perturbation scores of the top 20 genes in the "p53 signalling pathway" ranked by their average contribution to the perturbation score. Samples were annotated by the stages of cancers, along with robust Z-scores which indicate the extent of perturbation within each sample. The genes ATR and ATM were identified as possible key drivers of the activation of p53 signalling pathway, with downregulation of MDM4 also appearing likely to be playing a role.}\label{fig:Figure6}
+\caption{Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, showing any genes in the top 500 ranked for magnitudes of changes in expressions, and which pathways they are likely contributing to. No genes in the top500 were found to contribute to the perturbation of the AMPK signaling pathway or the Toxoplasmosis pathway.}\label{fig:Figure6}
+\end{figure}
+\efloatseparator
+ 
+\begin{figure}
+
+{\centering \includegraphics[width=1\linewidth]{sSNAPPY_paper_files/figure-latex/Figure7-1}
+
+}
+
+\caption{Gene-level perturbation scores of the top 20 genes in the "p53 signalling pathway" ranked by their average contribution to the perturbation score. Samples were annotated by the stage of cancers, along with robust Z-scores which indicate the extent of perturbation within each sample. The genes ATR and ATM were identified as possible key drivers of the activation of p53 signalling pathway, with MDM4 appearing likely to be playing an antagonistic role.}\label{fig:Figure7}
 \end{figure}
