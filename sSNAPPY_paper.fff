@@ -34,7 +34,7 @@
 
 }
 
-\caption{Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, colored by (A) pathways’ predicted direction of changes and (B) pathways’ -log10(p-values). Pathways with a FDR < 0.05 in the moderated t-test were included.}\label{fig:Figure4}
+\caption{Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, colored by (A) predicted direction of changes and (B) -log10(p-values). Only pathways with a FDR-adjusted p-value < 0.05 from moderated t-tests are shown.}\label{fig:Figure4}
 \end{figure}
 \efloatseparator
  
@@ -54,7 +54,7 @@
 
 }
 
-\caption{Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, showing any genes in the top 500 ranked for magnitudes of changes in expressions, and which pathways they are likely contributing to. No genes in the top500 were found to contribute to the perturbation of the AMPK signaling pathway or the Toxoplasmosis pathway.}\label{fig:Figure6}
+\caption{Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, showing any genes in the top 500 ranked by magnitude of change in expression, and which pathways they are likely contributing to. No genes in the top 500 were found to contribute to the perturbation of the AMPK signaling pathway or the Toxoplasmosis pathway.}\label{fig:Figure6}
 \end{figure}
 \efloatseparator
  
@@ -64,5 +64,5 @@
 
 }
 
-\caption{Gene-level perturbation scores of the top 20 genes in the "p53 signalling pathway" ranked by their average contribution to the perturbation score. Samples were annotated by the stage of cancers, along with robust Z-scores which indicate the extent of perturbation within each sample. The genes ATR and ATM were identified as possible key drivers of the activation of p53 signalling pathway, with MDM4 appearing likely to be playing an antagonistic role.}\label{fig:Figure7}
+\caption{Gene-level perturbation scores for the top 20 genes in the "p53 signalling pathway" ranked by average contribution to the perturbation score. Samples were annotated by cancer stage, along with the range for sample-level Z-scores as a guide to sample-specific pathway perturbation. The genes ATR and ATM were identified as possible key drivers of the activation of p53 signalling pathway, with MDM4 appearing likely to be playing an antagonistic role.}\label{fig:Figure7}
 \end{figure}

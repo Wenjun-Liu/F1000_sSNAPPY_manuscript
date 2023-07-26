@@ -128,11 +128,11 @@ RNA-seq, pathway enrichment, R package, topology, KEGG, scRNA-seq
 \clearpage
 \pagestyle{main}
 
-\textbf{R version}: R version 4.3.0 (2023-04-21)
+\textbf{R version}: R version 4.3.1 (2023-06-16)
 
 \textbf{Bioconductor version}: 3.17
 
-\textbf{Package}: 1.5.1
+\textbf{Package}: 1.4.2
 
 \hypertarget{introduction}{%
 \section{Introduction}\label{introduction}}
@@ -218,14 +218,15 @@ where:
   \(S_{hip}\) is the accumulated pathway perturbation score for pathway \(p\) in treatment \(h\) within sample \(i\)
 \end{itemize}
 
-To scale the single-sample pathway perturbation scores (\(S_{hip}\)) so they are comparable across pathways and to test for significance of individual scores, null distributions of perturbation scores for each pathway are generated through a sample permutation strategy, which retains any existing correlation structures between genes within a pathway.
+To scale single-sample pathway perturbation scores (\(S_{hip}\)) so they are comparable across pathways, and to test for significance of individual scores, null distributions of perturbation scores for each pathway are generated through a sample permutation strategy, which retains any existing correlation structures between genes within a pathway.
 During permutation, all sample labels are randomly shuffled and permuted pseudo-pairs formed from the re-shuffled labels.
 Single-sample fold-changes are then calculated for each pseudo-pair of permuted samples while the rest of the scoring algorithm remains unchanged.
 The median and median absolute deviation (MAD) are calculated from the set of permuted perturbation scores within each pathway, and used to normalise the raw perturbation scores to robust \(Z\)-scores.
 All possible permuted pseudo-pairs are sampled unless otherwise specified, such that in an experiment with \(I\) total samples, the maximum number of unique permuted pairs is \({}^IP_2 = \frac{{I!}}{{(I-2)!}} = I \times (I-1)\).
-Permutation p-value for individual scores indicating the approximate significance of pathway perturbation at the single-sample level will be derived by assessing the proportion of permuted scores with absolute values that are as or more extreme than the absolute value of test perturbation within each pathway\citep{Theo2009}.
-Since the smallest achievebale permutation p-value is 1/\(NP\), where \(NP\) is the number of permuted pairs, accurate estimation of small p-value requires a large number of permutation that is only feasible in data with large sample size.
-Apart from assessing whether a pathway's activity changed significantly within an individual sample, users may also be interested in detecting changes across all samples within a treatment, which can be performed by modelling scores with regression models, incorporating Smyth's moderated \(t\)-statistic\citep{Smyth_2004} as implemented in \emph{limma}\citep{limma_2015}.
+Permutation p-values for individual scores, indicating the approximate significance of pathway perturbation at the single-sample level, are also derived by assessing the proportion of permuted scores with absolute values as extreme, or more extreme, than the absolute value of test perturbation within each pathway\citep{Theo2009}.
+Since the smallest achievable permutation p-value is 1/\(NP\), where \(NP\) is the number of permuted pairs, accurate estimation of small p-value requires a large number of permutation that is only feasible in data with large sample size.
+
+Apart from assessing whether a pathway's activity changed significantly within an individual sample, users may also be interested in detecting changes across all samples within a treatment, which can be performed by modelling scores using regression models, and incorporating Smyth's moderated \(t\)-statistic\citep{Smyth_2004} as implemented in \emph{limma}\citep{limma_2015}.
 The single-sample nature of \emph{sSNAPPY}'s pathway perturbation scores is particularly helpful for datasets with complex experimental designs or known confounding factors as these can also be incorporated into the final regression models.
 
 The Bioconductor package graphite\citep{Sales2012} provides functions that can be used to retrieve pathway topologies from a database and convert topology information to adjacency matrices.
@@ -276,10 +277,10 @@ The following packages are required for this workflow
 \end{Highlighting}
 \end{Shaded}
 
-Before running the \emph{sSNAPPY} workflow, we need to load our expression matrix and define our sample-level metadata, then download any pathway information.
-Firstly we can read in the data, setting the treatment column in the metadata to be a factor.
-Importantly, to run \emph{sSNAPPY}, the row names of the expression matrix must be specified as EntrezGene IDs, for compatibility with pathway databases.
-Genes without EntrezGene IDs were excluded, leaving 10,098 genes in the example expression matrix.
+To begin running the \emph{sSNAPPY} workflow, we first load our expression matrix and define our sample-level metadata.
+Importantly, the row names of the expression matrix must be specified as EntrezGene IDs, for compatibility with pathway databases.
+Genes without EntrezGene IDs were excluded during pre-processing, leaving 10,098 genes in the example expression matrix.
+The treatment column within our metadata is expected to be a factor, with the reference level interpreted as the control treatment.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -305,8 +306,8 @@ Genes without EntrezGene IDs were excluded, leaving 10,098 genes in the example 
 \hypertarget{retrieval-of-pathway-topology}{%
 \subsection{Retrieval of Pathway Topology}\label{retrieval-of-pathway-topology}}
 
-Next, pathway topology information needs to be retrieved from a chosen database.
-Using KEGG as an example, the retrieved topology information will be stored as a list where each element corresponds to a pathway and the numbers in the matrices encode gene-gene interaction.
+Next, pathway topology information needs to be retrieved from a chosen database, and this is the only step requiring internet access.
+Using KEGG as an example, the retrieved topology information will be stored as a list where each element corresponds to a pathway and the numbers in the matrices encode gene-gene interactions.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -314,19 +315,16 @@ Using KEGG as an example, the retrieved topology information will be stored as a
 \end{Highlighting}
 \end{Shaded}
 
-In addition to downloading the topology matrices of all pathways, it is also possible to provide a restricted set of keywords for a targeted analysis.
+In addition to downloading topology matrices for all pathways, it is also possible to provide a restricted set of keywords for a targeted analysis.
 For example, passing the argument \texttt{keyword\ =\ c("metabolism",\ "estrogen")} would only return the subset of pathways which match either of these keywords.
 Multiple databases are also able to be searched by passing a vector of database names to the \texttt{database} argument.
 
 \hypertarget{score-single-sample-pathway-perturbation}{%
 \subsection{Score Single-Sample Pathway Perturbation}\label{score-single-sample-pathway-perturbation}}
 
-To compute the single-sample fold-changes (i.e.~logFC) required for the set of perturbation scores, samples must be matched pairs or nested.
-For instance, biopsies derived pre- vs post-treatment or untreated vs treated cell lines.
-The factor defining the paired structure is passed to the \texttt{weight\_ss\_fc()} function through the \texttt{groupBy} parameter.
-In our example dataset, pre- and post-treatment samples are matched by patient IDs.
-Additionally, the sample metadata must include the treatment of all samples.
-The treatment column must be a factor with the reference level set to be the control treatment.
+To compute the single-sample fold-changes (i.e.~logFC) required for the set of perturbation scores, samples must be `matched pairs' or nested, as would be found when analysing biopsies pre- vs post-treatment, or untreated vs treated cell lines nested by passage.
+The factor defining the nested structure is passed to the \texttt{weight\_ss\_fc()} function through the \texttt{groupBy} parameter.
+In our example dataset, pre- and post-treatment samples are matched by the ``patient\_id'' column.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -339,13 +337,12 @@ The treatment column must be a factor with the reference level set to be the con
 \end{Shaded}
 
 The output of \texttt{weight\_ss\_fc()} is a \texttt{list} where one element is a matrix of weighted single-sample fold-changes (\(\delta_{ghi}^*\)), with rows corresponding to genes and columns to samples, and the other element is the vector of gene-wise weights (\(w_g\)) used to calculate the weighted log fold-change (\(\delta_{ghi}^*\)), as described above.
+By default, the string \texttt{ENTREZID:} is added to all row names of the \(\delta_{ghi}^*\) matrix to be compatible with the format KEGG pathway topologies are retrieved in.
 
-The matrix of \(\delta_{ghi}^*\) values are then passed to pathway topologies to compute the gene-wise perturbation scores for all genes included in a pathway, before being summed into a single score for each pathway.
-In the above example, the string \texttt{ENTREZID:} was also added to all row names of the \(\delta_{ghi}^*\) matrix to be compatible with the format KEGG pathway topologies were retrieved in.
-These gene-wise perturbation scores can also be used in downstream analysis to identify genes playing the most significant roles in each pathway, as will be demonstrated in the visualisation section below.
-The pathway-level perturbation scores (\(S_{hip}\)) are returned as a data.frame containing sample and gene-set names.
-In the following steps, we first calculate the gene-level contributions to each pathway (\(S_{ghip}\)) using the function \texttt{raw\_gene\_pert()} and then obtain pathway-level summaries using \texttt{pathway\_pert()}.
-Pathways with zero perturbation scores across all genes and samples will be dropped at this stage.
+The matrix of \(\delta_{ghi}^*\) values are then passed to pathway topologies to compute gene-wise perturbation scores for all genes within a pathway, before being summed into a single score for each pathway.
+\texttt{raw\_gene\_pert()} returns a list, with each element containing the gene-level perturbation scores for a given pathway, with each matrix able to be used during downstream analysis to identify which genes play the most significant roles in each pathway, as demonstrated in later sections.
+Pathway-level perturbation scores (\(S_{hip}\)) are then returned as a data.frame containing sample and gene-set names after calling \texttt{pathway\_pert()}.
+Pathways with zero perturbation scores across all genes and samples are dropped at this step.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -368,11 +365,11 @@ Pathways with zero perturbation scores across all genes and samples will be drop
 \hypertarget{sample-permutation-for-normalisation-and-significance-testing}{%
 \subsection{Sample Permutation for Normalisation and Significance Testing}\label{sample-permutation-for-normalisation-and-significance-testing}}
 
-The values obtained from each pathway will vary greatly due to the variability in topology structures.
-To determine the significance of individual scores and transform scores to ensure they are comparable across pathways, sSNAPPY utilises a sample-permutation strategy to simulate the null distributions of perturbation scores.
+The range of values obtained from each pathway will vary greatly due to the variability in topology structures.
+To determine the significance of individual scores and transform scores to ensure they are comparable across pathways, sSNAPPY utilises a sample-permutation strategy to estimate the null distributions of perturbation scores.
 Since sample labels will be permuted randomly to put samples into pseudo-pairs, sample metadata is not required by the \texttt{generate\_permuted\ \_scores()} function.
-All possible random pairs between samples will be sampled by default, unless otherwise specified by the \texttt{NB} parameter.
-In this example dataset with a total of 22 samples, 462 (i.e.~22 \(\times\) 21) permuted scores will be computed for each pathway.
+All possible random pairs between samples will be sampled by default, unless otherwise specified.
+In this example dataset with a total of 22 samples, the full set of 462 (i.e.~22 \(\times\) 21) permuted scores will be computed for each pathway.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -383,7 +380,7 @@ In this example dataset with a total of 22 samples, 462 (i.e.~22 \(\times\) 21) 
 \end{Highlighting}
 \end{Shaded}
 
-Apart from pathways whose permuted perturbation scores are consistently zero, the empirical distributions of remaining pathways should be approximately normally distributed with \(\mu = 0\), with the scale of the distributions heavily impacted by the number of genes within each pathway along with the topology.
+Apart from pathways whose permuted perturbation scores are consistently zero, the empirical distributions of remaining pathways are expected to be approximately normally distributed with \(\mu = 0\), but with the scale of distributions heavily impacted by both the number of genes within each pathway and the overall topology.
 To demonstrate this, we randomly selected 6 pathways to demonstrate their quantile-quantile (q-q) plot and visualised the distributions of their permuted perturbation scores as boxplots (Figure \ref{fig:Figure3}).
 
 \begin{Shaded}
@@ -438,9 +435,9 @@ To demonstrate this, we randomly selected 6 pathways to demonstrate their quanti
 \caption{(A) Q-Q plot and (B) distributions of permuted perturbation scores of six randomly selected pathways. All sampled empirical distributions are approximately normally distributed with a mean of zero.}\label{fig:Figure3}
 \end{figure}
 
-The distributions obtained from label permutations are then used to convert each pathway-level score into a scaled robust \(Z\)-score using the function \texttt{normalise\_by\_permu()}.
-Two-sided p-values for individual scores will be computed based on how extreme the test scores are in comparison to permuted scores for each pathway, and corrected for multiple testing using any of the available methods, returning the FDR-adjusted values by default.
-In our brief example data, no pathways would be considered as significantly perturbed at the single-sample level using an FDR adjustment with \(\alpha\) = 0.05.
+The distributions obtained from label permutations are then used to convert each pathway-level score into a robust \(Z\)-score using the function \texttt{normalise\_by\_permu()}.
+Two-sided p-values for individual scores are computed based on how extreme test scores are in comparison to permuted scores for each pathway, and corrected for multiple testing using any of the available methods, returning the FDR-adjusted values by default.
+In our example data, no pathways would be considered as significantly perturbed at the single-sample level using an FDR adjustment with \(\alpha\) = 0.05.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -469,8 +466,8 @@ In our brief example data, no pathways would be considered as significantly pert
 
 A key question of interest in our example dataset is to identify which biological processes were impacted by chemotherapy across the entire group of patients.
 Using the sample-level output obtained above, we can explore this by applying t-tests or regression models across all samples.
-In order to minimise spurious results, Smyth's moderated t-statistics\citep{Smyth_2004} are able to be applied across the complete dataset, and given that we are using Z-scores, a constant variance was assumed across all pathways.
-To perform this analysis, the robust Z-scores were converted to a matrix, and the standard \emph{limma} methodologies used.
+In order to minimise spurious results, Smyth's moderated t-statistics\citep{Smyth_2004} are able to be applied across the complete dataset, with a constant variance assumed across all pathways, given that we are using Z-scores,.
+To perform this analysis, robust Z-scores were converted to a matrix and standard \emph{limma} methodologies were used.
 For our use case here, where only one treatment group is present, no design matrix is required and a simple t-test is appropriate.
 
 \begin{Shaded}
@@ -530,24 +527,23 @@ For enrichment analysis in the original study\citep{Zhang2022}, unsupervised clu
 Clusters were then annotated manually by performing pathway enrichment testing on cluster marker genes.
 Two clusters, associated with proliferative DNA repair signatures and stress-related markers, contained significantly higher numbers of post-chemotherapy cells than pre-treatment ones\citep{Zhang2022}.
 The representative pathways enriched in the stress-associated cluster were \emph{IL6-mediated signaling events}, \emph{TNF signaling pathway}, and \emph{cellular responses to stress}, characterized by marker genes \emph{JUN}, \emph{FOS}, \emph{IL6}, \emph{TNF}, \emph{CXCR4}, \emph{SNAI1}, \emph{VIM}, \emph{GADD45B}, and \emph{MCL1.}
-Among the stress-related marker genes reported, 5 of them (\emph{FOS}, \emph{GADD45B}, \emph{IL6}, \emph{JUN}, and \emph{TNF}) were implicated in pathways that were considered to be significantly impacted by sSNAPPY.
-The other post-chemotherapy cell dominated cluster in the original study was enriched for pathways associated with cell proliferation and DNA repair, such as the Cell cycle, DNA repair, Homology directed repair (HDR) through homologous recombination, and Fanconi anaemia pathway.
+Among the stress-related marker genes reported, five (\emph{FOS}, \emph{GADD45B}, \emph{IL6}, \emph{JUN}, and \emph{TNF}) were implicated in pathways that were considered to be significantly impacted by sSNAPPY.
+The other post-chemotherapy cell dominated cluster in the original study was enriched for pathways associated with cell proliferation and DNA repair, such as the Cell cycle, DNA repair, Homology directed repair (HDR) through homologous recombination, and the Fanconi anaemia pathway.
 A key gene involved in those pathways was \emph{CHEK1}, which was also found in significantly perturbed pathways detected by sSNAPPY: the p53 signaling pathway and Cellular senescence pathway.
 
 Apart from considering all treated samples as biological replicates, users may elect to perform an analysis incorporating other phenotypic traits which may impact a patients responses to chemotherapy, such as disease stages or tumour grades.
-To perform this step using the moderated t-statistic strategy and extend the above analysis, an appropriate design matrix is the only thing required for model-fitting, or alternatively, the samples may be subset accordingly.
+To perform this step using the moderated t-statistic strategy and extend the above analysis, an appropriate design matrix is the only additional requirement for model-fitting, or alternatively, samples may be subset as may be appropriate.
 
 \hypertarget{visualising-perturbed-pathways-as-networks}{%
 \subsection{Visualising Perturbed Pathways as Networks}\label{visualising-perturbed-pathways-as-networks}}
 
-A valuable feature of sSNAPPY is the provision of multiple visualisation functions to assist in the interpretation of results.
-Biological pathways are not independent of each other with many genes playing a role across multiple pathways, and as such, presenting pathway analysis results as a network can be a powerful way to intuitively summarise the results and facilitate interpretation of the underlying biology.
+A valuable feature of sSNAPPY is the provision of several visualisation functions to assist in the interpretation of results.
+Biological pathways are not independent of each other with many genes playing a role across multiple pathways, and as such, viewing pathway analysis results as a network can be a powerful way to intuitively summarise the results and facilitate interpretation of the underlying biology.
 The \texttt{plot\_gs\_network()} function allows users to easily convert a list of relevant biological pathways to a network where edges between pathway nodes represent overlapping genes.
 Defined by the colorBy parameter, pathway nodes can be coloured by either the predicted direction of change or by significance levels (Figure \ref{fig:Figure4}).
 The returned plot is a ggplot2 \citep{Wickham2009} object, meaning that components of the plotting theme and other parameters can be customized as for any other ggplot2 objects.
 
-First we should obtain a subset of pathways to visualise.
-In the following example, pathways that were considered to be significantly perturbed at group-level were inspected, which involved three steps to prepare the data: 1) rename the logFC column to reflect the true meaning of the value and, 2) create a categorical variable with the pathway status, 3) transform the p-values for simpler visualisation.
+In the following example, pathways that were considered to be significantly perturbed at group-level were inspected, which involved three steps to prepare the data: 1) rename the logFC column to reflect the true meaning of the value and, 2) create a categorical variable with the pathway status, 3) transform p-values for simpler visualisation.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -599,16 +595,16 @@ In the following example, pathways that were considered to be significantly pert
 
 }
 
-\caption{Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, colored by (A) pathways’ predicted direction of changes and (B) pathways’ -log10(p-values). Pathways with a FDR < 0.05 in the moderated t-test were included.}\label{fig:Figure4}
+\caption{Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, colored by (A) predicted direction of changes and (B) -log10(p-values). Only pathways with a FDR-adjusted p-value < 0.05 from moderated t-tests are shown.}\label{fig:Figure4}
 \end{figure}
 
 By examining the network structure, we can see that many of the highly connected pathways playing a central role in the network are infection-related (Figure \ref{fig:Figure4}).
 To summarise related pathways and further enable interpretation, we can apply community detection\citep{Newman2004} and group related pathways into `communities'.
 sSNAPPY's \texttt{plot\_community()} function is a ``one-stop shop'' for applying a community detection algorithm of the user's choice to the network structure and annotating identified communities by the most common pathway category, denoting the main biological processes perturbed in that community.
 The most recent categories for KEGG pathways were curated from the \href{https://www.genome.jp/kegg/pathway.html}{KEGG website} and included as part of sSNAPPY.
-Annotation of KEGG pathway communities is automatically completed by calling the in-built data object.
-Analyses involving other pathway databases will require user-provided pathway categories.
-In the current dataset, the Louvain method was applied to the network of biological pathways and revealed two primary communities, where one was annotated to be cell cycle and endocrine system related and the other one was most closely related to infectious diseases (Figure \ref{fig:Figure5}).
+Annotation of KEGG pathway communities is automatically completed by calling the in-built data object, and incorporates annotations provided as part of the KEGG hierarchy.
+Analyses involving other pathway databases may require user-provided pathway categories.
+In the current dataset, the Louvain method was applied to the network of biological pathways and revealed two primary communities, where one was annotated to be cell cycle and endocrine system related and the other one was more closely related to infectious diseases (Figure \ref{fig:Figure5}) indicating a clear immune-signalling aspect to these results.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -656,8 +652,8 @@ An alternative strategy will be to select genes based on test-statistics, howeve
 \end{Highlighting}
 \end{Shaded}
 
-Since KEGG pathway topologies were retrieved using EntrezIDs, users can provide a data.frame mapping Entrez IDs to their chosen identifiers, such as gene names, through the mapEntrezID parameter to make the visualisations more informative.
-A data.frame converting Entrez IDs to ensemble gene names was derived from the Ensembl Release 101\citep{Ensembl2022} and has been made available as part of the package.
+Since KEGG pathway topologies were retrieved using Entrez IDs, users can provide a data.frame mapping Entrez IDs to their chosen identifiers, such as gene names, through the mapEntrezID parameter, in order to make the visualisations more informative.
+A data.frame converting Entrez IDs to Ensembl gene names was derived from the Ensembl Release 101\citep{Ensembl2022} and has been made available as part of the package and serves as a helpful template for future mapping operations by users.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -708,7 +704,7 @@ A data.frame converting Entrez IDs to ensemble gene names was derived from the E
 
 }
 
-\caption{Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, showing any genes in the top 500 ranked for magnitudes of changes in expressions, and which pathways they are likely contributing to. No genes in the top500 were found to contribute to the perturbation of the AMPK signaling pathway or the Toxoplasmosis pathway.}\label{fig:Figure6}
+\caption{Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, showing any genes in the top 500 ranked by magnitude of change in expression, and which pathways they are likely contributing to. No genes in the top 500 were found to contribute to the perturbation of the AMPK signaling pathway or the Toxoplasmosis pathway.}\label{fig:Figure6}
 \end{figure}
 
 \hypertarget{identifying-key-gene-contributions}{%
@@ -759,11 +755,13 @@ Inclusion of the Z-Scores enabled the assessment of the level of perturbation pr
 
 }
 
-\caption{Gene-level perturbation scores of the top 20 genes in the "p53 signalling pathway" ranked by their average contribution to the perturbation score. Samples were annotated by the stage of cancers, along with robust Z-scores which indicate the extent of perturbation within each sample. The genes ATR and ATM were identified as possible key drivers of the activation of p53 signalling pathway, with MDM4 appearing likely to be playing an antagonistic role.}\label{fig:Figure7}
+\caption{Gene-level perturbation scores for the top 20 genes in the "p53 signalling pathway" ranked by average contribution to the perturbation score. Samples were annotated by cancer stage, along with the range for sample-level Z-scores as a guide to sample-specific pathway perturbation. The genes ATR and ATM were identified as possible key drivers of the activation of p53 signalling pathway, with MDM4 appearing likely to be playing an antagonistic role.}\label{fig:Figure7}
 \end{figure}
 
-From this heatmap we can identify candidate genes which are likely to be making the biggest contribution to the activation of p53 Signaling Pathway upon chemotherapy, such as \emph{ART} and \emph{ATM}, along with the \emph{MDM4} and members of the GADD45 family.
-Ataxia-telangiectasia mutated (\emph{ATM}) is a well-established oncosuppressor\citep{Moslemi2021} while haploinsufficient mouse double minute 4 (\emph{MDM4}) is an oncogene that suppresses p53\citep{Momand}. Mutations of both genes have been observed in many types of cancers\citep{Choi2016, Gansmo2016, Atwal2009}.
+From this heatmap we can identify candidate genes which are likely to be making the biggest contribution to the activation of p53 Signaling Pathway upon chemotherapy,
+such as \emph{ART} and \emph{ATM}, along with the \emph{MDM4} and members of the GADD45 family.
+Ataxia-telangiectasia mutated (\emph{ATM}) is a well-established oncosuppressor\citep{Moslemi2021} while haploinsufficient mouse double minute 4 (\emph{MDM4}) is an oncogene that suppresses p53\citep{Momand}.
+Mutations of both genes have been observed in many types of cancers\citep{Choi2016, Gansmo2016, Atwal2009}.
 Moreover, the Ataxia telangiectasia and RAD3-related protein kinase (\emph{ATR}) and the growth arrest and DNA damage-inducible gene 45 (\emph{GADD45}) have gained great attention as potential targets for anti-tumor treatments due to their involvement in DNA damage repair\citep{Liebermann2011, Hu2022}.
 ATR inhibitors, in particular, have shown promising results in clinical trials for HGSOC.\citep{Li2022, Gong2021}.
 
@@ -771,7 +769,7 @@ ATR inhibitors, in particular, have shown promising results in clinical trials f
 \section{Discussion}\label{discussion}}
 
 In conclusion, we have presented and provided a demonstration for the R/Bioconductor package \emph{sSNAPPY} which offers a novel single-sample pathway perturbation testing approach, tailored for heterogeneous tissue samples in matched-pair design.
-In contrast to many common enrichment methods, sSNAPPY uses pathway topology information to compute perturbation scores which indicate the likely impact on the activity of a pathway, by predicting direction of change.
+In contrast to many common enrichment methods, sSNAPPY uses pathway topology information to compute perturbation scores which indicate the likely impact on the activity of a pathway, by predicting direction of change and enabling deeper characterisation of biological responses.
 By applying sSNAPPY to a public scRNA-seq data collected before and after HGSOC patients were subjected to chemotherapy, we demonstrated its ability to detect significant pathway perturbations of various interesting biological processes consistent with, and far beyond what was shown in the original study.
 Whilst initially conceived for bulk-RNA studies, this demonstration has also provided clear applicability to scRNA datasets.
 \emph{sSNAPPY} addresses the limitations of alternative strategies which fail to account for gene-gene interactions encoded by pathway topologies and are unable to predict the directionality of pathway activities.
@@ -793,10 +791,18 @@ The dataset analysed in this manuscript are stored in the data directory of this
 \item
   Source code available from: \url{https://github.com/Wenjun-Liu/sSNAPPY}
 \item
-  Archived source code at time of publication: {[}DOI (found on right hand side of a Zenodo record){]}
+  Archived source code at time of publication: \url{https://doi.org/10.5281/zenodo.8185451}
 \item
-  License: \href{https://opensource.org/license/mit/}{MIT}
+  License: GNU General Public License v3.0 (\href{https://opensource.org/license/gpl-3-0/}{GPL-3}
 \end{itemize}
+
+\hypertarget{author-contributions}{%
+\section{Author Contributions}\label{author-contributions}}
+
+WL's contributions include Conceptualization, Data Curation, Formal Analysis, Investigation, Methodology, Project Administration, Software, Validation, Visualisation, Writing - Original Draft Preparation, and Writing - Review \& Editing.
+VM was involved with Conceptualization, Methodology and Writing - Review \& Editing.
+WDT contributed to Writing - Review \& Editing.
+SMP's contributions include Conceptualization, Methodology, Project Administration, Software, Supervision, Writing - Original Draft Preparation, and Writing - Review \& Editing.
 
 \hypertarget{competing-interests}{%
 \section{Competing interests}\label{competing-interests}}
@@ -806,9 +812,9 @@ No competing interests were disclosed
 \hypertarget{grant-information}{%
 \section{Grant information}\label{grant-information}}
 
-This work was supported by funding from the National Health and Medical Research Council of Australia (ID 1186647 to W.D. Tilley) and the National Breast Cancer Foundation Australia (ID IIRS-23-069 to W.D. Tilley).
+W.D. Tilley's research is supported by the National Health and Medical Research Council of Australia (ID 1186647) and the National Breast Cancer Foundation Australia (ID IIRS-23-069)
 
 \renewcommand\refname{References}
-{\small\bibliography{sample.bib}}
+{\small\bibliography{bibliography.bib}}
 
 \end{document}
