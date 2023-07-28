@@ -24,7 +24,7 @@ abstract:
   *sSNAPPY* represents a novel pathway analysis strategy that takes into consideration of pathway topology to predict impacted biology pathways, both within related samples and across treatment groups. 
   In addition to not relying on the detection of differentially expressed genes, the method and associated R package offer important flexibility and provide powerful visualisation tools.
 
-keywords: RNA-seq, pathway enrichment, R package, topology, KEGG, scRNA-seq
+keywords: RNA-seq, pathway enrichment, R package, topology, KEGG, Reactome, scRNA-seq
 bibliography: bibliography.bib
 csl: vancouver.csl
 output: BiocWorkflowTools::f1000_article
@@ -216,10 +216,14 @@ head(sample_meta)
 ## Retrieval of Pathway Topology
 
 Next, pathway topology information needs to be retrieved from a chosen database, and this is the only step requiring internet access.
-Using KEGG as an example, the retrieved topology information will be stored as a list where each element corresponds to a pathway and the numbers in the matrices encode gene-gene interactions. 
+Using Reactome as an example, the retrieved topology information will be stored as a list where each element corresponds to a pathway and the numbers in the matrices encode gene-gene interactions. 
 
-```{r}
-gsTopology <- retrieve_topology(database = "kegg", species = "hsapiens")
+```{r, eval=FALSE}
+gsTopology <- retrieve_topology(database = "reactome", species = "hsapiens")
+```
+
+```{r, echo=FALSE}
+gsTopology <- readRDS(here::here("data/gsTopology.rds"))
 ```
 
 In addition to downloading topology matrices for all pathways, it is also possible to provide a restricted set of keywords for a targeted analysis.
@@ -241,7 +245,7 @@ glimpse(weightedFC)
 ```
 
 The output of `weight_ss_fc()` is a `list` where one element is a matrix of weighted single-sample fold-changes ($\delta_{ghi}^*$), with rows corresponding to genes and columns to samples, and the other element is the vector of gene-wise weights ($w_g$) used to calculate the weighted log fold-change ($\delta_{ghi}^*$), as described above.
-By default, the string `ENTREZID:` is added to all row names of the $\delta_{ghi}^*$ matrix to be compatible with the format KEGG pathway topologies are retrieved in. 
+By default, the string `ENTREZID:` is added to all row names of the $\delta_{ghi}^*$ matrix to be compatible with the format Reactome pathway topologies are retrieved in. 
 
 The matrix of $\delta_{ghi}^*$ values are then passed to pathway topologies to compute gene-wise perturbation scores for all genes within a pathway, before being summed into a single score for each pathway. 
 `raw_gene_pert()` returns a list, with each element containing the gene-level perturbation scores for a given pathway, with each matrix able to be used during downstream analysis to identify which genes play the most significant roles in each pathway, as demonstrated in later sections.
@@ -250,7 +254,7 @@ Pathways with zero perturbation scores across all genes and samples are dropped 
 
 ```{r}
 genePertScore <- raw_gene_pert(weightedFC$weighted_logFC, gsTopology)
-ssPertScore <- pathway_pert(genePertScore)
+ssPertScore <- pathway_pert(genePertScore, weightedFC$weighted_logFC)
 head(ssPertScore)
 ```
 
@@ -263,21 +267,20 @@ All possible random pairs between samples will be sampled by default, unless oth
 In this example dataset with a total of 22 samples, the full set of 462 (i.e. 22 $\times$ 21) permuted scores will be computed for each pathway. 
 
 ```{r calc-permuted-score, eval=FALSE}
-set.seed(123)
 permutedScore <- generate_permuted_scores(
     as.matrix(logCPM), gsTopology = gsTopology, weight = weightedFC$weight
 )
 ```
 
 ```{r, echo=FALSE}
-permutedScore <- readRDS(here::here("data/permutedScore.rds"))
+permutedScore <- readRDS(here::here("data/permutedScore_wiki.rds"))
 ```
 
 Apart from pathways whose permuted perturbation scores are consistently zero, the empirical distributions of remaining pathways are expected to be approximately normally distributed with $\mu = 0$, but with the scale of distributions heavily impacted by both the number of genes within each pathway and the overall topology. 
 To demonstrate this, we randomly selected 6 pathways to demonstrate their quantile-quantile (q-q) plot and visualised the distributions of their permuted perturbation scores as boxplots (Figure \@ref(fig:Figure3)).
 
 ```{r Figure3, out.width='100%', fig.width=12, fig.height=12, fig.cap="(A) Q-Q plot and (B) distributions of permuted perturbation scores of six randomly selected pathways. All sampled empirical distributions are approximately normally distributed with a mean of zero."}
-set.seed(234)
+set.seed(175)
 random_pathways <- permutedScore %>%
     keep(~all(.!=0)) %>%
     .[sample(seq_along(.), 6)] %>%
@@ -287,7 +290,7 @@ random_pathways <- permutedScore %>%
     ) %>%
     mutate(
         gs_name = str_replace_all(gs_name, "\\.", " "),
-        gs_name = str_remove_all(gs_name, "kegg ")
+        gs_name = str_remove_all(gs_name, "reactome ")
     ) 
 p1 <- random_pathways %>%
   ggplot(aes(sample = score, colour = gs_name)) +
@@ -333,28 +336,28 @@ In order to minimise spurious results, Smyth's moderated t-statistics[@Smyth_200
 To perform this analysis, robust Z-scores were converted to a matrix and standard *limma* methodologies were used.
 For our use case here, where only one treatment group is present, no design matrix is required and a simple t-test is appropriate.
 
-
 ```{r}
 z_matrix <- normalisedScores %>%
-  dplyr::select(robustZ, gs_name, sample) %>%
-  pivot_wider(names_from = "sample", values_from = "robustZ") %>%
-  column_to_rownames("gs_name") %>%
-  as.matrix()
-z_fits <- lmFit(z_matrix, design = rep(1, ncol(z_matrix))) %>% 
-  eBayes(trend = FALSE)
+    dplyr::select(robustZ, gs_name, sample) %>%
+    pivot_wider(names_from = "sample", values_from = "robustZ") %>%
+    column_to_rownames("gs_name") %>%
+    as.matrix()
+z_fits <- lmFit(z_matrix, design = rep(1, ncol(z_matrix))
+                ) %>% 
+  eBayes()
 top_table <- topTable(z_fits, number = Inf) %>%
   as_tibble(rownames = "gs_name")
+sigPathway <- top_table %>%
+    dplyr::filter(adj.P.Val < 0.05)
 ```
 
-Pathways with an FDR < 0.05 in the moderated t-test were considered to be significantly perturbed at the group level. 
-`r nrow(dplyr::filter(top_table, adj.P.Val < 0.05))` out of the 315 tested KEGG pathways passed this selection threshold (Table \@ref(tab:Table1)).
+`r nrow(sigPathway)` out of the `r nrow(top_table)` tested wikipathways have an FDR < 0.05 in the moderated t-test, hence were considered to be significantly perturbed at the group level. The top 10 most highly ranked pathways and their predicted direction of change are shown in Table \@ref(tab:Table1).
 
 ```{r}
-table1 <- top_table %>%
-  dplyr::filter(adj.P.Val < 0.05) %>% 
+table1 <- sigPathway %>%
   mutate(
     Direction = ifelse(logFC < 0, "Inhibited", "Activated"), 
-    gs_name = str_remove_all(gs_name, "kegg.")
+    gs_name = str_remove_all(gs_name, "reactome.")
   ) %>%
   dplyr::select(
     Pathway = gs_name, Change = logFC,  P.Value, FDR = adj.P.Val, Direction
@@ -365,7 +368,7 @@ table1 <- top_table %>%
 ```{r Table1, echo=FALSE, message=FALSE, warning=FALSE}
 knitr::kable(
   table1, format = "latex",
-  caption = "Significantly impacted KEGG pathways identified among post-chemotherapy samples using sSNAPPY", 
+  caption = "Significantly impacted Reactome pathways identified among post-chemotherapy samples using sSNAPPY", 
   booktabs = TRUE,
   format.args = list(digits = 2)
 ) %>%
@@ -379,12 +382,13 @@ For enrichment analysis in the original study[@Zhang2022], unsupervised clusteri
 Clusters were then annotated manually by performing pathway enrichment testing on cluster marker genes. 
 Two clusters, associated with proliferative DNA repair signatures and stress-related markers, contained significantly higher numbers of post-chemotherapy cells than pre-treatment ones[@Zhang2022].
 The representative pathways enriched in the stress-associated cluster were *IL6-mediated signaling events*, *TNF signaling pathway*, and *cellular responses to stress*,  characterized by marker genes *JUN*, *FOS*, *IL6*, *TNF*, *CXCR4*, *SNAI1*, *VIM*, *GADD45B*, and *MCL1.* 
-Among the stress-related marker genes reported, five (*FOS*, *GADD45B*, *IL6*, *JUN*, and *TNF*) were implicated in pathways that were considered to be significantly impacted by sSNAPPY.
 The other post-chemotherapy cell dominated cluster in the original study was enriched for pathways associated with cell proliferation and DNA repair, such as the Cell cycle, DNA repair, Homology directed repair (HDR) through homologous recombination, and the Fanconi anaemia pathway. 
-A key gene involved in those pathways was *CHEK1*, which was also found in significantly perturbed pathways detected by sSNAPPY: the p53 signaling pathway and Cellular senescence pathway.
+*sSNAPPY* not only detected many significant perturbed pathways that are highly concordant with the pathways reported in the original study but also predicted their directions of changes.
+For example, the DNT repair pathway *SUMOylation of DNA damage response and repair proteins* pathway was predicted to be significantly inhibited by in post-chemotherapy samples. 
 
 Apart from considering all treated samples as biological replicates, users may elect to perform an analysis incorporating other phenotypic traits which may impact a patients responses to chemotherapy, such as disease stages or tumour grades. 
 To perform this step using the moderated t-statistic strategy and extend the above analysis, an appropriate design matrix is the only additional requirement for model-fitting, or alternatively, samples may be subset as may be appropriate.
+
 
 ## Visualising Perturbed Pathways as Networks
 
@@ -394,28 +398,32 @@ The `plot_gs_network()` function allows users to easily convert a list of releva
 Defined by the colorBy parameter, pathway nodes can be coloured by either the predicted direction of change or by significance levels (Figure \@ref(fig:Figure4)). 
 The returned plot is a ggplot2 [@Wickham2009] object, meaning that components of the plotting theme and other parameters can be customized as for any other ggplot2 objects.
 
-<!-- First we should obtain a subset of pathways to visualise. -->
-In the following example, pathways that were considered to be significantly perturbed at group-level were inspected, which involved three steps to prepare the data: 1)  rename the logFC column to reflect the true meaning of the value and, 2) create a categorical variable with the pathway status, 3) transform p-values for simpler visualisation.
+In the following example, we'll inspect the 10 most significantly inhibited and 10 most significantly activated pathways, which involved four steps to prepare the data: 1)  rename the logFC column to reflect the true meaning of the value and, 2) create a categorical variable with the pathway status, 3) transform p-values for simpler visualisation and 4) obtain a subset of pathways to visualise.
 
 ```{r}
-sigPathway <- top_table %>%
-  dplyr::filter(adj.P.Val < 0.05) %>% 
-  dplyr::rename(Z = logFC) %>% 
-  mutate(
-    status = ifelse(
-        Z > 0, "Activated", "Inhibited"
-    ),
-    status = as.factor(status),
-    `-log10(p)` = -log10(P.Value)
-  )
+sigPathway <- sigPathway %>%
+    dplyr::rename(Z = logFC) %>% 
+    mutate(
+        status = ifelse(
+            Z > 0, "Activated", "Inhibited"), 
+        status = ifelse(
+            adj.P.Val < 0.05, status, "Unchanged"
+        ), 
+        status = as.factor(status),
+        `-log10(p)` = -log10(P.Value)
+    )  %>% 
+    split(f = .$status) %>%
+    lapply(function(x)x[1:10,]) %>%
+    bind_rows()
+
 ```
 
-```{r Figure4, out.width='100%', fig.width = 12, fig.height = 6, fig.cap = "Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, colored by (A) predicted direction of changes and (B) -log10(p-values). Only pathways with a FDR-adjusted p-value < 0.05 from moderated t-tests are shown."}
+```{r Figure4, out.width='100%', fig.width = 10, fig.height = 12, fig.cap = "Significantly perturbed Reactome pathways identified among post-chemotherapy samples using sSNAPPY, colored by (A) predicted direction of changes and (B) -log10(p-values). Only the 10 most significantly inhibited and 10 most significantly activated pathways are shown."}
 set.seed(123)
 # Plot the network structure
 p1 <- plot_gs_network(
   normalisedScores = sigPathway, gsTopology = gsTopology, colorBy = "status",
-  gsNameSize = 4
+  gsNameSize = 3
 ) +
   scale_colour_manual(values = c("red", "blue", "grey30")) +
   theme_void() +
@@ -425,7 +433,7 @@ p2 <- plot_gs_network(
   normalisedScores = sigPathway,
   gsTopology = gsTopology, 
   colorBy  = "-log10(p)", 
-  gsNameSize = 4,
+  gsNameSize = 3,
   gsLegTitle = expression(paste(-log[10], "p"))
 ) +
   scale_colour_viridis_c() +
@@ -434,25 +442,29 @@ p2 <- plot_gs_network(
     legend.text = element_text(size = 8),
     legend.title = element_text(size = 10)
   ) 
-p1 | p2 + plot_annotation(tag_levels = "A") 
+p1 / p2 + plot_annotation(tag_levels = "A") 
 ```
 
 
-By examining the network structure, we can see that many of the highly connected pathways playing a central role in the network are infection-related (Figure \@ref(fig:Figure4)). 
+Any advantage of visualising pathway analysis results using network structures is that it allows the identification of highly connected pathways.  (Figure \@ref(fig:Figure4)).
 To summarise related pathways and further enable interpretation, we can apply community detection[@Newman2004] and group related pathways into 'communities'.
-sSNAPPY’s `plot_community()` function is a "one-stop shop" for applying a community detection algorithm of the user’s choice to the network structure and annotating identified communities by the most common pathway category, denoting the main biological processes perturbed in that community. 
-The most recent categories for KEGG pathways were curated from the [KEGG website](https://www.genome.jp/kegg/pathway.html) and included as part of sSNAPPY. 
-Annotation of KEGG pathway communities is automatically completed by calling the in-built data object, and incorporates annotations provided as part of the KEGG hierarchy.
-Analyses involving other pathway databases may require user-provided pathway categories. 
-In the current dataset, the Louvain method was applied to the network of biological pathways and revealed two primary communities, where one was annotated to be cell cycle and endocrine system related and the other one was more closely related to infectious diseases (Figure \@ref(fig:Figure5)) indicating a clear immune-signalling aspect to these results. 
+sSNAPPY’s `plot_community()` function is a "one-stop shop" for applying a community detection algorithm of the user’s choice to the network structure and annotating identified communities by the most common pathway category, denoting the main biological processes perturbed in that community.
+The most recent categories for both KEGG and Reactome pathways were curated from their respective website: [KEGG website](https://www.genome.jp/kegg/pathway.html, [Reactome website](https://reactome.org/PathwayBrowser/#/R-HSA-1632852&PATH=R-HSA-9612973) and included as parts of sSNAPPY.
+Analyses involving other pathway databases may require user-provided pathway categories.
+When the information about pathway categorisations is available, annotation of pathway communities is automatically completed.
+In the current dataset, the Louvain method was applied to the network of biological pathways and revealed five primary communities: 1) Adaptive Immune System; 2) Cell Cycle, Mitotic; 3) Chromatin modifying enzymes & Epigenetic regulation of gene expression; 4) Post-translational protein modification and 5) The citric acid (TCA) cycle and respiratory electron transport (Figure \@ref(fig:Figure5)).
+The largest community formed was the Adaptive Immune System pathway, indicating a clear immune-signalling aspect to these results.
 
-```{r Figure5, out.width='80%', fig.width = 10, fig.height = 6.5,fig.cap = 'Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, colored by community structures detected through the louvain algorithm. The main biological processes perturbed by the chemotherapy were shown.'}
-set.seed(123)
+```{r Figure5, out.width='80%', fig.width = 15, fig.height = 12,fig.cap = 'Significantly perturbed Reactome pathways identified among post-chemotherapy samples using sSNAPPY, colored by community structures detected through the louvain algorithm. The main biological processes associated with the top 20 pathways that wer most perturbed by the chemotherapy were shown.'}
+#load(system.file("extdata", "gsAnnotation_df_wiki.rda", package = "sSNAPPY"))
+load("~/sSNAPPY/inst/extdata/gsAnnotation_df_wiki.rda")
+set.seed(456)
 plot_community(
     normalisedScores = sigPathway,
     gsTopology = gsTopology, 
+    gsAnnotation = gsAnnotation_df_wiki,
     colorBy = "status",
-    lb_size = 4
+    lb_size = 3
 ) +
     scale_colour_manual(values = c("red", "blue")) +
     scale_fill_viridis_d() +
@@ -480,7 +492,7 @@ top500 <- rank(1/abs(meanFC)) <= 500
 dirFC <- ifelse(meanFC > 0, "Up-Regulated", "Down-Regulated")
 ```
 
-Since KEGG pathway topologies were retrieved using Entrez IDs, users can provide a data.frame mapping Entrez IDs to their chosen identifiers, such as gene names, through the mapEntrezID parameter, in order to make the visualisations more informative. 
+Since Reactome pathway topologies were retrieved using Entrez IDs, users can provide a data.frame mapping Entrez IDs to their chosen identifiers, such as gene names, through the mapEntrezID parameter, in order to make the visualisations more informative. 
 A data.frame converting Entrez IDs to Ensembl gene names was derived from the Ensembl Release 101[@Ensembl2022] and has been made available as part of the package and serves as a helpful template for future mapping operations by users. 
 
 ```{r}
@@ -488,7 +500,7 @@ load(system.file("extdata", "entrez2name.rda", package = "sSNAPPY"))
 head(entrez2name)
 ```
 
-```{r Figure6, out.width='80%', fig.width = 9.6, fig.height = 8, fig.cap = 'Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, showing any genes in the top 500 ranked by magnitude of change in expression, and which pathways they are likely contributing to. No genes in the top 500 were found to contribute to the perturbation of the AMPK signaling pathway or the Toxoplasmosis pathway.'}
+```{r Figure6, out.width='80%', fig.width = 12, fig.height = 10, fig.cap = 'Significantly perturbed Reactome pathways identified among post-chemotherapy samples using sSNAPPY, showing any genes in the top 500 ranked by magnitude of change in expression, and which pathways they are likely contributing to.'}
 set.seed(123)
 plot_gs2gene(
     normalisedScores = sigPathway, 
@@ -496,8 +508,9 @@ plot_gs2gene(
     colorGsBy = "status", 
     mapEntrezID = entrez2name, 
     geneFC = meanFC[top500], 
+    layout = "kk",
     edgeAlpha = 1, 
-    gsNameSize = 5, 
+    gsNameSize = 4, 
     gsNodeSize = 4,
     geneNameSize = 4
 ) +
@@ -510,58 +523,89 @@ plot_gs2gene(
     )
 ```
 
+
 ## Identifying Key Gene Contributions
 
 To further investigate a specific pathway and elucidate which are the key genes contributing to the final perturbation score, we can generate a heatmap via `plot_gene_contribution()` which shows the gene-level perturbation scores for the top-ranked members of a given pathway.
-This function takes advantage of the plotting capabilities of the `pheatmap` package[@pheatmap], and as such, other annotations are also able to be easily included, such as the disease stage, or which general ranges the pathway-level normalised Z-Scores are in.
+This function takes advantage of the plotting capabilities of the `pheatmap` package[@pheatmap], and as such, other annotations are also able to be easily included, such as patient response, or which general ranges the pathway-level normalised Z-Scores are in.
 Inclusion of the Z-Scores enabled the assessment of the level of perturbation predicted in each sample and key genes involved (Figure \@ref(fig:Figure7)).
 
-```{r Figure7, out.width='100%', fig.width = 12, fig.height = 7, fig.cap = 'Gene-level perturbation scores for the top 20 genes in the \"p53 signalling pathway\" ranked by average contribution to the perturbation score. Samples were annotated by cancer stage, along with the range for sample-level Z-scores as a guide to sample-specific pathway perturbation. The genes ATR and ATM were identified as possible key drivers of the activation of p53 signalling pathway, with MDM4 appearing likely to be playing an antagonistic role.'}
+```{r Figure7, out.width='100%', fig.width = 12, fig.height = 7, fig.cap = 'Gene-level perturbation scores for the top 15 genes in the \"SUMOylation of DNA replication proteins\" ranked by average contribution to the perturbation score. Samples were annotated by patient chemotherapyy response score (CRS), along with the range for sample-level Z-scores as a guide to sample-specific pathway perturbation. The genes CDCA8, TOP2A, UBE2I, BIRC5 were identified as possible key drivers of the inhibition of of this pathway.'}
 annotation_df <- normalisedScores %>%
-    dplyr::filter(gs_name == "kegg.p53 signaling pathway") %>%
-    left_join(dplyr::select(sample_meta, sample, Stage), by = "sample") %>%
+    dplyr::filter(gs_name == "reactome.SUMOylation of DNA replication proteins") %>%
+    left_join(dplyr::select(sample_meta, sample,  CRS), by = "sample") %>%
     mutate(
       `Z Range` = cut(
         robustZ, breaks = seq(-2, 2, length.out = 6), include.lowest = TRUE
       ), 
       sample = str_remove_all(sample, "_post-NACT")
     ) %>% 
-    dplyr::select(sample, `Z Range`, Stage)  
+    dplyr::select(sample, `Z Range`, CRS)  
 z_levels <- levels(annotation_df$`Z Range`)
 annotation_col <- list(
-  Stage = c(IIIC = "#4B0055", IVA = "#009B95", IVB = "#FDE333"),
+  CRS = c("3" = "#4B0055", "2" = "#009B95", "1" = "#FDE333"),
   `Z Range` = setNames(
     colorRampPalette(c("navyblue", "white", "darkred"))(length(z_levels)),
     z_levels
   )
 )
 plot_gene_contribution(
-    genePertMatr = genePertScore$`kegg.p53 signaling pathway` %>%
-        set_colnames(str_remove_all(colnames(.), "_post-NACT")),
+    genePertMatr = genePertScore$`reactome.SUMOylation of DNA replication proteins` %>%
+        set_colnames(str_remove_all(colnames(.), "_post-NACT")) %>%
+        .[rownames(.) %in% rownames(weightedFC$weighted_logFC),],
     color = rev(colorspace::divergex_hcl(100, palette = "RdBu")),
-    breaks = seq(-0.0015, 0.0015, length.out = 100), 
+    breaks = seq(-0.002, 0.002, length.out = 100), 
     annotation_df =  annotation_df, 
-    topGene = 20, filterBy = "mean", 
+    topGene = 15, filterBy = "mean", 
     mapEntrezID = entrez2name,
     annotation_colors = annotation_col,
-    cutree_rows = 3, cutree_cols = 3,
-    main = "P53 Signaling Pathway [KEGG]"
+    cutree_rows = 2,
+    cutree_cols = 2,
+    main = "SUMOylation of DNA replication proteins [REACTOME]"
 )
 ```
 
 
-<!-- From this heatmap we can identify candidate genes which are likely to be making the biggest contribution to the activation of p53 Signaling Pathway upon chemotherapy, and by referring to pathway structures (https://www.genome.jp/pathway/hsa04115), elucidate clear detail on which specific sections of the pathway are exerting a biological influence. -->
-<!-- Ataxia-telangiectasia mutated (*ATM*) and RAD3-related protein kinase (*ATR*) synergistically interact with the checkpoint kinases *CHEK1* and *CHEK2* to activate *TP53*. -->
-<!-- Increased *TP53* activity then down-regulates DNA damage-inducible gene 45 (*GADD45*) and Stratifin (*SFN*) likely inducing G2 arrest through the Cyclin B/CDK1 complex -->
-<!-- Simultaneously, Apoptosis is likely induced via BCL2-binding component 3 (*BBC3*) and Caspase3/9 signalling. -->
-<!-- The apparent antagonistic effects shown by *MDM4* may represent a homeostatic response to the increase in *TP53* signalling [@Wade2013-yk]. -->
+From this heatmap we can identify candidate genes which are likely to be making the biggest contribution to the inhibition of the SUMOylation of DNA replication proteins pathway upon chemotherapy,
+such as *CDCA8*, *TOP2A*, *UBE2I*, *BIRC5* (Figure \@ref(fig:Figure7)).
+The median single-sample logFC of the selected driver genes among post-chemotherapy samples are all negative.  
+The four genes are all associated with tumour progression and invasiveness and have been studied in the context of ovarian cancer. 
+Both ubiquitin conjugating enzyme E2I (*UBE2I*) and cell division cycle associated 8 (*CDCA8*) have been identified as oncogenes in numerous cancer types, including ovarian cancer[@Dong2013, @qi2021]. 
+Notably, in ovarian cancer, elevated *UBE2I* expression has been associated with poorer clinical outcomes[@Zou2020].
+Similarly, expression of *BIRC5* that encodes human survivin protein is also a predictor of inferior ovarian cancer patient outcome[@Gasowska-Bajger2021]. 
+Additionally, we observe a decrease in expression of the Topoisomerase II$\alpha$ (*TOP2A*) gene in post-chemotherapy HGSOC tumour cells, corroborating prior findings reported by Gao et al.."
 
-From this heatmap we can identify candidate genes which are likely to be making the biggest contribution to the activation of p53 Signaling Pathway upon chemotherapy,
-such as *ART* and *ATM*, along with the *MDM4* and members of the GADD45 family.
-Ataxia-telangiectasia mutated (*ATM*) is a well-established oncosuppressor[@Moslemi2021] while haploinsufficient mouse double minute 4 (*MDM4*) is an oncogene that suppresses p53[@Momand].
-Mutations of both genes have been observed in many types of cancers[@Choi2016; @Gansmo2016; @Atwal2009].
-Moreover, the Ataxia telangiectasia and RAD3-related protein kinase (*ATR*) and the growth arrest and DNA damage-inducible gene 45 (*GADD45*) have gained great attention as potential targets for anti-tumor treatments due to their involvement in DNA damage repair[@Liebermann2011; @Hu2022].
-ATR inhibitors, in particular, have shown promising results in clinical trials for HGSOC.[@Li2022; @Gong2021].
+```{r Figure8, out.width='100%',  fig.cap = 'Single-sample logFC (ssFC) of potential key driverss of the inhibition of \"SUMOylation of DNA replication proteins\" pathway post-chemotherapy.'}
+gene2plot <- entrez2name %>%
+    dplyr::filter(
+        mapTo %in% c("CDCA8", "TOP2A", "UBE2I", "BIRC5")
+    )
+(weightedFC$weighted_logFC / weightedFC$weight) %>%
+    as.data.frame() %>%
+    rownames_to_column("entrezid") %>%
+    pivot_longer(
+        cols = -"entrezid", 
+        names_to = "sample", 
+        values_to = "ssFC"
+    ) %>%
+    left_join(entrez2name) %>%
+    dplyr::filter(mapTo %in% c("CDCA8", "TOP2A", "UBE2I", "BIRC5")) %>%
+    ggplot(
+        aes(mapTo, ssFC, fill = mapTo)
+    ) +
+    geom_boxplot() +
+    labs(
+        x = "", 
+        fill = "Gene"
+    ) +
+    geom_hline(yintercept = 0, color = "red", linetype = "dashed") +
+    theme_bw() +
+    theme(
+        text = element_text(size = 15)
+    )
+    
+```
+
 
 # Discussion
 
