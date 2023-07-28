@@ -216,7 +216,7 @@ head(sample_meta)
 ## Retrieval of Pathway Topology
 
 Next, pathway topology information needs to be retrieved from a chosen database, and this is the only step requiring internet access.
-Using Reactome as an example, the retrieved topology information will be stored as a list where each element corresponds to a pathway and the numbers in the matrices encode gene-gene interactions. 
+Using the Reactome database[@reactome2021] as an example, the retrieved topology information will be stored as a list where each element corresponds to a pathway and the numbers in the matrices encode gene-gene interactions. 
 
 ```{r, eval=FALSE}
 gsTopology <- retrieve_topology(database = "reactome", species = "hsapiens")
@@ -280,7 +280,7 @@ Apart from pathways whose permuted perturbation scores are consistently zero, th
 To demonstrate this, we randomly selected 6 pathways to demonstrate their quantile-quantile (q-q) plot and visualised the distributions of their permuted perturbation scores as boxplots (Figure \@ref(fig:Figure3)).
 
 ```{r Figure3, out.width='100%', fig.width=12, fig.height=12, fig.cap="(A) Q-Q plot and (B) distributions of permuted perturbation scores of six randomly selected pathways. All sampled empirical distributions are approximately normally distributed with a mean of zero."}
-set.seed(175)
+set.seed(123)
 random_pathways <- permutedScore %>%
     keep(~all(.!=0)) %>%
     .[sample(seq_along(.), 6)] %>%
@@ -332,7 +332,7 @@ head(normalisedScores)
 
 A key question of interest in our example dataset is to identify which biological processes were impacted by chemotherapy across the entire group of patients.
 Using the sample-level output obtained above, we can explore this by applying t-tests or regression models across all samples.
-In order to minimise spurious results, Smyth's moderated t-statistics[@Smyth_2004] are able to be applied across the complete dataset, with a constant variance assumed across all pathways, given that we are using Z-scores,.
+In order to minimise spurious results, Smyth's moderated t-statistics[@Smyth_2004] are able to be applied across the complete dataset, with a constant variance assumed across all pathways, given that we are using Z-scores.
 To perform this analysis, robust Z-scores were converted to a matrix and standard *limma* methodologies were used.
 For our use case here, where only one treatment group is present, no design matrix is required and a simple t-test is appropriate.
 
@@ -351,24 +351,27 @@ sigPathway <- top_table %>%
     dplyr::filter(adj.P.Val < 0.05)
 ```
 
-`r nrow(sigPathway)` out of the `r nrow(top_table)` tested wikipathways have an FDR < 0.05 in the moderated t-test, hence were considered to be significantly perturbed at the group level. The top 10 most highly ranked pathways and their predicted direction of change are shown in Table \@ref(tab:Table1).
+`r nrow(sigPathway)` out of the `r nrow(top_table)` tested Reactome pathways have an FDR < 0.05 in the moderated t-test, hence were considered to be significantly perturbed at the group level. The Table \@ref(tab:Table1) presents the top 10 significantly inhibited and activated pathways, along with their predicted direction of change.
 
 ```{r}
 table1 <- sigPathway %>%
-  mutate(
-    Direction = ifelse(logFC < 0, "Inhibited", "Activated"), 
-    gs_name = str_remove_all(gs_name, "reactome.")
-  ) %>%
-  dplyr::select(
+    mutate(
+        Direction = ifelse(logFC < 0, "Inhibited", "Activated"), 
+        gs_name = str_remove_all(gs_name, "reactome.")
+    ) %>%
+    split(f = .$Direction) %>%
+    lapply(function(x)x[1:10,]) %>%
+    bind_rows() %>%
+    dplyr::select(
     Pathway = gs_name, Change = logFC,  P.Value, FDR = adj.P.Val, Direction
-  )
+)
 ```
 
 
 ```{r Table1, echo=FALSE, message=FALSE, warning=FALSE}
 knitr::kable(
   table1, format = "latex",
-  caption = "Significantly impacted Reactome pathways identified among post-chemotherapy samples using sSNAPPY", 
+  caption = "Significantly impacted Reactome pathways identified among post-chemotherapy samples using sSNAPPY. Only the 10 most significantly inhibited and 10 most significantly activated pathways are shown.", 
   booktabs = TRUE,
   format.args = list(digits = 2)
 ) %>%
@@ -381,10 +384,9 @@ knitr::kable(
 For enrichment analysis in the original study[@Zhang2022], unsupervised clustering was performed on all cells labelled as cancer cells. 
 Clusters were then annotated manually by performing pathway enrichment testing on cluster marker genes. 
 Two clusters, associated with proliferative DNA repair signatures and stress-related markers, contained significantly higher numbers of post-chemotherapy cells than pre-treatment ones[@Zhang2022].
-The representative pathways enriched in the stress-associated cluster were *IL6-mediated signaling events*, *TNF signaling pathway*, and *cellular responses to stress*,  characterized by marker genes *JUN*, *FOS*, *IL6*, *TNF*, *CXCR4*, *SNAI1*, *VIM*, *GADD45B*, and *MCL1.* 
-The other post-chemotherapy cell dominated cluster in the original study was enriched for pathways associated with cell proliferation and DNA repair, such as the Cell cycle, DNA repair, Homology directed repair (HDR) through homologous recombination, and the Fanconi anaemia pathway. 
-*sSNAPPY* not only detected many significant perturbed pathways that are highly concordant with the pathways reported in the original study but also predicted their directions of changes.
-For example, the DNT repair pathway *SUMOylation of DNA damage response and repair proteins* pathway was predicted to be significantly inhibited by in post-chemotherapy samples. 
+The representative pathways enriched in the stress-associated cluster were *IL6-mediated signaling events*, *TNF signaling pathway*, and *cellular responses to stress*, and the other post-chemotherapy cell dominated cluster in the original study was enriched for pathways associated with cell proliferation and DNA repair, such as the Cell cycle, DNA repair, Homology directed repair (HDR) through homologous recombination, and the Fanconi anaemia pathway. 
+*sSNAPPY* not only detected many significant perturbed pathways that are highly concordant with the pathways reported to be enriched in the original study but also predicted their directions of changes.
+For example, the DNT repair pathway *SUMOylation of DNA damage response and repair proteins* pathway was predicted to be significantly inhibited by the chemotherapy. 
 
 Apart from considering all treated samples as biological replicates, users may elect to perform an analysis incorporating other phenotypic traits which may impact a patients responses to chemotherapy, such as disease stages or tumour grades. 
 To perform this step using the moderated t-statistic strategy and extend the above analysis, an appropriate design matrix is the only additional requirement for model-fitting, or alternatively, samples may be subset as may be appropriate.
@@ -418,7 +420,7 @@ sigPathway <- sigPathway %>%
 
 ```
 
-```{r Figure4, out.width='100%', fig.width = 10, fig.height = 12, fig.cap = "Significantly perturbed Reactome pathways identified among post-chemotherapy samples using sSNAPPY, colored by (A) predicted direction of changes and (B) -log10(p-values). Only the 10 most significantly inhibited and 10 most significantly activated pathways are shown."}
+```{r Figure4, out.width='100%', fig.width = 8, fig.height = 12, fig.cap = "Significantly perturbed Reactome pathways identified among post-chemotherapy samples using sSNAPPY, colored by (A) predicted direction of changes and (B) -log10(p-values). Only the 10 most significantly inhibited and 10 most significantly activated pathways are shown."}
 set.seed(123)
 # Plot the network structure
 p1 <- plot_gs_network(
@@ -446,18 +448,21 @@ p1 / p2 + plot_annotation(tag_levels = "A")
 ```
 
 
-Any advantage of visualising pathway analysis results using network structures is that it allows the identification of highly connected pathways.  (Figure \@ref(fig:Figure4)).
-To summarise related pathways and further enable interpretation, we can apply community detection[@Newman2004] and group related pathways into 'communities'.
+Any advantage of visualising pathway analysis results using network structures is that it allows the identification of highly connected pathways (Figure \@ref(fig:Figure4)).
+To summarise related pathways and further enable interpretation, we can apply community detection[@Newman2004] to group related pathways into 'communities'.
 sSNAPPY’s `plot_community()` function is a "one-stop shop" for applying a community detection algorithm of the user’s choice to the network structure and annotating identified communities by the most common pathway category, denoting the main biological processes perturbed in that community.
-The most recent categories for both KEGG and Reactome pathways were curated from their respective website: [KEGG website](https://www.genome.jp/kegg/pathway.html, [Reactome website](https://reactome.org/PathwayBrowser/#/R-HSA-1632852&PATH=R-HSA-9612973) and included as parts of sSNAPPY.
+The most recent categories for both KEGG and Reactome databases were curated from their respective website ([KEGG website](https://www.genome.jp/kegg/pathway.html) & [Reactome website](https://reactome.org/PathwayBrowser/#/R-HSA-1632852&PATH=R-HSA-9612973)) and included as parts of sSNAPPY.
 Analyses involving other pathway databases may require user-provided pathway categories.
 When the information about pathway categorisations is available, annotation of pathway communities is automatically completed.
 In the current dataset, the Louvain method was applied to the network of biological pathways and revealed five primary communities: 1) Adaptive Immune System; 2) Cell Cycle, Mitotic; 3) Chromatin modifying enzymes & Epigenetic regulation of gene expression; 4) Post-translational protein modification and 5) The citric acid (TCA) cycle and respiratory electron transport (Figure \@ref(fig:Figure5)).
 The largest community formed was the Adaptive Immune System pathway, indicating a clear immune-signalling aspect to these results.
 
-```{r Figure5, out.width='80%', fig.width = 15, fig.height = 12,fig.cap = 'Significantly perturbed Reactome pathways identified among post-chemotherapy samples using sSNAPPY, colored by community structures detected through the louvain algorithm. The main biological processes associated with the top 20 pathways that wer most perturbed by the chemotherapy were shown.'}
-#load(system.file("extdata", "gsAnnotation_df_wiki.rda", package = "sSNAPPY"))
+```{r, echo=FALSE}
 load("~/sSNAPPY/inst/extdata/gsAnnotation_df_wiki.rda")
+```
+
+```{r Figure5, out.width='100%', fig.width = 12, fig.height = 8,fig.cap = 'Significantly perturbed Reactome pathways identified among post-chemotherapy samples using sSNAPPY, colored by community structures detected through the louvain algorithm. The main biological processes associated with the top 20 pathways that wer most perturbed by the chemotherapy were shown.'}
+#load(system.file("extdata", "gsAnnotation_df_wiki.rda", package = "sSNAPPY"))
 set.seed(456)
 plot_community(
     normalisedScores = sigPathway,
@@ -470,10 +475,11 @@ plot_community(
     scale_fill_viridis_d() +
     scale_x_continuous(expand = expansion(0.25)) +
     scale_y_continuous(expand = expansion(0.25)) +
+    guides(fill = FALSE) +
     theme_void() +
     theme(
-        legend.text = element_text(size = 12),
-        legend.title = element_text(size = 12)
+        legend.text = element_text(size = 8),
+        legend.title = element_text(size = 10)
     )
 ```
 
@@ -500,7 +506,7 @@ load(system.file("extdata", "entrez2name.rda", package = "sSNAPPY"))
 head(entrez2name)
 ```
 
-```{r Figure6, out.width='80%', fig.width = 12, fig.height = 10, fig.cap = 'Significantly perturbed Reactome pathways identified among post-chemotherapy samples using sSNAPPY, showing any genes in the top 500 ranked by magnitude of change in expression, and which pathways they are likely contributing to.'}
+```{r Figure6, out.width='100%', fig.width = 12, fig.height = 10, fig.cap = 'Significantly perturbed Reactome pathways identified among post-chemotherapy samples using sSNAPPY, showing any genes in the top 500 ranked by magnitude of change in expression, and which pathways they are likely contributing to. Only the 10 most significantly inhibited and 10 most significantly activated pathways are shown.'}
 set.seed(123)
 plot_gs2gene(
     normalisedScores = sigPathway, 
@@ -530,7 +536,7 @@ To further investigate a specific pathway and elucidate which are the key genes 
 This function takes advantage of the plotting capabilities of the `pheatmap` package[@pheatmap], and as such, other annotations are also able to be easily included, such as patient response, or which general ranges the pathway-level normalised Z-Scores are in.
 Inclusion of the Z-Scores enabled the assessment of the level of perturbation predicted in each sample and key genes involved (Figure \@ref(fig:Figure7)).
 
-```{r Figure7, out.width='100%', fig.width = 12, fig.height = 7, fig.cap = 'Gene-level perturbation scores for the top 15 genes in the \"SUMOylation of DNA replication proteins\" ranked by average contribution to the perturbation score. Samples were annotated by patient chemotherapyy response score (CRS), along with the range for sample-level Z-scores as a guide to sample-specific pathway perturbation. The genes CDCA8, TOP2A, UBE2I, BIRC5 were identified as possible key drivers of the inhibition of of this pathway.'}
+```{r Figure7, out.width='100%', fig.width = 12, fig.height = 7, fig.cap = 'Gene-level perturbation scores for the top 15 genes in the \"SUMOylation of DNA replication proteins\" pathway ranked by average contribution to the perturbation score. Samples were annotated by patient chemotherapy response score (CRS), along with the range for sample-level Z-scores as a guide to sample-specific pathway perturbation. The genes CDCA8, TOP2A, UBE2I, BIRC5 were identified as possible key drivers of the inhibition of of this pathway.'}
 annotation_df <- normalisedScores %>%
     dplyr::filter(gs_name == "reactome.SUMOylation of DNA replication proteins") %>%
     left_join(dplyr::select(sample_meta, sample,  CRS), by = "sample") %>%
@@ -568,14 +574,22 @@ plot_gene_contribution(
 
 From this heatmap we can identify candidate genes which are likely to be making the biggest contribution to the inhibition of the SUMOylation of DNA replication proteins pathway upon chemotherapy,
 such as *CDCA8*, *TOP2A*, *UBE2I*, *BIRC5* (Figure \@ref(fig:Figure7)).
-The median single-sample logFC of the selected driver genes among post-chemotherapy samples are all negative.  
 The four genes are all associated with tumour progression and invasiveness and have been studied in the context of ovarian cancer. 
-Both ubiquitin conjugating enzyme E2I (*UBE2I*) and cell division cycle associated 8 (*CDCA8*) have been identified as oncogenes in numerous cancer types, including ovarian cancer[@Dong2013, @qi2021]. 
+Both ubiquitin conjugating enzyme E2I (*UBE2I*) and cell division cycle associated 8 (*CDCA8*) genes have been identified as oncogenes in numerous cancer types, including ovarian cancer[@Dong2013;@qi2021]. 
 Notably, in ovarian cancer, elevated *UBE2I* expression has been associated with poorer clinical outcomes[@Zou2020].
 Similarly, expression of *BIRC5* that encodes human survivin protein is also a predictor of inferior ovarian cancer patient outcome[@Gasowska-Bajger2021]. 
-Additionally, we observe a decrease in expression of the Topoisomerase II$\alpha$ (*TOP2A*) gene in post-chemotherapy HGSOC tumour cells, corroborating prior findings reported by Gao et al.."
+Lastly, Topoisomerase II$\alpha$ (*TOP2A*), which encodes DNA topoisomerase, has been identified as a gene that promotes the tumorigenesis of HGSOC tumours[@Gao2020].
+Aligning with the report by Chekerov et al.[@Chekerov2006] that expression of *TOP2A* in ovarian tumour cells decreases as a response to chemotherapy[@Chekerov2006], the median single-sample logFC of *TOP2A* was negative among the HGSOC post-chemotherapy samples included in this study (Figure \@ref(fig:Figure8)). 
+The other three selected potential driver genes (*CDCA8*, *UBE2I*, and *BIRC5*) also had negative median single-sample logFC in post-chemotherapy samples (Figure \@ref(fig:Figure8)).
+Considering the implication of these four genes in ovarian cancer, decreases in their expression after chemotherapy treatment potentially indicate a favorable response to therapy.
+By annotating the heatmap of gene-wise perturbation scores with patient chemotherapy response score (CRS), we noticed that the strongest inhibition of the SUMOylation of DNA replication proteins pathway was in the patient with the highest CRS score of 3 (i.e sample EOC443). 
+CRS is an indicator of the relative length of progression-free survival after chemotherapy, where a score of 3 represents the longest survival.
+Hence inhibition of the SUMOylation of DNA replication proteins pathway might mediate favorable response to chemotherapy in ovarian cancer patients.
+We acknowledge that our analysis was limited to a small number of patients, which restricts the generalizability of the results. 
+However, despite this limitation, these findings underscore the strength of sSNAPPY as a valuable tool for hypothesis generation. 
+Not only can sSNAPPY predict directional pathway perturbations, but it also enables the identification of key driver genes underlying these perturbations. 
 
-```{r Figure8, out.width='100%',  fig.cap = 'Single-sample logFC (ssFC) of potential key driverss of the inhibition of \"SUMOylation of DNA replication proteins\" pathway post-chemotherapy.'}
+```{r Figure8, out.width='80%', fig.height=5, fig.width=6, fig.cap = 'Single-sample logFC (ssFC) of potential key genes driving the inhibition of \"SUMOylation of DNA replication proteins\" pathway as a response to chemotherapy in HGSOC tumours.', message=FALSE}
 gene2plot <- entrez2name %>%
     dplyr::filter(
         mapTo %in% c("CDCA8", "TOP2A", "UBE2I", "BIRC5")
@@ -601,7 +615,7 @@ gene2plot <- entrez2name %>%
     geom_hline(yintercept = 0, color = "red", linetype = "dashed") +
     theme_bw() +
     theme(
-        text = element_text(size = 15)
+        text = element_text(size = 10)
     )
     
 ```

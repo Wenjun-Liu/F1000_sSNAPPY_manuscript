@@ -1,12 +1,24 @@
 \begin{table}
 
-\caption{\label{tab:Table1}Significantly impacted Reactome pathways identified among post-chemotherapy samples using sSNAPPY}
+\caption{\label{tab:Table1}Significantly impacted Reactome pathways identified among post-chemotherapy samples using sSNAPPY. Only the 10 most significantly inhibited and 10 most significantly activated pathways are shown.}
 \centering
 \resizebox{\linewidth}{!}{
 \begin{tabular}[t]{lrrrl}
 \toprule
 Pathway & Change & P.Value & FDR & Direction\\
 \midrule
+\cellcolor{gray!6}{Signaling by Retinoic Acid} & \cellcolor{gray!6}{0.60} & \cellcolor{gray!6}{4.4e-04} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Activated}\\
+Regulation of pyruvate dehydrogenase (PDH) complex & 0.60 & 4.6e-04 & 0.015 & Activated\\
+\cellcolor{gray!6}{Pyruvate metabolism} & \cellcolor{gray!6}{0.60} & \cellcolor{gray!6}{4.6e-04} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Activated}\\
+Pyruvate metabolism and Citric Acid (TCA) cycle & 0.60 & 4.6e-04 & 0.015 & Activated\\
+\cellcolor{gray!6}{Negative regulation of MAPK pathway} & \cellcolor{gray!6}{0.63} & \cellcolor{gray!6}{5.4e-04} & \cellcolor{gray!6}{0.017} & \cellcolor{gray!6}{Activated}\\
+\addlinespace
+Translocation of ZAP-70 to Immunological synapse & 0.62 & 8.8e-04 & 0.022 & Activated\\
+\cellcolor{gray!6}{Generation of second messenger molecules} & \cellcolor{gray!6}{0.62} & \cellcolor{gray!6}{8.8e-04} & \cellcolor{gray!6}{0.022} & \cellcolor{gray!6}{Activated}\\
+MHC class II antigen presentation & 0.63 & 1.2e-03 & 0.024 & Activated\\
+\cellcolor{gray!6}{NGF-stimulated transcription} & \cellcolor{gray!6}{0.58} & \cellcolor{gray!6}{1.4e-03} & \cellcolor{gray!6}{0.025} & \cellcolor{gray!6}{Activated}\\
+Downstream TCR signaling & 0.63 & 1.4e-03 & 0.025 & Activated\\
+\addlinespace
 \cellcolor{gray!6}{Interleukin-35 Signalling} & \cellcolor{gray!6}{-0.90} & \cellcolor{gray!6}{1.7e-05} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Inhibited}\\
 Sphingolipid de novo biosynthesis & -0.90 & 2.8e-05 & 0.015 & Inhibited\\
 \cellcolor{gray!6}{SUMOylation of DNA replication proteins} & \cellcolor{gray!6}{-0.82} & \cellcolor{gray!6}{6.9e-05} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Inhibited}\\
@@ -18,140 +30,6 @@ Polo-like kinase mediated events & -0.88 & 1.4e-04 & 0.015 & Inhibited\\
 Chromatin organization & -0.79 & 1.5e-04 & 0.015 & Inhibited\\
 \cellcolor{gray!6}{SUMO E3 ligases SUMOylate target proteins} & \cellcolor{gray!6}{-0.77} & \cellcolor{gray!6}{1.8e-04} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Inhibited}\\
 APC-Cdc20 mediated degradation of Nek2A & -0.84 & 2.1e-04 & 0.015 & Inhibited\\
-\addlinespace
-\cellcolor{gray!6}{APC/C:Cdc20 mediated degradation of Cyclin B} & \cellcolor{gray!6}{-0.83} & \cellcolor{gray!6}{2.3e-04} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Inhibited}\\
-UCH proteinases & -0.71 & 2.3e-04 & 0.015 & Inhibited\\
-\cellcolor{gray!6}{Gene expression (Transcription)} & \cellcolor{gray!6}{-0.72} & \cellcolor{gray!6}{2.8e-04} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Inhibited}\\
-rRNA processing & -0.72 & 3.2e-04 & 0.015 & Inhibited\\
-\cellcolor{gray!6}{rRNA processing in the nucleus and cytosol} & \cellcolor{gray!6}{-0.72} & \cellcolor{gray!6}{3.2e-04} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Inhibited}\\
-\addlinespace
-Major pathway of rRNA processing in the nucleolus and cytosol & -0.72 & 3.2e-04 & 0.015 & Inhibited\\
-\cellcolor{gray!6}{Phosphorylation of Emi1} & \cellcolor{gray!6}{-0.78} & \cellcolor{gray!6}{3.3e-04} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Inhibited}\\
-Phosphorylation of the APC/C & -0.78 & 3.3e-04 & 0.015 & Inhibited\\
-\cellcolor{gray!6}{Mitotic Prometaphase} & \cellcolor{gray!6}{-0.80} & \cellcolor{gray!6}{3.3e-04} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Inhibited}\\
-SUMOylation & -0.71 & 3.4e-04 & 0.015 & Inhibited\\
-\addlinespace
-\cellcolor{gray!6}{MASTL Facilitates Mitotic Progression} & \cellcolor{gray!6}{-0.79} & \cellcolor{gray!6}{3.4e-04} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Inhibited}\\
-SUMOylation of ubiquitinylation proteins & -0.74 & 3.5e-04 & 0.015 & Inhibited\\
-\cellcolor{gray!6}{Activation of NIMA Kinases NEK9, NEK6, NEK7} & \cellcolor{gray!6}{-0.82} & \cellcolor{gray!6}{3.5e-04} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Inhibited}\\
-SUMOylation of SUMOylation proteins & -0.69 & 3.8e-04 & 0.015 & Inhibited\\
-\cellcolor{gray!6}{RMTs methylate histone arginines} & \cellcolor{gray!6}{-0.68} & \cellcolor{gray!6}{3.9e-04} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Inhibited}\\
-\addlinespace
-Activation of the pre-replicative complex & -0.83 & 4.1e-04 & 0.015 & Inhibited\\
-\cellcolor{gray!6}{Resolution of Sister Chromatid Cohesion} & \cellcolor{gray!6}{-0.81} & \cellcolor{gray!6}{4.4e-04} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Inhibited}\\
-Signaling by Retinoic Acid & 0.60 & 4.4e-04 & 0.015 & Activated\\
-\cellcolor{gray!6}{NOTCH3 Intracellular Domain Regulates Transcription} & \cellcolor{gray!6}{-0.68} & \cellcolor{gray!6}{4.5e-04} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Inhibited}\\
-SUMOylation of chromatin organization proteins & -0.68 & 4.6e-04 & 0.015 & Inhibited\\
-\addlinespace
-\cellcolor{gray!6}{Regulation of pyruvate dehydrogenase (PDH) complex} & \cellcolor{gray!6}{0.60} & \cellcolor{gray!6}{4.6e-04} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Activated}\\
-Pyruvate metabolism & 0.60 & 4.6e-04 & 0.015 & Activated\\
-\cellcolor{gray!6}{Pyruvate metabolism and Citric Acid (TCA) cycle} & \cellcolor{gray!6}{0.60} & \cellcolor{gray!6}{4.6e-04} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Activated}\\
-Negative regulation of MAPK pathway & 0.63 & 5.4e-04 & 0.017 & Activated\\
-\cellcolor{gray!6}{SUMOylation of RNA binding proteins} & \cellcolor{gray!6}{-0.66} & \cellcolor{gray!6}{5.7e-04} & \cellcolor{gray!6}{0.018} & \cellcolor{gray!6}{Inhibited}\\
-\addlinespace
-Deubiquitination & -0.59 & 6.1e-04 & 0.019 & Inhibited\\
-\cellcolor{gray!6}{Interleukin-12 family signaling} & \cellcolor{gray!6}{-0.67} & \cellcolor{gray!6}{6.7e-04} & \cellcolor{gray!6}{0.020} & \cellcolor{gray!6}{Inhibited}\\
-Loss of Nlp from mitotic centrosomes & -0.78 & 7.2e-04 & 0.020 & Inhibited\\
-\cellcolor{gray!6}{Loss of proteins required for interphase microtubule organization from the centrosome} & \cellcolor{gray!6}{-0.78} & \cellcolor{gray!6}{7.2e-04} & \cellcolor{gray!6}{0.020} & \cellcolor{gray!6}{Inhibited}\\
-cell division & -0.78 & 7.2e-04 & 0.020 & Inhibited\\
-\addlinespace
-\cellcolor{gray!6}{TRAF3-dependent IRF activation pathway} & \cellcolor{gray!6}{-0.65} & \cellcolor{gray!6}{7.5e-04} & \cellcolor{gray!6}{0.020} & \cellcolor{gray!6}{Inhibited}\\
-TRAF6 mediated IRF7 activation & -0.69 & 7.5e-04 & 0.020 & Inhibited\\
-\cellcolor{gray!6}{Translocation of ZAP-70 to Immunological synapse} & \cellcolor{gray!6}{0.62} & \cellcolor{gray!6}{8.8e-04} & \cellcolor{gray!6}{0.022} & \cellcolor{gray!6}{Activated}\\
-Generation of second messenger molecules & 0.62 & 8.8e-04 & 0.022 & Activated\\
-\cellcolor{gray!6}{Terminal pathway of complement} & \cellcolor{gray!6}{-0.67} & \cellcolor{gray!6}{9.0e-04} & \cellcolor{gray!6}{0.022} & \cellcolor{gray!6}{Inhibited}\\
-\addlinespace
-Negative epigenetic regulation of rRNA expression & -0.61 & 9.7e-04 & 0.023 & Inhibited\\
-\cellcolor{gray!6}{Transport of the SLBP independent Mature mRNA} & \cellcolor{gray!6}{-0.64} & \cellcolor{gray!6}{1.0e-03} & \cellcolor{gray!6}{0.024} & \cellcolor{gray!6}{Inhibited}\\
-Metabolism of RNA & -0.69 & 1.1e-03 & 0.024 & Inhibited\\
-\cellcolor{gray!6}{Transport of Mature mRNA Derived from an Intronless Transcript} & \cellcolor{gray!6}{-0.64} & \cellcolor{gray!6}{1.1e-03} & \cellcolor{gray!6}{0.024} & \cellcolor{gray!6}{Inhibited}\\
-MHC class II antigen presentation & 0.63 & 1.2e-03 & 0.024 & Activated\\
-\addlinespace
-\cellcolor{gray!6}{Nonsense-Mediated Decay (NMD)} & \cellcolor{gray!6}{-0.69} & \cellcolor{gray!6}{1.2e-03} & \cellcolor{gray!6}{0.024} & \cellcolor{gray!6}{Inhibited}\\
-Nonsense Mediated Decay (NMD) enhanced by the Exon Junction Complex (EJC) & -0.69 & 1.2e-03 & 0.024 & Inhibited\\
-\cellcolor{gray!6}{Condensation of Prophase Chromosomes} & \cellcolor{gray!6}{-0.73} & \cellcolor{gray!6}{1.2e-03} & \cellcolor{gray!6}{0.024} & \cellcolor{gray!6}{Inhibited}\\
-SUMO is transferred from E1 to E2 (UBE2I, UBC9) & -0.64 & 1.2e-03 & 0.024 & Inhibited\\
-\cellcolor{gray!6}{SUMO is conjugated to E1 (UBA2:SAE1)} & \cellcolor{gray!6}{-0.64} & \cellcolor{gray!6}{1.2e-03} & \cellcolor{gray!6}{0.024} & \cellcolor{gray!6}{Inhibited}\\
-\addlinespace
-Regulation of TP53 Activity through Acetylation & -0.65 & 1.2e-03 & 0.024 & Inhibited\\
-\cellcolor{gray!6}{NGF-stimulated transcription} & \cellcolor{gray!6}{0.58} & \cellcolor{gray!6}{1.4e-03} & \cellcolor{gray!6}{0.025} & \cellcolor{gray!6}{Activated}\\
-Downstream TCR signaling & 0.63 & 1.4e-03 & 0.025 & Activated\\
-\cellcolor{gray!6}{Translation} & \cellcolor{gray!6}{-0.72} & \cellcolor{gray!6}{1.4e-03} & \cellcolor{gray!6}{0.025} & \cellcolor{gray!6}{Inhibited}\\
-Regulation of NPAS4 gene expression & 0.61 & 1.4e-03 & 0.025 & Activated\\
-\addlinespace
-\cellcolor{gray!6}{Regulation of NPAS4 mRNA translation} & \cellcolor{gray!6}{0.61} & \cellcolor{gray!6}{1.4e-03} & \cellcolor{gray!6}{0.025} & \cellcolor{gray!6}{Activated}\\
-Regulation of PTEN mRNA translation & 0.61 & 1.4e-03 & 0.025 & Activated\\
-\cellcolor{gray!6}{Apoptosis induced DNA fragmentation} & \cellcolor{gray!6}{-0.69} & \cellcolor{gray!6}{1.5e-03} & \cellcolor{gray!6}{0.025} & \cellcolor{gray!6}{Inhibited}\\
-Aberrant regulation of mitotic G1/S transition in cancer due to RB1 defects & 0.60 & 1.5e-03 & 0.025 & Activated\\
-\cellcolor{gray!6}{Defective binding of RB1 mutants to E2F1,(E2F2, E2F3)} & \cellcolor{gray!6}{0.60} & \cellcolor{gray!6}{1.5e-03} & \cellcolor{gray!6}{0.025} & \cellcolor{gray!6}{Activated}\\
-\addlinespace
-Diseases of mitotic cell cycle & 0.60 & 1.5e-03 & 0.025 & Activated\\
-\cellcolor{gray!6}{Aberrant regulation of mitotic cell cycle due to RB1 defects} & \cellcolor{gray!6}{0.60} & \cellcolor{gray!6}{1.5e-03} & \cellcolor{gray!6}{0.025} & \cellcolor{gray!6}{Activated}\\
-Transport of Mature mRNAs Derived from Intronless Transcripts & -0.62 & 1.6e-03 & 0.025 & Inhibited\\
-\cellcolor{gray!6}{Transport of the SLBP Dependant Mature mRNA} & \cellcolor{gray!6}{-0.60} & \cellcolor{gray!6}{1.6e-03} & \cellcolor{gray!6}{0.025} & \cellcolor{gray!6}{Inhibited}\\
-Antiviral mechanism by IFN-stimulated genes & -0.59 & 1.6e-03 & 0.025 & Inhibited\\
-\addlinespace
-\cellcolor{gray!6}{HATs acetylate histones} & \cellcolor{gray!6}{-0.68} & \cellcolor{gray!6}{1.6e-03} & \cellcolor{gray!6}{0.025} & \cellcolor{gray!6}{Inhibited}\\
-Regulation of TP53 Activity & -0.71 & 1.6e-03 & 0.025 & Inhibited\\
-\cellcolor{gray!6}{ISG15 antiviral mechanism} & \cellcolor{gray!6}{-0.59} & \cellcolor{gray!6}{1.7e-03} & \cellcolor{gray!6}{0.025} & \cellcolor{gray!6}{Inhibited}\\
-Interferon Signaling & -0.59 & 1.7e-03 & 0.025 & Inhibited\\
-\cellcolor{gray!6}{Response of EIF2AK4 (GCN2) to amino acid deficiency} & \cellcolor{gray!6}{-0.69} & \cellcolor{gray!6}{1.8e-03} & \cellcolor{gray!6}{0.026} & \cellcolor{gray!6}{Inhibited}\\
-\addlinespace
-Cytokine Signaling in Immune system & -0.58 & 1.8e-03 & 0.026 & Inhibited\\
-\cellcolor{gray!6}{Golgi Cisternae Pericentriolar Stack Reorganization} & \cellcolor{gray!6}{-0.81} & \cellcolor{gray!6}{1.9e-03} & \cellcolor{gray!6}{0.027} & \cellcolor{gray!6}{Inhibited}\\
-Homologous DNA Pairing and Strand Exchange & -0.70 & 1.9e-03 & 0.027 & Inhibited\\
-\cellcolor{gray!6}{Presynaptic phase of homologous DNA pairing and strand exchange} & \cellcolor{gray!6}{-0.70} & \cellcolor{gray!6}{1.9e-03} & \cellcolor{gray!6}{0.027} & \cellcolor{gray!6}{Inhibited}\\
-Regulation of APC/C activators between G1/S and early anaphase & -0.69 & 2.0e-03 & 0.027 & Inhibited\\
-\addlinespace
-\cellcolor{gray!6}{Carboxyterminal post-translational modifications of tubulin} & \cellcolor{gray!6}{-0.76} & \cellcolor{gray!6}{2.0e-03} & \cellcolor{gray!6}{0.027} & \cellcolor{gray!6}{Inhibited}\\
-Cellular response to starvation & -0.67 & 2.0e-03 & 0.027 & Inhibited\\
-\cellcolor{gray!6}{Regulation of IGF Activity by IGFBP} & \cellcolor{gray!6}{0.53} & \cellcolor{gray!6}{2.1e-03} & \cellcolor{gray!6}{0.027} & \cellcolor{gray!6}{Activated}\\
-Amino acids regulate mTORC1 & 0.62 & 2.2e-03 & 0.028 & Activated\\
-\cellcolor{gray!6}{SUMOylation of DNA damage response and repair proteins} & \cellcolor{gray!6}{-0.56} & \cellcolor{gray!6}{2.3e-03} & \cellcolor{gray!6}{0.030} & \cellcolor{gray!6}{Inhibited}\\
-\addlinespace
-Peptide chain elongation & -0.65 & 2.4e-03 & 0.030 & Inhibited\\
-\cellcolor{gray!6}{G2/M Checkpoints} & \cellcolor{gray!6}{-0.74} & \cellcolor{gray!6}{2.4e-03} & \cellcolor{gray!6}{0.030} & \cellcolor{gray!6}{Inhibited}\\
-Activation of gene expression by SREBF (SREBP) & -0.60 & 2.5e-03 & 0.030 & Inhibited\\
-\cellcolor{gray!6}{Nuclear Envelope Breakdown} & \cellcolor{gray!6}{-0.58} & \cellcolor{gray!6}{2.5e-03} & \cellcolor{gray!6}{0.030} & \cellcolor{gray!6}{Inhibited}\\
-Depolymerization of the Nuclear Lamina & -0.57 & 2.5e-03 & 0.030 & Inhibited\\
-\addlinespace
-\cellcolor{gray!6}{Prolonged ERK activation events} & \cellcolor{gray!6}{-0.54} & \cellcolor{gray!6}{2.5e-03} & \cellcolor{gray!6}{0.030} & \cellcolor{gray!6}{Inhibited}\\
-Pre-NOTCH Transcription and Translation & 0.66 & 2.6e-03 & 0.030 & Activated\\
-\cellcolor{gray!6}{Acetylcholine Neurotransmitter Release Cycle} & \cellcolor{gray!6}{0.64} & \cellcolor{gray!6}{2.6e-03} & \cellcolor{gray!6}{0.030} & \cellcolor{gray!6}{Activated}\\
-Positive epigenetic regulation of rRNA expression & -0.59 & 2.6e-03 & 0.030 & Inhibited\\
-\cellcolor{gray!6}{Eukaryotic Translation Elongation} & \cellcolor{gray!6}{-0.63} & \cellcolor{gray!6}{2.7e-03} & \cellcolor{gray!6}{0.031} & \cellcolor{gray!6}{Inhibited}\\
-\addlinespace
-Norepinephrine Neurotransmitter Release Cycle & 0.63 & 2.8e-03 & 0.032 & Activated\\
-\cellcolor{gray!6}{Nuclear Pore Complex (NPC) Disassembly} & \cellcolor{gray!6}{-0.68} & \cellcolor{gray!6}{2.9e-03} & \cellcolor{gray!6}{0.032} & \cellcolor{gray!6}{Inhibited}\\
-Glutamate Neurotransmitter Release Cycle & 0.63 & 2.9e-03 & 0.032 & Activated\\
-\cellcolor{gray!6}{Serotonin Neurotransmitter Release Cycle} & \cellcolor{gray!6}{0.63} & \cellcolor{gray!6}{2.9e-03} & \cellcolor{gray!6}{0.032} & \cellcolor{gray!6}{Activated}\\
-Death Receptor Signaling & 0.74 & 3.0e-03 & 0.033 & Activated\\
-\addlinespace
-\cellcolor{gray!6}{snRNP Assembly} & \cellcolor{gray!6}{-0.55} & \cellcolor{gray!6}{3.1e-03} & \cellcolor{gray!6}{0.033} & \cellcolor{gray!6}{Inhibited}\\
-Non-coding RNA Metabolism & -0.55 & 3.1e-03 & 0.033 & Inhibited\\
-\cellcolor{gray!6}{Cyclin A/B1/B2 associated events during G2/M transition} & \cellcolor{gray!6}{-0.63} & \cellcolor{gray!6}{3.1e-03} & \cellcolor{gray!6}{0.033} & \cellcolor{gray!6}{Inhibited}\\
-Sphingolipid metabolism & -0.56 & 3.2e-03 & 0.034 & Inhibited\\
-\cellcolor{gray!6}{Frs2-mediated activation} & \cellcolor{gray!6}{-0.56} & \cellcolor{gray!6}{3.6e-03} & \cellcolor{gray!6}{0.038} & \cellcolor{gray!6}{Inhibited}\\
-\addlinespace
-pre-mRNA splicing & -0.58 & 3.9e-03 & 0.039 & Inhibited\\
-\cellcolor{gray!6}{mRNA Splicing} & \cellcolor{gray!6}{-0.58} & \cellcolor{gray!6}{3.9e-03} & \cellcolor{gray!6}{0.039} & \cellcolor{gray!6}{Inhibited}\\
-Transcriptional Regulation by TP53 & -0.65 & 3.9e-03 & 0.039 & Inhibited\\
-\cellcolor{gray!6}{ATF4 activates genes in response to endoplasmic reticulum  stress} & \cellcolor{gray!6}{0.53} & \cellcolor{gray!6}{3.9e-03} & \cellcolor{gray!6}{0.039} & \cellcolor{gray!6}{Activated}\\
-SUMOylation of transcription cofactors & -0.50 & 4.0e-03 & 0.040 & Inhibited\\
-\addlinespace
-\cellcolor{gray!6}{Processing of Capped Intron-Containing Pre-mRNA} & \cellcolor{gray!6}{-0.57} & \cellcolor{gray!6}{4.2e-03} & \cellcolor{gray!6}{0.042} & \cellcolor{gray!6}{Inhibited}\\
-Post-translational protein phosphorylation & 0.51 & 4.3e-03 & 0.042 & Activated\\
-\cellcolor{gray!6}{Mitotic Prophase} & \cellcolor{gray!6}{-0.58} & \cellcolor{gray!6}{4.4e-03} & \cellcolor{gray!6}{0.043} & \cellcolor{gray!6}{Inhibited}\\
-RNA Polymerase II Transcription & -0.58 & 4.5e-03 & 0.044 & Inhibited\\
-\cellcolor{gray!6}{TCR signaling} & \cellcolor{gray!6}{0.57} & \cellcolor{gray!6}{5.0e-03} & \cellcolor{gray!6}{0.047} & \cellcolor{gray!6}{Activated}\\
-\addlinespace
-PERK regulates gene expression & 0.56 & 5.0e-03 & 0.048 & Activated\\
-\cellcolor{gray!6}{Activation of NOXA and translocation to mitochondria} & \cellcolor{gray!6}{-0.49} & \cellcolor{gray!6}{5.2e-03} & \cellcolor{gray!6}{0.049} & \cellcolor{gray!6}{Inhibited}\\
-The role of GTSE1 in G2/M progression after G2 checkpoint & -0.61 & 5.3e-03 & 0.049 & Inhibited\\
-\cellcolor{gray!6}{Generic Transcription Pathway} & \cellcolor{gray!6}{-0.56} & \cellcolor{gray!6}{5.4e-03} & \cellcolor{gray!6}{0.050} & \cellcolor{gray!6}{Inhibited}\\
-FGFR3 ligand binding and activation & 0.51 & 5.5e-03 & 0.050 & Activated\\
-\addlinespace
-\cellcolor{gray!6}{FGFR3c ligand binding and activation} & \cellcolor{gray!6}{0.51} & \cellcolor{gray!6}{5.5e-03} & \cellcolor{gray!6}{0.050} & \cellcolor{gray!6}{Activated}\\
 \bottomrule
 \end{tabular}}
 \end{table}

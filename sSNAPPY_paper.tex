@@ -71,7 +71,7 @@
 
 \hypersetup{unicode=true,
             pdftitle={sSNAPPY: an R/Bioconductor package for single-sample directional pathway perturbation analysis},
-            pdfkeywords={RNA-seq, pathway enrichment, R package, topology, KEGG, scRNA-seq},
+            pdfkeywords={RNA-seq, pathway enrichment, R package, topology, KEGG, Reactome, scRNA-seq},
             pdfborder={0 0 0},
             breaklinks=true}
 
@@ -122,7 +122,7 @@ A common outcome of analysing RNA-Seq data is the detection of biological pathwa
 \end{abstract}
 
 \section*{Keywords}
-RNA-seq, pathway enrichment, R package, topology, KEGG, scRNA-seq
+RNA-seq, pathway enrichment, R package, topology, KEGG, Reactome, scRNA-seq
 
 
 \clearpage
@@ -307,11 +307,11 @@ The treatment column within our metadata is expected to be a factor, with the re
 \subsection{Retrieval of Pathway Topology}\label{retrieval-of-pathway-topology}}
 
 Next, pathway topology information needs to be retrieved from a chosen database, and this is the only step requiring internet access.
-Using KEGG as an example, the retrieved topology information will be stored as a list where each element corresponds to a pathway and the numbers in the matrices encode gene-gene interactions.
+Using the Reactome database\citep{reactome2021} as an example, the retrieved topology information will be stored as a list where each element corresponds to a pathway and the numbers in the matrices encode gene-gene interactions.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{gsTopology }\OtherTok{\textless{}{-}} \FunctionTok{retrieve\_topology}\NormalTok{(}\AttributeTok{database =} \StringTok{"wikipathways"}\NormalTok{, }\AttributeTok{species =} \StringTok{"hsapiens"}\NormalTok{)}
+\NormalTok{gsTopology }\OtherTok{\textless{}{-}} \FunctionTok{retrieve\_topology}\NormalTok{(}\AttributeTok{database =} \StringTok{"reactome"}\NormalTok{, }\AttributeTok{species =} \StringTok{"hsapiens"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -337,7 +337,7 @@ In our example dataset, pre- and post-treatment samples are matched by the ``pat
 \end{Shaded}
 
 The output of \texttt{weight\_ss\_fc()} is a \texttt{list} where one element is a matrix of weighted single-sample fold-changes (\(\delta_{ghi}^*\)), with rows corresponding to genes and columns to samples, and the other element is the vector of gene-wise weights (\(w_g\)) used to calculate the weighted log fold-change (\(\delta_{ghi}^*\)), as described above.
-By default, the string \texttt{ENTREZID:} is added to all row names of the \(\delta_{ghi}^*\) matrix to be compatible with the format KEGG pathway topologies are retrieved in.
+By default, the string \texttt{ENTREZID:} is added to all row names of the \(\delta_{ghi}^*\) matrix to be compatible with the format Reactome pathway topologies are retrieved in.
 
 The matrix of \(\delta_{ghi}^*\) values are then passed to pathway topologies to compute gene-wise perturbation scores for all genes within a pathway, before being summed into a single score for each pathway.
 \texttt{raw\_gene\_pert()} returns a list, with each element containing the gene-level perturbation scores for a given pathway, with each matrix able to be used during downstream analysis to identify which genes play the most significant roles in each pathway, as demonstrated in later sections.
@@ -384,7 +384,7 @@ To demonstrate this, we randomly selected 6 pathways to demonstrate their quanti
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\FunctionTok{set.seed}\NormalTok{(}\DecValTok{175}\NormalTok{)}
+\FunctionTok{set.seed}\NormalTok{(}\DecValTok{123}\NormalTok{)}
 \NormalTok{random\_pathways }\OtherTok{\textless{}{-}}\NormalTok{ permutedScore }\SpecialCharTok{\%\textgreater{}\%}
     \FunctionTok{keep}\NormalTok{(}\SpecialCharTok{\textasciitilde{}}\FunctionTok{all}\NormalTok{(.}\SpecialCharTok{!=}\DecValTok{0}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%}
 \NormalTok{    .[}\FunctionTok{sample}\NormalTok{(}\FunctionTok{seq\_along}\NormalTok{(.), }\DecValTok{6}\NormalTok{)] }\SpecialCharTok{\%\textgreater{}\%}
@@ -472,7 +472,7 @@ In our example data, no pathways would be considered as significantly perturbed 
 
 A key question of interest in our example dataset is to identify which biological processes were impacted by chemotherapy across the entire group of patients.
 Using the sample-level output obtained above, we can explore this by applying t-tests or regression models across all samples.
-In order to minimise spurious results, Smyth's moderated t-statistics\citep{Smyth_2004} are able to be applied across the complete dataset, with a constant variance assumed across all pathways, given that we are using Z-scores,.
+In order to minimise spurious results, Smyth's moderated t-statistics\citep{Smyth_2004} are able to be applied across the complete dataset, with a constant variance assumed across all pathways, given that we are using Z-scores.
 To perform this analysis, robust Z-scores were converted to a matrix and standard \emph{limma} methodologies were used.
 For our use case here, where only one treatment group is present, no design matrix is required and a simple t-test is appropriate.
 
@@ -493,30 +493,45 @@ For our use case here, where only one treatment group is present, no design matr
 \end{Highlighting}
 \end{Shaded}
 
-121 out of the 1094 tested wikipathways have an FDR \textless{} 0.05 in the moderated t-test, hence were considered to be significantly perturbed at the group level. The top 10 most highly ranked pathways and their predicted direction of change are shown in Table \ref{tab:Table1}.
+121 out of the 1094 tested Reactome pathways have an FDR \textless{} 0.05 in the moderated t-test, hence were considered to be significantly perturbed at the group level. The Table \ref{tab:Table1} presents the top 10 significantly inhibited and activated pathways, along with their predicted direction of change.
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{table1 }\OtherTok{\textless{}{-}}\NormalTok{ sigPathway }\SpecialCharTok{\%\textgreater{}\%}
-  \FunctionTok{mutate}\NormalTok{(}
-    \AttributeTok{Direction =} \FunctionTok{ifelse}\NormalTok{(logFC }\SpecialCharTok{\textless{}} \DecValTok{0}\NormalTok{, }\StringTok{"Inhibited"}\NormalTok{, }\StringTok{"Activated"}\NormalTok{), }
-    \AttributeTok{gs\_name =} \FunctionTok{str\_remove\_all}\NormalTok{(gs\_name, }\StringTok{"reactome."}\NormalTok{)}
-\NormalTok{  ) }\SpecialCharTok{\%\textgreater{}\%}
-\NormalTok{  dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(}
+    \FunctionTok{mutate}\NormalTok{(}
+        \AttributeTok{Direction =} \FunctionTok{ifelse}\NormalTok{(logFC }\SpecialCharTok{\textless{}} \DecValTok{0}\NormalTok{, }\StringTok{"Inhibited"}\NormalTok{, }\StringTok{"Activated"}\NormalTok{), }
+        \AttributeTok{gs\_name =} \FunctionTok{str\_remove\_all}\NormalTok{(gs\_name, }\StringTok{"reactome."}\NormalTok{)}
+\NormalTok{    ) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{split}\NormalTok{(}\AttributeTok{f =}\NormalTok{ .}\SpecialCharTok{$}\NormalTok{Direction) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{lapply}\NormalTok{(}\ControlFlowTok{function}\NormalTok{(x)x[}\DecValTok{1}\SpecialCharTok{:}\DecValTok{10}\NormalTok{,]) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{bind\_rows}\NormalTok{() }\SpecialCharTok{\%\textgreater{}\%}
+\NormalTok{    dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(}
     \AttributeTok{Pathway =}\NormalTok{ gs\_name, }\AttributeTok{Change =}\NormalTok{ logFC,  P.Value, }\AttributeTok{FDR =}\NormalTok{ adj.P.Val, Direction}
-\NormalTok{  )}
+\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{table}
 
-\caption{\label{tab:Table1}Significantly impacted Reactome pathways identified among post-chemotherapy samples using sSNAPPY}
+\caption{\label{tab:Table1}Significantly impacted Reactome pathways identified among post-chemotherapy samples using sSNAPPY. Only the 10 most significantly inhibited and 10 most significantly activated pathways are shown.}
 \centering
 \resizebox{\linewidth}{!}{
 \begin{tabular}[t]{lrrrl}
 \toprule
 Pathway & Change & P.Value & FDR & Direction\\
 \midrule
+\cellcolor{gray!6}{Signaling by Retinoic Acid} & \cellcolor{gray!6}{0.60} & \cellcolor{gray!6}{4.4e-04} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Activated}\\
+Regulation of pyruvate dehydrogenase (PDH) complex & 0.60 & 4.6e-04 & 0.015 & Activated\\
+\cellcolor{gray!6}{Pyruvate metabolism} & \cellcolor{gray!6}{0.60} & \cellcolor{gray!6}{4.6e-04} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Activated}\\
+Pyruvate metabolism and Citric Acid (TCA) cycle & 0.60 & 4.6e-04 & 0.015 & Activated\\
+\cellcolor{gray!6}{Negative regulation of MAPK pathway} & \cellcolor{gray!6}{0.63} & \cellcolor{gray!6}{5.4e-04} & \cellcolor{gray!6}{0.017} & \cellcolor{gray!6}{Activated}\\
+\addlinespace
+Translocation of ZAP-70 to Immunological synapse & 0.62 & 8.8e-04 & 0.022 & Activated\\
+\cellcolor{gray!6}{Generation of second messenger molecules} & \cellcolor{gray!6}{0.62} & \cellcolor{gray!6}{8.8e-04} & \cellcolor{gray!6}{0.022} & \cellcolor{gray!6}{Activated}\\
+MHC class II antigen presentation & 0.63 & 1.2e-03 & 0.024 & Activated\\
+\cellcolor{gray!6}{NGF-stimulated transcription} & \cellcolor{gray!6}{0.58} & \cellcolor{gray!6}{1.4e-03} & \cellcolor{gray!6}{0.025} & \cellcolor{gray!6}{Activated}\\
+Downstream TCR signaling & 0.63 & 1.4e-03 & 0.025 & Activated\\
+\addlinespace
 \cellcolor{gray!6}{Interleukin-35 Signalling} & \cellcolor{gray!6}{-0.90} & \cellcolor{gray!6}{1.7e-05} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Inhibited}\\
 Sphingolipid de novo biosynthesis & -0.90 & 2.8e-05 & 0.015 & Inhibited\\
 \cellcolor{gray!6}{SUMOylation of DNA replication proteins} & \cellcolor{gray!6}{-0.82} & \cellcolor{gray!6}{6.9e-05} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Inhibited}\\
@@ -528,140 +543,6 @@ Polo-like kinase mediated events & -0.88 & 1.4e-04 & 0.015 & Inhibited\\
 Chromatin organization & -0.79 & 1.5e-04 & 0.015 & Inhibited\\
 \cellcolor{gray!6}{SUMO E3 ligases SUMOylate target proteins} & \cellcolor{gray!6}{-0.77} & \cellcolor{gray!6}{1.8e-04} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Inhibited}\\
 APC-Cdc20 mediated degradation of Nek2A & -0.84 & 2.1e-04 & 0.015 & Inhibited\\
-\addlinespace
-\cellcolor{gray!6}{APC/C:Cdc20 mediated degradation of Cyclin B} & \cellcolor{gray!6}{-0.83} & \cellcolor{gray!6}{2.3e-04} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Inhibited}\\
-UCH proteinases & -0.71 & 2.3e-04 & 0.015 & Inhibited\\
-\cellcolor{gray!6}{Gene expression (Transcription)} & \cellcolor{gray!6}{-0.72} & \cellcolor{gray!6}{2.8e-04} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Inhibited}\\
-rRNA processing & -0.72 & 3.2e-04 & 0.015 & Inhibited\\
-\cellcolor{gray!6}{rRNA processing in the nucleus and cytosol} & \cellcolor{gray!6}{-0.72} & \cellcolor{gray!6}{3.2e-04} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Inhibited}\\
-\addlinespace
-Major pathway of rRNA processing in the nucleolus and cytosol & -0.72 & 3.2e-04 & 0.015 & Inhibited\\
-\cellcolor{gray!6}{Phosphorylation of Emi1} & \cellcolor{gray!6}{-0.78} & \cellcolor{gray!6}{3.3e-04} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Inhibited}\\
-Phosphorylation of the APC/C & -0.78 & 3.3e-04 & 0.015 & Inhibited\\
-\cellcolor{gray!6}{Mitotic Prometaphase} & \cellcolor{gray!6}{-0.80} & \cellcolor{gray!6}{3.3e-04} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Inhibited}\\
-SUMOylation & -0.71 & 3.4e-04 & 0.015 & Inhibited\\
-\addlinespace
-\cellcolor{gray!6}{MASTL Facilitates Mitotic Progression} & \cellcolor{gray!6}{-0.79} & \cellcolor{gray!6}{3.4e-04} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Inhibited}\\
-SUMOylation of ubiquitinylation proteins & -0.74 & 3.5e-04 & 0.015 & Inhibited\\
-\cellcolor{gray!6}{Activation of NIMA Kinases NEK9, NEK6, NEK7} & \cellcolor{gray!6}{-0.82} & \cellcolor{gray!6}{3.5e-04} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Inhibited}\\
-SUMOylation of SUMOylation proteins & -0.69 & 3.8e-04 & 0.015 & Inhibited\\
-\cellcolor{gray!6}{RMTs methylate histone arginines} & \cellcolor{gray!6}{-0.68} & \cellcolor{gray!6}{3.9e-04} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Inhibited}\\
-\addlinespace
-Activation of the pre-replicative complex & -0.83 & 4.1e-04 & 0.015 & Inhibited\\
-\cellcolor{gray!6}{Resolution of Sister Chromatid Cohesion} & \cellcolor{gray!6}{-0.81} & \cellcolor{gray!6}{4.4e-04} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Inhibited}\\
-Signaling by Retinoic Acid & 0.60 & 4.4e-04 & 0.015 & Activated\\
-\cellcolor{gray!6}{NOTCH3 Intracellular Domain Regulates Transcription} & \cellcolor{gray!6}{-0.68} & \cellcolor{gray!6}{4.5e-04} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Inhibited}\\
-SUMOylation of chromatin organization proteins & -0.68 & 4.6e-04 & 0.015 & Inhibited\\
-\addlinespace
-\cellcolor{gray!6}{Regulation of pyruvate dehydrogenase (PDH) complex} & \cellcolor{gray!6}{0.60} & \cellcolor{gray!6}{4.6e-04} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Activated}\\
-Pyruvate metabolism & 0.60 & 4.6e-04 & 0.015 & Activated\\
-\cellcolor{gray!6}{Pyruvate metabolism and Citric Acid (TCA) cycle} & \cellcolor{gray!6}{0.60} & \cellcolor{gray!6}{4.6e-04} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Activated}\\
-Negative regulation of MAPK pathway & 0.63 & 5.4e-04 & 0.017 & Activated\\
-\cellcolor{gray!6}{SUMOylation of RNA binding proteins} & \cellcolor{gray!6}{-0.66} & \cellcolor{gray!6}{5.7e-04} & \cellcolor{gray!6}{0.018} & \cellcolor{gray!6}{Inhibited}\\
-\addlinespace
-Deubiquitination & -0.59 & 6.1e-04 & 0.019 & Inhibited\\
-\cellcolor{gray!6}{Interleukin-12 family signaling} & \cellcolor{gray!6}{-0.67} & \cellcolor{gray!6}{6.7e-04} & \cellcolor{gray!6}{0.020} & \cellcolor{gray!6}{Inhibited}\\
-Loss of Nlp from mitotic centrosomes & -0.78 & 7.2e-04 & 0.020 & Inhibited\\
-\cellcolor{gray!6}{Loss of proteins required for interphase microtubule organization from the centrosome} & \cellcolor{gray!6}{-0.78} & \cellcolor{gray!6}{7.2e-04} & \cellcolor{gray!6}{0.020} & \cellcolor{gray!6}{Inhibited}\\
-cell division & -0.78 & 7.2e-04 & 0.020 & Inhibited\\
-\addlinespace
-\cellcolor{gray!6}{TRAF3-dependent IRF activation pathway} & \cellcolor{gray!6}{-0.65} & \cellcolor{gray!6}{7.5e-04} & \cellcolor{gray!6}{0.020} & \cellcolor{gray!6}{Inhibited}\\
-TRAF6 mediated IRF7 activation & -0.69 & 7.5e-04 & 0.020 & Inhibited\\
-\cellcolor{gray!6}{Translocation of ZAP-70 to Immunological synapse} & \cellcolor{gray!6}{0.62} & \cellcolor{gray!6}{8.8e-04} & \cellcolor{gray!6}{0.022} & \cellcolor{gray!6}{Activated}\\
-Generation of second messenger molecules & 0.62 & 8.8e-04 & 0.022 & Activated\\
-\cellcolor{gray!6}{Terminal pathway of complement} & \cellcolor{gray!6}{-0.67} & \cellcolor{gray!6}{9.0e-04} & \cellcolor{gray!6}{0.022} & \cellcolor{gray!6}{Inhibited}\\
-\addlinespace
-Negative epigenetic regulation of rRNA expression & -0.61 & 9.7e-04 & 0.023 & Inhibited\\
-\cellcolor{gray!6}{Transport of the SLBP independent Mature mRNA} & \cellcolor{gray!6}{-0.64} & \cellcolor{gray!6}{1.0e-03} & \cellcolor{gray!6}{0.024} & \cellcolor{gray!6}{Inhibited}\\
-Metabolism of RNA & -0.69 & 1.1e-03 & 0.024 & Inhibited\\
-\cellcolor{gray!6}{Transport of Mature mRNA Derived from an Intronless Transcript} & \cellcolor{gray!6}{-0.64} & \cellcolor{gray!6}{1.1e-03} & \cellcolor{gray!6}{0.024} & \cellcolor{gray!6}{Inhibited}\\
-MHC class II antigen presentation & 0.63 & 1.2e-03 & 0.024 & Activated\\
-\addlinespace
-\cellcolor{gray!6}{Nonsense-Mediated Decay (NMD)} & \cellcolor{gray!6}{-0.69} & \cellcolor{gray!6}{1.2e-03} & \cellcolor{gray!6}{0.024} & \cellcolor{gray!6}{Inhibited}\\
-Nonsense Mediated Decay (NMD) enhanced by the Exon Junction Complex (EJC) & -0.69 & 1.2e-03 & 0.024 & Inhibited\\
-\cellcolor{gray!6}{Condensation of Prophase Chromosomes} & \cellcolor{gray!6}{-0.73} & \cellcolor{gray!6}{1.2e-03} & \cellcolor{gray!6}{0.024} & \cellcolor{gray!6}{Inhibited}\\
-SUMO is transferred from E1 to E2 (UBE2I, UBC9) & -0.64 & 1.2e-03 & 0.024 & Inhibited\\
-\cellcolor{gray!6}{SUMO is conjugated to E1 (UBA2:SAE1)} & \cellcolor{gray!6}{-0.64} & \cellcolor{gray!6}{1.2e-03} & \cellcolor{gray!6}{0.024} & \cellcolor{gray!6}{Inhibited}\\
-\addlinespace
-Regulation of TP53 Activity through Acetylation & -0.65 & 1.2e-03 & 0.024 & Inhibited\\
-\cellcolor{gray!6}{NGF-stimulated transcription} & \cellcolor{gray!6}{0.58} & \cellcolor{gray!6}{1.4e-03} & \cellcolor{gray!6}{0.025} & \cellcolor{gray!6}{Activated}\\
-Downstream TCR signaling & 0.63 & 1.4e-03 & 0.025 & Activated\\
-\cellcolor{gray!6}{Translation} & \cellcolor{gray!6}{-0.72} & \cellcolor{gray!6}{1.4e-03} & \cellcolor{gray!6}{0.025} & \cellcolor{gray!6}{Inhibited}\\
-Regulation of NPAS4 gene expression & 0.61 & 1.4e-03 & 0.025 & Activated\\
-\addlinespace
-\cellcolor{gray!6}{Regulation of NPAS4 mRNA translation} & \cellcolor{gray!6}{0.61} & \cellcolor{gray!6}{1.4e-03} & \cellcolor{gray!6}{0.025} & \cellcolor{gray!6}{Activated}\\
-Regulation of PTEN mRNA translation & 0.61 & 1.4e-03 & 0.025 & Activated\\
-\cellcolor{gray!6}{Apoptosis induced DNA fragmentation} & \cellcolor{gray!6}{-0.69} & \cellcolor{gray!6}{1.5e-03} & \cellcolor{gray!6}{0.025} & \cellcolor{gray!6}{Inhibited}\\
-Aberrant regulation of mitotic G1/S transition in cancer due to RB1 defects & 0.60 & 1.5e-03 & 0.025 & Activated\\
-\cellcolor{gray!6}{Defective binding of RB1 mutants to E2F1,(E2F2, E2F3)} & \cellcolor{gray!6}{0.60} & \cellcolor{gray!6}{1.5e-03} & \cellcolor{gray!6}{0.025} & \cellcolor{gray!6}{Activated}\\
-\addlinespace
-Diseases of mitotic cell cycle & 0.60 & 1.5e-03 & 0.025 & Activated\\
-\cellcolor{gray!6}{Aberrant regulation of mitotic cell cycle due to RB1 defects} & \cellcolor{gray!6}{0.60} & \cellcolor{gray!6}{1.5e-03} & \cellcolor{gray!6}{0.025} & \cellcolor{gray!6}{Activated}\\
-Transport of Mature mRNAs Derived from Intronless Transcripts & -0.62 & 1.6e-03 & 0.025 & Inhibited\\
-\cellcolor{gray!6}{Transport of the SLBP Dependant Mature mRNA} & \cellcolor{gray!6}{-0.60} & \cellcolor{gray!6}{1.6e-03} & \cellcolor{gray!6}{0.025} & \cellcolor{gray!6}{Inhibited}\\
-Antiviral mechanism by IFN-stimulated genes & -0.59 & 1.6e-03 & 0.025 & Inhibited\\
-\addlinespace
-\cellcolor{gray!6}{HATs acetylate histones} & \cellcolor{gray!6}{-0.68} & \cellcolor{gray!6}{1.6e-03} & \cellcolor{gray!6}{0.025} & \cellcolor{gray!6}{Inhibited}\\
-Regulation of TP53 Activity & -0.71 & 1.6e-03 & 0.025 & Inhibited\\
-\cellcolor{gray!6}{ISG15 antiviral mechanism} & \cellcolor{gray!6}{-0.59} & \cellcolor{gray!6}{1.7e-03} & \cellcolor{gray!6}{0.025} & \cellcolor{gray!6}{Inhibited}\\
-Interferon Signaling & -0.59 & 1.7e-03 & 0.025 & Inhibited\\
-\cellcolor{gray!6}{Response of EIF2AK4 (GCN2) to amino acid deficiency} & \cellcolor{gray!6}{-0.69} & \cellcolor{gray!6}{1.8e-03} & \cellcolor{gray!6}{0.026} & \cellcolor{gray!6}{Inhibited}\\
-\addlinespace
-Cytokine Signaling in Immune system & -0.58 & 1.8e-03 & 0.026 & Inhibited\\
-\cellcolor{gray!6}{Golgi Cisternae Pericentriolar Stack Reorganization} & \cellcolor{gray!6}{-0.81} & \cellcolor{gray!6}{1.9e-03} & \cellcolor{gray!6}{0.027} & \cellcolor{gray!6}{Inhibited}\\
-Homologous DNA Pairing and Strand Exchange & -0.70 & 1.9e-03 & 0.027 & Inhibited\\
-\cellcolor{gray!6}{Presynaptic phase of homologous DNA pairing and strand exchange} & \cellcolor{gray!6}{-0.70} & \cellcolor{gray!6}{1.9e-03} & \cellcolor{gray!6}{0.027} & \cellcolor{gray!6}{Inhibited}\\
-Regulation of APC/C activators between G1/S and early anaphase & -0.69 & 2.0e-03 & 0.027 & Inhibited\\
-\addlinespace
-\cellcolor{gray!6}{Carboxyterminal post-translational modifications of tubulin} & \cellcolor{gray!6}{-0.76} & \cellcolor{gray!6}{2.0e-03} & \cellcolor{gray!6}{0.027} & \cellcolor{gray!6}{Inhibited}\\
-Cellular response to starvation & -0.67 & 2.0e-03 & 0.027 & Inhibited\\
-\cellcolor{gray!6}{Regulation of IGF Activity by IGFBP} & \cellcolor{gray!6}{0.53} & \cellcolor{gray!6}{2.1e-03} & \cellcolor{gray!6}{0.027} & \cellcolor{gray!6}{Activated}\\
-Amino acids regulate mTORC1 & 0.62 & 2.2e-03 & 0.028 & Activated\\
-\cellcolor{gray!6}{SUMOylation of DNA damage response and repair proteins} & \cellcolor{gray!6}{-0.56} & \cellcolor{gray!6}{2.3e-03} & \cellcolor{gray!6}{0.030} & \cellcolor{gray!6}{Inhibited}\\
-\addlinespace
-Peptide chain elongation & -0.65 & 2.4e-03 & 0.030 & Inhibited\\
-\cellcolor{gray!6}{G2/M Checkpoints} & \cellcolor{gray!6}{-0.74} & \cellcolor{gray!6}{2.4e-03} & \cellcolor{gray!6}{0.030} & \cellcolor{gray!6}{Inhibited}\\
-Activation of gene expression by SREBF (SREBP) & -0.60 & 2.5e-03 & 0.030 & Inhibited\\
-\cellcolor{gray!6}{Nuclear Envelope Breakdown} & \cellcolor{gray!6}{-0.58} & \cellcolor{gray!6}{2.5e-03} & \cellcolor{gray!6}{0.030} & \cellcolor{gray!6}{Inhibited}\\
-Depolymerization of the Nuclear Lamina & -0.57 & 2.5e-03 & 0.030 & Inhibited\\
-\addlinespace
-\cellcolor{gray!6}{Prolonged ERK activation events} & \cellcolor{gray!6}{-0.54} & \cellcolor{gray!6}{2.5e-03} & \cellcolor{gray!6}{0.030} & \cellcolor{gray!6}{Inhibited}\\
-Pre-NOTCH Transcription and Translation & 0.66 & 2.6e-03 & 0.030 & Activated\\
-\cellcolor{gray!6}{Acetylcholine Neurotransmitter Release Cycle} & \cellcolor{gray!6}{0.64} & \cellcolor{gray!6}{2.6e-03} & \cellcolor{gray!6}{0.030} & \cellcolor{gray!6}{Activated}\\
-Positive epigenetic regulation of rRNA expression & -0.59 & 2.6e-03 & 0.030 & Inhibited\\
-\cellcolor{gray!6}{Eukaryotic Translation Elongation} & \cellcolor{gray!6}{-0.63} & \cellcolor{gray!6}{2.7e-03} & \cellcolor{gray!6}{0.031} & \cellcolor{gray!6}{Inhibited}\\
-\addlinespace
-Norepinephrine Neurotransmitter Release Cycle & 0.63 & 2.8e-03 & 0.032 & Activated\\
-\cellcolor{gray!6}{Nuclear Pore Complex (NPC) Disassembly} & \cellcolor{gray!6}{-0.68} & \cellcolor{gray!6}{2.9e-03} & \cellcolor{gray!6}{0.032} & \cellcolor{gray!6}{Inhibited}\\
-Glutamate Neurotransmitter Release Cycle & 0.63 & 2.9e-03 & 0.032 & Activated\\
-\cellcolor{gray!6}{Serotonin Neurotransmitter Release Cycle} & \cellcolor{gray!6}{0.63} & \cellcolor{gray!6}{2.9e-03} & \cellcolor{gray!6}{0.032} & \cellcolor{gray!6}{Activated}\\
-Death Receptor Signaling & 0.74 & 3.0e-03 & 0.033 & Activated\\
-\addlinespace
-\cellcolor{gray!6}{snRNP Assembly} & \cellcolor{gray!6}{-0.55} & \cellcolor{gray!6}{3.1e-03} & \cellcolor{gray!6}{0.033} & \cellcolor{gray!6}{Inhibited}\\
-Non-coding RNA Metabolism & -0.55 & 3.1e-03 & 0.033 & Inhibited\\
-\cellcolor{gray!6}{Cyclin A/B1/B2 associated events during G2/M transition} & \cellcolor{gray!6}{-0.63} & \cellcolor{gray!6}{3.1e-03} & \cellcolor{gray!6}{0.033} & \cellcolor{gray!6}{Inhibited}\\
-Sphingolipid metabolism & -0.56 & 3.2e-03 & 0.034 & Inhibited\\
-\cellcolor{gray!6}{Frs2-mediated activation} & \cellcolor{gray!6}{-0.56} & \cellcolor{gray!6}{3.6e-03} & \cellcolor{gray!6}{0.038} & \cellcolor{gray!6}{Inhibited}\\
-\addlinespace
-pre-mRNA splicing & -0.58 & 3.9e-03 & 0.039 & Inhibited\\
-\cellcolor{gray!6}{mRNA Splicing} & \cellcolor{gray!6}{-0.58} & \cellcolor{gray!6}{3.9e-03} & \cellcolor{gray!6}{0.039} & \cellcolor{gray!6}{Inhibited}\\
-Transcriptional Regulation by TP53 & -0.65 & 3.9e-03 & 0.039 & Inhibited\\
-\cellcolor{gray!6}{ATF4 activates genes in response to endoplasmic reticulum  stress} & \cellcolor{gray!6}{0.53} & \cellcolor{gray!6}{3.9e-03} & \cellcolor{gray!6}{0.039} & \cellcolor{gray!6}{Activated}\\
-SUMOylation of transcription cofactors & -0.50 & 4.0e-03 & 0.040 & Inhibited\\
-\addlinespace
-\cellcolor{gray!6}{Processing of Capped Intron-Containing Pre-mRNA} & \cellcolor{gray!6}{-0.57} & \cellcolor{gray!6}{4.2e-03} & \cellcolor{gray!6}{0.042} & \cellcolor{gray!6}{Inhibited}\\
-Post-translational protein phosphorylation & 0.51 & 4.3e-03 & 0.042 & Activated\\
-\cellcolor{gray!6}{Mitotic Prophase} & \cellcolor{gray!6}{-0.58} & \cellcolor{gray!6}{4.4e-03} & \cellcolor{gray!6}{0.043} & \cellcolor{gray!6}{Inhibited}\\
-RNA Polymerase II Transcription & -0.58 & 4.5e-03 & 0.044 & Inhibited\\
-\cellcolor{gray!6}{TCR signaling} & \cellcolor{gray!6}{0.57} & \cellcolor{gray!6}{5.0e-03} & \cellcolor{gray!6}{0.047} & \cellcolor{gray!6}{Activated}\\
-\addlinespace
-PERK regulates gene expression & 0.56 & 5.0e-03 & 0.048 & Activated\\
-\cellcolor{gray!6}{Activation of NOXA and translocation to mitochondria} & \cellcolor{gray!6}{-0.49} & \cellcolor{gray!6}{5.2e-03} & \cellcolor{gray!6}{0.049} & \cellcolor{gray!6}{Inhibited}\\
-The role of GTSE1 in G2/M progression after G2 checkpoint & -0.61 & 5.3e-03 & 0.049 & Inhibited\\
-\cellcolor{gray!6}{Generic Transcription Pathway} & \cellcolor{gray!6}{-0.56} & \cellcolor{gray!6}{5.4e-03} & \cellcolor{gray!6}{0.050} & \cellcolor{gray!6}{Inhibited}\\
-FGFR3 ligand binding and activation & 0.51 & 5.5e-03 & 0.050 & Activated\\
-\addlinespace
-\cellcolor{gray!6}{FGFR3c ligand binding and activation} & \cellcolor{gray!6}{0.51} & \cellcolor{gray!6}{5.5e-03} & \cellcolor{gray!6}{0.050} & \cellcolor{gray!6}{Activated}\\
 \bottomrule
 \end{tabular}}
 \end{table}
@@ -669,10 +550,9 @@ FGFR3 ligand binding and activation & 0.51 & 5.5e-03 & 0.050 & Activated\\
 For enrichment analysis in the original study\citep{Zhang2022}, unsupervised clustering was performed on all cells labelled as cancer cells.
 Clusters were then annotated manually by performing pathway enrichment testing on cluster marker genes.
 Two clusters, associated with proliferative DNA repair signatures and stress-related markers, contained significantly higher numbers of post-chemotherapy cells than pre-treatment ones\citep{Zhang2022}.
-The representative pathways enriched in the stress-associated cluster were \emph{IL6-mediated signaling events}, \emph{TNF signaling pathway}, and \emph{cellular responses to stress}, characterized by marker genes \emph{JUN}, \emph{FOS}, \emph{IL6}, \emph{TNF}, \emph{CXCR4}, \emph{SNAI1}, \emph{VIM}, \emph{GADD45B}, and \emph{MCL1.}
-The other post-chemotherapy cell dominated cluster in the original study was enriched for pathways associated with cell proliferation and DNA repair, such as the Cell cycle, DNA repair, Homology directed repair (HDR) through homologous recombination, and the Fanconi anaemia pathway.
-\emph{sSNAPPY} not only detected many significant perturbed pathways that are highly concordant with the pathways reported in the original study but also predicted their directions of changes.
-For example, the DNT repair pathway \emph{SUMOylation of DNA damage response and repair proteins} pathway was predicted to be significantly inhibited by in post-chemotherapy samples.
+The representative pathways enriched in the stress-associated cluster were \emph{IL6-mediated signaling events}, \emph{TNF signaling pathway}, and \emph{cellular responses to stress}, and the other post-chemotherapy cell dominated cluster in the original study was enriched for pathways associated with cell proliferation and DNA repair, such as the Cell cycle, DNA repair, Homology directed repair (HDR) through homologous recombination, and the Fanconi anaemia pathway.
+\emph{sSNAPPY} not only detected many significant perturbed pathways that are highly concordant with the pathways reported to be enriched in the original study but also predicted their directions of changes.
+For example, the DNT repair pathway \emph{SUMOylation of DNA damage response and repair proteins} pathway was predicted to be significantly inhibited by the chemotherapy.
 
 Apart from considering all treated samples as biological replicates, users may elect to perform an analysis incorporating other phenotypic traits which may impact a patients responses to chemotherapy, such as disease stages or tumour grades.
 To perform this step using the moderated t-statistic strategy and extend the above analysis, an appropriate design matrix is the only additional requirement for model-fitting, or alternatively, samples may be subset as may be appropriate.
@@ -742,22 +622,21 @@ In the following example, we'll inspect the 10 most significantly inhibited and 
 
 }
 
-\caption{Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, colored by (A) predicted direction of changes and (B) -log10(p-values). Only the 10 most significantly inhibited and 10 most significantly activated pathways are shown.}\label{fig:Figure4}
+\caption{Significantly perturbed Reactome pathways identified among post-chemotherapy samples using sSNAPPY, colored by (A) predicted direction of changes and (B) -log10(p-values). Only the 10 most significantly inhibited and 10 most significantly activated pathways are shown.}\label{fig:Figure4}
 \end{figure}
 
-Any advantage of visualising pathway analysis results using network structures is that it allows the identification of highly connected pathways. (Figure \ref{fig:Figure4}).
-To summarise related pathways and further enable interpretation, we can apply community detection\citep{Newman2004} and group related pathways into `communities'.
+Any advantage of visualising pathway analysis results using network structures is that it allows the identification of highly connected pathways (Figure \ref{fig:Figure4}).
+To summarise related pathways and further enable interpretation, we can apply community detection\citep{Newman2004} to group related pathways into `communities'.
 sSNAPPY's \texttt{plot\_community()} function is a ``one-stop shop'' for applying a community detection algorithm of the user's choice to the network structure and annotating identified communities by the most common pathway category, denoting the main biological processes perturbed in that community.
-The most recent categories for both KEGG and Reactome pathways were curated from their respective website: {[}KEGG website{]}(\url{https://www.genome.jp/kegg/pathway.html}, \href{https://reactome.org/PathwayBrowser/\#/R-HSA-1632852&PATH=R-HSA-9612973}{Reactome website} and included as parts of sSNAPPY.
+The most recent categories for both KEGG and Reactome databases were curated from their respective website (\href{https://www.genome.jp/kegg/pathway.html}{KEGG website} \& \href{https://reactome.org/PathwayBrowser/\#/R-HSA-1632852&PATH=R-HSA-9612973}{Reactome website}) and included as parts of sSNAPPY.
 Analyses involving other pathway databases may require user-provided pathway categories.
-When the information about pathway categorisations is available, annotation of KEGG pathway communities is automatically completed.
-In the current dataset, the Louvain method was applied to the network of biological pathways and revealed five primary communities: (Figure \ref{fig:Figure5})
+When the information about pathway categorisations is available, annotation of pathway communities is automatically completed.
+In the current dataset, the Louvain method was applied to the network of biological pathways and revealed five primary communities: 1) Adaptive Immune System; 2) Cell Cycle, Mitotic; 3) Chromatin modifying enzymes \& Epigenetic regulation of gene expression; 4) Post-translational protein modification and 5) The citric acid (TCA) cycle and respiratory electron transport (Figure \ref{fig:Figure5}).
 The largest community formed was the Adaptive Immune System pathway, indicating a clear immune-signalling aspect to these results.
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \CommentTok{\#load(system.file("extdata", "gsAnnotation\_df\_wiki.rda", package = "sSNAPPY"))}
-\FunctionTok{load}\NormalTok{(}\StringTok{"\textasciitilde{}/sSNAPPY/inst/extdata/gsAnnotation\_df\_wiki.rda"}\NormalTok{)}
 \FunctionTok{set.seed}\NormalTok{(}\DecValTok{456}\NormalTok{)}
 \FunctionTok{plot\_community}\NormalTok{(}
     \AttributeTok{normalisedScores =}\NormalTok{ sigPathway,}
@@ -770,17 +649,26 @@ The largest community formed was the Adaptive Immune System pathway, indicating 
     \FunctionTok{scale\_fill\_viridis\_d}\NormalTok{() }\SpecialCharTok{+}
     \FunctionTok{scale\_x\_continuous}\NormalTok{(}\AttributeTok{expand =} \FunctionTok{expansion}\NormalTok{(}\FloatTok{0.25}\NormalTok{)) }\SpecialCharTok{+}
     \FunctionTok{scale\_y\_continuous}\NormalTok{(}\AttributeTok{expand =} \FunctionTok{expansion}\NormalTok{(}\FloatTok{0.25}\NormalTok{)) }\SpecialCharTok{+}
+    \FunctionTok{guides}\NormalTok{(}\AttributeTok{fill =} \ConstantTok{FALSE}\NormalTok{) }\SpecialCharTok{+}
     \FunctionTok{theme\_void}\NormalTok{() }\SpecialCharTok{+}
     \FunctionTok{theme}\NormalTok{(}
-        \AttributeTok{legend.text =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{12}\NormalTok{),}
-        \AttributeTok{legend.title =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{12}\NormalTok{)}
+        \AttributeTok{legend.text =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{8}\NormalTok{),}
+        \AttributeTok{legend.title =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{10}\NormalTok{)}
 \NormalTok{    )}
 \end{Highlighting}
 \end{Shaded}
 
+\begin{verbatim}
+## Warning: The `<scale>` argument of `guides()` cannot be `FALSE`. Use "none" instead as
+## of ggplot2 3.3.4.
+## This warning is displayed once every 8 hours.
+## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
+## generated.
+\end{verbatim}
+
 \begin{figure}
 
-{\centering \includegraphics[width=0.8\linewidth]{sSNAPPY_paper_files/figure-latex/Figure5-1} 
+{\centering \includegraphics[width=1\linewidth]{sSNAPPY_paper_files/figure-latex/Figure5-1} 
 
 }
 
@@ -803,7 +691,7 @@ An alternative strategy will be to select genes based on test-statistics, howeve
 \end{Highlighting}
 \end{Shaded}
 
-Since KEGG pathway topologies were retrieved using Entrez IDs, users can provide a data.frame mapping Entrez IDs to their chosen identifiers, such as gene names, through the mapEntrezID parameter, in order to make the visualisations more informative.
+Since Reactome pathway topologies were retrieved using Entrez IDs, users can provide a data.frame mapping Entrez IDs to their chosen identifiers, such as gene names, through the mapEntrezID parameter, in order to make the visualisations more informative.
 A data.frame converting Entrez IDs to Ensembl gene names was derived from the Ensembl Release 101\citep{Ensembl2022} and has been made available as part of the package and serves as a helpful template for future mapping operations by users.
 
 \begin{Shaded}
@@ -834,8 +722,9 @@ A data.frame converting Entrez IDs to Ensembl gene names was derived from the En
     \AttributeTok{colorGsBy =} \StringTok{"status"}\NormalTok{, }
     \AttributeTok{mapEntrezID =}\NormalTok{ entrez2name, }
     \AttributeTok{geneFC =}\NormalTok{ meanFC[top500], }
+    \AttributeTok{layout =} \StringTok{"kk"}\NormalTok{,}
     \AttributeTok{edgeAlpha =} \DecValTok{1}\NormalTok{, }
-    \AttributeTok{gsNameSize =} \DecValTok{5}\NormalTok{, }
+    \AttributeTok{gsNameSize =} \DecValTok{4}\NormalTok{, }
     \AttributeTok{gsNodeSize =} \DecValTok{4}\NormalTok{,}
     \AttributeTok{geneNameSize =} \DecValTok{4}
 \NormalTok{) }\SpecialCharTok{+}
@@ -851,35 +740,35 @@ A data.frame converting Entrez IDs to Ensembl gene names was derived from the En
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.8\linewidth]{sSNAPPY_paper_files/figure-latex/Figure6-1} 
+{\centering \includegraphics[width=1\linewidth]{sSNAPPY_paper_files/figure-latex/Figure6-1} 
 
 }
 
-\caption{Significantly perturbed KEGG pathways identified among post-chemotherapy samples using sSNAPPY, showing any genes in the top 500 ranked by magnitude of change in expression, and which pathways they are likely contributing to. No genes in the top 500 were found to contribute to the perturbation of the AMPK signaling pathway or the Toxoplasmosis pathway.}\label{fig:Figure6}
+\caption{Significantly perturbed Reactome pathways identified among post-chemotherapy samples using sSNAPPY, showing any genes in the top 500 ranked by magnitude of change in expression, and which pathways they are likely contributing to. Only the 10 most significantly inhibited and 10 most significantly activated pathways are shown.}\label{fig:Figure6}
 \end{figure}
 
 \hypertarget{identifying-key-gene-contributions}{%
 \subsection{Identifying Key Gene Contributions}\label{identifying-key-gene-contributions}}
 
 To further investigate a specific pathway and elucidate which are the key genes contributing to the final perturbation score, we can generate a heatmap via \texttt{plot\_gene\_contribution()} which shows the gene-level perturbation scores for the top-ranked members of a given pathway.
-This function takes advantage of the plotting capabilities of the \texttt{pheatmap} package\citep{pheatmap}, and as such, other annotations are also able to be easily included, such as the disease stage, or which general ranges the pathway-level normalised Z-Scores are in.
+This function takes advantage of the plotting capabilities of the \texttt{pheatmap} package\citep{pheatmap}, and as such, other annotations are also able to be easily included, such as patient response, or which general ranges the pathway-level normalised Z-Scores are in.
 Inclusion of the Z-Scores enabled the assessment of the level of perturbation predicted in each sample and key genes involved (Figure \ref{fig:Figure7}).
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{annotation\_df }\OtherTok{\textless{}{-}}\NormalTok{ normalisedScores }\SpecialCharTok{\%\textgreater{}\%}
 \NormalTok{    dplyr}\SpecialCharTok{::}\FunctionTok{filter}\NormalTok{(gs\_name }\SpecialCharTok{==} \StringTok{"reactome.SUMOylation of DNA replication proteins"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
-    \FunctionTok{left\_join}\NormalTok{(dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(sample\_meta, sample, Stage), }\AttributeTok{by =} \StringTok{"sample"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{left\_join}\NormalTok{(dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(sample\_meta, sample,  CRS), }\AttributeTok{by =} \StringTok{"sample"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
     \FunctionTok{mutate}\NormalTok{(}
       \StringTok{\textasciigrave{}}\AttributeTok{Z Range}\StringTok{\textasciigrave{}} \OtherTok{=} \FunctionTok{cut}\NormalTok{(}
 \NormalTok{        robustZ, }\AttributeTok{breaks =} \FunctionTok{seq}\NormalTok{(}\SpecialCharTok{{-}}\DecValTok{2}\NormalTok{, }\DecValTok{2}\NormalTok{, }\AttributeTok{length.out =} \DecValTok{6}\NormalTok{), }\AttributeTok{include.lowest =} \ConstantTok{TRUE}
 \NormalTok{      ), }
       \AttributeTok{sample =} \FunctionTok{str\_remove\_all}\NormalTok{(sample, }\StringTok{"\_post{-}NACT"}\NormalTok{)}
 \NormalTok{    ) }\SpecialCharTok{\%\textgreater{}\%} 
-\NormalTok{    dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(sample, }\StringTok{\textasciigrave{}}\AttributeTok{Z Range}\StringTok{\textasciigrave{}}\NormalTok{, Stage)  }
+\NormalTok{    dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(sample, }\StringTok{\textasciigrave{}}\AttributeTok{Z Range}\StringTok{\textasciigrave{}}\NormalTok{, CRS)  }
 \NormalTok{z\_levels }\OtherTok{\textless{}{-}} \FunctionTok{levels}\NormalTok{(annotation\_df}\SpecialCharTok{$}\StringTok{\textasciigrave{}}\AttributeTok{Z Range}\StringTok{\textasciigrave{}}\NormalTok{)}
 \NormalTok{annotation\_col }\OtherTok{\textless{}{-}} \FunctionTok{list}\NormalTok{(}
-  \AttributeTok{Stage =} \FunctionTok{c}\NormalTok{(}\AttributeTok{IIIC =} \StringTok{"\#4B0055"}\NormalTok{, }\AttributeTok{IVA =} \StringTok{"\#009B95"}\NormalTok{, }\AttributeTok{IVB =} \StringTok{"\#FDE333"}\NormalTok{),}
+  \AttributeTok{CRS =} \FunctionTok{c}\NormalTok{(}\StringTok{"3"} \OtherTok{=} \StringTok{"\#4B0055"}\NormalTok{, }\StringTok{"2"} \OtherTok{=} \StringTok{"\#009B95"}\NormalTok{, }\StringTok{"1"} \OtherTok{=} \StringTok{"\#FDE333"}\NormalTok{),}
   \StringTok{\textasciigrave{}}\AttributeTok{Z Range}\StringTok{\textasciigrave{}} \OtherTok{=} \FunctionTok{setNames}\NormalTok{(}
     \FunctionTok{colorRampPalette}\NormalTok{(}\FunctionTok{c}\NormalTok{(}\StringTok{"navyblue"}\NormalTok{, }\StringTok{"white"}\NormalTok{, }\StringTok{"darkred"}\NormalTok{))(}\FunctionTok{length}\NormalTok{(z\_levels)),}
 \NormalTok{    z\_levels}
@@ -887,15 +776,17 @@ Inclusion of the Z-Scores enabled the assessment of the level of perturbation pr
 \NormalTok{)}
 \FunctionTok{plot\_gene\_contribution}\NormalTok{(}
     \AttributeTok{genePertMatr =}\NormalTok{ genePertScore}\SpecialCharTok{$}\StringTok{\textasciigrave{}}\AttributeTok{reactome.SUMOylation of DNA replication proteins}\StringTok{\textasciigrave{}} \SpecialCharTok{\%\textgreater{}\%}
-        \FunctionTok{set\_colnames}\NormalTok{(}\FunctionTok{str\_remove\_all}\NormalTok{(}\FunctionTok{colnames}\NormalTok{(.), }\StringTok{"\_post{-}NACT"}\NormalTok{)),}
+        \FunctionTok{set\_colnames}\NormalTok{(}\FunctionTok{str\_remove\_all}\NormalTok{(}\FunctionTok{colnames}\NormalTok{(.), }\StringTok{"\_post{-}NACT"}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%}
+\NormalTok{        .[}\FunctionTok{rownames}\NormalTok{(.) }\SpecialCharTok{\%in\%} \FunctionTok{rownames}\NormalTok{(weightedFC}\SpecialCharTok{$}\NormalTok{weighted\_logFC),],}
     \AttributeTok{color =} \FunctionTok{rev}\NormalTok{(colorspace}\SpecialCharTok{::}\FunctionTok{divergex\_hcl}\NormalTok{(}\DecValTok{100}\NormalTok{, }\AttributeTok{palette =} \StringTok{"RdBu"}\NormalTok{)),}
     \AttributeTok{breaks =} \FunctionTok{seq}\NormalTok{(}\SpecialCharTok{{-}}\FloatTok{0.002}\NormalTok{, }\FloatTok{0.002}\NormalTok{, }\AttributeTok{length.out =} \DecValTok{100}\NormalTok{), }
     \AttributeTok{annotation\_df =}\NormalTok{  annotation\_df, }
-    \AttributeTok{topGene =} \DecValTok{20}\NormalTok{, }\AttributeTok{filterBy =} \StringTok{"mean"}\NormalTok{, }
+    \AttributeTok{topGene =} \DecValTok{15}\NormalTok{, }\AttributeTok{filterBy =} \StringTok{"mean"}\NormalTok{, }
     \AttributeTok{mapEntrezID =}\NormalTok{ entrez2name,}
     \AttributeTok{annotation\_colors =}\NormalTok{ annotation\_col,}
     \AttributeTok{cutree\_rows =} \DecValTok{2}\NormalTok{,}
-    \AttributeTok{main =} \StringTok{"P53 Signaling Pathway [KEGG]"}
+    \AttributeTok{cutree\_cols =} \DecValTok{2}\NormalTok{,}
+    \AttributeTok{main =} \StringTok{"SUMOylation of DNA replication proteins [REACTOME]"}
 \NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
@@ -906,15 +797,66 @@ Inclusion of the Z-Scores enabled the assessment of the level of perturbation pr
 
 }
 
-\caption{Gene-level perturbation scores for the top 20 genes in the "p53 signalling pathway" ranked by average contribution to the perturbation score. Samples were annotated by cancer stage, along with the range for sample-level Z-scores as a guide to sample-specific pathway perturbation. The genes ATR and ATM were identified as possible key drivers of the activation of p53 signalling pathway, with MDM4 appearing likely to be playing an antagonistic role.}\label{fig:Figure7}
+\caption{Gene-level perturbation scores for the top 15 genes in the "SUMOylation of DNA replication proteins" pathway ranked by average contribution to the perturbation score. Samples were annotated by patient chemotherapy response score (CRS), along with the range for sample-level Z-scores as a guide to sample-specific pathway perturbation. The genes CDCA8, TOP2A, UBE2I, BIRC5 were identified as possible key drivers of the inhibition of of this pathway.}\label{fig:Figure7}
 \end{figure}
 
-From this heatmap we can identify candidate genes which are likely to be making the biggest contribution to the activation of p53 Signaling Pathway upon chemotherapy,
-such as \emph{ART} and \emph{ATM}, along with the \emph{MDM4} and members of the GADD45 family.
-Ataxia-telangiectasia mutated (\emph{ATM}) is a well-established oncosuppressor\citep{Moslemi2021} while haploinsufficient mouse double minute 4 (\emph{MDM4}) is an oncogene that suppresses p53\citep{Momand}.
-Mutations of both genes have been observed in many types of cancers\citep{Choi2016, Gansmo2016, Atwal2009}.
-Moreover, the Ataxia telangiectasia and RAD3-related protein kinase (\emph{ATR}) and the growth arrest and DNA damage-inducible gene 45 (\emph{GADD45}) have gained great attention as potential targets for anti-tumor treatments due to their involvement in DNA damage repair\citep{Liebermann2011, Hu2022}.
-ATR inhibitors, in particular, have shown promising results in clinical trials for HGSOC.\citep{Li2022, Gong2021}.
+From this heatmap we can identify candidate genes which are likely to be making the biggest contribution to the inhibition of the SUMOylation of DNA replication proteins pathway upon chemotherapy,
+such as \emph{CDCA8}, \emph{TOP2A}, \emph{UBE2I}, \emph{BIRC5} (Figure \ref{fig:Figure7}).
+The four genes are all associated with tumour progression and invasiveness and have been studied in the context of ovarian cancer.
+Both ubiquitin conjugating enzyme E2I (\emph{UBE2I}) and cell division cycle associated 8 (\emph{CDCA8}) genes have been identified as oncogenes in numerous cancer types, including ovarian cancer\citep{Dong2013, qi2021}.
+Notably, in ovarian cancer, elevated \emph{UBE2I} expression has been associated with poorer clinical outcomes\citep{Zou2020}.
+Similarly, expression of \emph{BIRC5} that encodes human survivin protein is also a predictor of inferior ovarian cancer patient outcome\citep{Gasowska-Bajger2021}.
+Lastly, Topoisomerase II\(\alpha\) (\emph{TOP2A}), which encodes DNA topoisomerase, has been identified as a gene that promotes the tumorigenesis of HGSOC tumours\citep{Gao2020}.
+Aligning with the report by Chekerov et al.\citep{Chekerov2006} that expression of \emph{TOP2A} in ovarian tumour cells decreases as a response to chemotherapy\citep{Chekerov2006}, the median single-sample logFC of \emph{TOP2A} was negative among the HGSOC post-chemotherapy samples included in this study (Figure \ref{fig:Figure8}).
+The other three selected potential driver genes (\emph{CDCA8}, \emph{UBE2I}, and \emph{BIRC5}) also had negative median single-sample logFC in post-chemotherapy samples (Figure \ref{fig:Figure8}).
+Considering the implication of these four genes in ovarian cancer, decreases in their expression after chemotherapy treatment potentially indicate a favorable response to therapy.
+By annotating the heatmap of gene-wise perturbation scores with patient chemotherapy response score (CRS), we noticed that the strongest inhibition of the SUMOylation of DNA replication proteins pathway was in the patient with the highest CRS score of 3 (i.e sample EOC443).
+CRS is an indicator of the relative length of progression-free survival after chemotherapy, where a score of 3 represents the longest survival.
+Hence inhibition of the SUMOylation of DNA replication proteins pathway might mediate favorable response to chemotherapy in ovarian cancer patients.
+We acknowledge that our analysis was limited to a small number of patients, which restricts the generalizability of the results.
+However, despite this limitation, these findings underscore the strength of sSNAPPY as a valuable tool for hypothesis generation.
+Not only can sSNAPPY predict directional pathway perturbations, but it also enables the identification of key driver genes underlying these perturbations.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{gene2plot }\OtherTok{\textless{}{-}}\NormalTok{ entrez2name }\SpecialCharTok{\%\textgreater{}\%}
+\NormalTok{    dplyr}\SpecialCharTok{::}\FunctionTok{filter}\NormalTok{(}
+\NormalTok{        mapTo }\SpecialCharTok{\%in\%} \FunctionTok{c}\NormalTok{(}\StringTok{"CDCA8"}\NormalTok{, }\StringTok{"TOP2A"}\NormalTok{, }\StringTok{"UBE2I"}\NormalTok{, }\StringTok{"BIRC5"}\NormalTok{)}
+\NormalTok{    )}
+\NormalTok{(weightedFC}\SpecialCharTok{$}\NormalTok{weighted\_logFC }\SpecialCharTok{/}\NormalTok{ weightedFC}\SpecialCharTok{$}\NormalTok{weight) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{as.data.frame}\NormalTok{() }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{rownames\_to\_column}\NormalTok{(}\StringTok{"entrezid"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{pivot\_longer}\NormalTok{(}
+        \AttributeTok{cols =} \SpecialCharTok{{-}}\StringTok{"entrezid"}\NormalTok{, }
+        \AttributeTok{names\_to =} \StringTok{"sample"}\NormalTok{, }
+        \AttributeTok{values\_to =} \StringTok{"ssFC"}
+\NormalTok{    ) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{left\_join}\NormalTok{(entrez2name) }\SpecialCharTok{\%\textgreater{}\%}
+\NormalTok{    dplyr}\SpecialCharTok{::}\FunctionTok{filter}\NormalTok{(mapTo }\SpecialCharTok{\%in\%} \FunctionTok{c}\NormalTok{(}\StringTok{"CDCA8"}\NormalTok{, }\StringTok{"TOP2A"}\NormalTok{, }\StringTok{"UBE2I"}\NormalTok{, }\StringTok{"BIRC5"}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{ggplot}\NormalTok{(}
+        \FunctionTok{aes}\NormalTok{(mapTo, ssFC, }\AttributeTok{fill =}\NormalTok{ mapTo)}
+\NormalTok{    ) }\SpecialCharTok{+}
+    \FunctionTok{geom\_boxplot}\NormalTok{() }\SpecialCharTok{+}
+    \FunctionTok{labs}\NormalTok{(}
+        \AttributeTok{x =} \StringTok{""}\NormalTok{, }
+        \AttributeTok{fill =} \StringTok{"Gene"}
+\NormalTok{    ) }\SpecialCharTok{+}
+    \FunctionTok{geom\_hline}\NormalTok{(}\AttributeTok{yintercept =} \DecValTok{0}\NormalTok{, }\AttributeTok{color =} \StringTok{"red"}\NormalTok{, }\AttributeTok{linetype =} \StringTok{"dashed"}\NormalTok{) }\SpecialCharTok{+}
+    \FunctionTok{theme\_bw}\NormalTok{() }\SpecialCharTok{+}
+    \FunctionTok{theme}\NormalTok{(}
+        \AttributeTok{text =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{10}\NormalTok{)}
+\NormalTok{    )}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{figure}
+
+{\centering \includegraphics[width=0.8\linewidth]{sSNAPPY_paper_files/figure-latex/Figure8-1} 
+
+}
+
+\caption{Single-sample logFC (ssFC) of potential key genes driving the inhibition of "SUMOylation of DNA replication proteins" pathway as a response to chemotherapy in HGSOC tumours.}\label{fig:Figure8}
+\end{figure}
 
 \hypertarget{discussion}{%
 \section{Discussion}\label{discussion}}
