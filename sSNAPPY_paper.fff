@@ -1,14 +1,14 @@
-\begin{figure}
+\begin{figure}[h]
 
 {\centering \includegraphics[width=1\linewidth]{sSNAPPY_paper_files/figure-latex/Figure1}
 
 }
 
-\caption{Schematic illustration of the differences betweeen conventional pathway analysis methods and sSNAPPY. Instead of being limited to treatment-level analyses, \textit{sSNAPPY} allows the detection of pathway perturbation in individual samples by using sample-specific estimates of fold-change instead of experiment-wide estimates. (Created with BioRender.com).}\label{fig:Figure1}
+\caption{Schematic illustration of the differences between conventional pathway analysis methods and sSNAPPY. Instead of being limited to treatment-level analyses, \textit{sSNAPPY} allows the detection of pathway perturbation in individual samples by using sample-specific estimates of fold-change instead of experiment-wide estimates. (Created with BioRender.com).}\label{fig:Figure1}
 \end{figure}
 \efloatseparator
  
-\begin{figure}
+\begin{figure}[h]
 
 {\centering \includegraphics[width=1\linewidth]{sSNAPPY_paper_files/figure-latex/Figure2}
 
@@ -18,7 +18,7 @@
 \end{figure}
 \efloatseparator
  
-\begin{figure}
+\begin{figure}[p]
 
 {\centering \includegraphics[width=1\linewidth]{sSNAPPY_paper_files/figure-latex/Figure3-1}
 
@@ -28,51 +28,51 @@
 \end{figure}
 \efloatseparator
  
-\begin{figure}
+\begin{figure}[hp]
 
 {\centering \includegraphics[width=1\linewidth]{sSNAPPY_paper_files/figure-latex/Figure4-1}
 
 }
 
-\caption{Significantly perturbed Reactome pathways identified among post-chemotherapy samples using sSNAPPY, colored by (A) predicted direction of changes and (B) -log10(p-values). Only the 10 most significantly inhibited and 10 most significantly activated pathways are shown.}\label{fig:Figure4}
+\caption{Significantly perturbed Reactome pathways identified among post-chemotherapy samples using sSNAPPY, colored by (A) predicted direction of changes and (B) -log10(p-values). Only the top 15 most highly ranked are shown.}\label{fig:Figure4}
 \end{figure}
 \efloatseparator
  
-\begin{figure}
+\begin{figure}[hp]
 
 {\centering \includegraphics[width=1\linewidth]{sSNAPPY_paper_files/figure-latex/Figure5-1}
 
 }
 
-\caption{Significantly perturbed Reactome pathways identified among post-chemotherapy samples using sSNAPPY, colored by community structures detected through the louvain algorithm. The main biological processes associated with the top 20 pathways that wer most perturbed by the chemotherapy were shown.}\label{fig:Figure5}
+\caption{Significantly perturbed Reactome pathways identified among post-chemotherapy samples using sSNAPPY, colored by community structures detected through the louvain algorithm. The main biological processes associated with the top 15 pathways that were most perturbed by chemotherapy are shown.}\label{fig:Figure5}
 \end{figure}
 \efloatseparator
  
-\begin{figure}
+\begin{figure}[h]
 
 {\centering \includegraphics[width=1\linewidth]{sSNAPPY_paper_files/figure-latex/Figure6-1}
 
 }
 
-\caption{Significantly perturbed Reactome pathways identified among post-chemotherapy samples using sSNAPPY, showing any genes in the top 500 ranked by magnitude of change in expression, and which pathways they are likely contributing to. Only the 10 most significantly inhibited and 10 most significantly activated pathways are shown.}\label{fig:Figure6}
+\caption{Significantly perturbed Reactome pathways identified among post-chemotherapy samples using sSNAPPY, showing any genes in the top 200 ranked by magnitude of change in expression, and the pathways they are likely contributing to. Only the 15 most significantly perturbed pathways are shown.}\label{fig:Figure6}
 \end{figure}
 \efloatseparator
  
-\begin{figure}
+\begin{figure}[hp]
 
 {\centering \includegraphics[width=1\linewidth]{sSNAPPY_paper_files/figure-latex/Figure7-1}
 
 }
 
-\caption{Gene-level perturbation scores for the top 15 genes in the "SUMOylation of DNA replication proteins" pathway ranked by average contribution to the perturbation score. Samples were annotated by patient chemotherapy response score (CRS), along with the range for sample-level Z-scores as a guide to sample-specific pathway perturbation. The genes CDCA8, TOP2A, UBE2I, BIRC5 were identified as possible key drivers of the inhibition of of this pathway.}\label{fig:Figure7}
+\caption{Gene-level perturbation scores for the top 15 genes in the "SUMOylation of DNA replication proteins" pathway ranked by average contribution to the perturbation score. Samples were annotated by patient chemotherapy response score (CRS), along with the range for sample-level Z-scores as a guide to sample-specific pathway perturbation. The genes CDCA8, UBE2I, BIRC5 and three SUMO family genes SUMO1, SUMO2, SUMO3 were identified as possible key drivers of the inhibition of this pathway.}\label{fig:Figure7}
 \end{figure}
 \efloatseparator
  
-\begin{figure}
+\begin{figure}[h]
 
 {\centering \includegraphics[width=0.8\linewidth]{sSNAPPY_paper_files/figure-latex/Figure8-1}
 
 }
 
-\caption{Single-sample logFC (ssFC) of potential key genes driving the inhibition of "SUMOylation of DNA replication proteins" pathway as a response to chemotherapy in HGSOC tumours.}\label{fig:Figure8}
+\caption{Single-sample logFC (ssFC) of potential key genes driving the inhibition of "SUMOylation of DNA replication proteins" pathway as a response to chemotherapy in HGSOC tumours. The red dash line indicates a ssFC of 0 (i.e. no change in expression).}\label{fig:Figure8}
 \end{figure}
