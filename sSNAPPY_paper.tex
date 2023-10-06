@@ -132,13 +132,13 @@ RNA-seq, pathway enrichment, R package, topology, KEGG, Reactome, scRNA-seq
 
 \textbf{Bioconductor version}: 3.17
 
-\textbf{Package}: 1.5.1
+\textbf{Package}: 1.4.4
 
 \hypertarget{introduction}{%
 \section{Introduction}\label{introduction}}
 
 Using pathway enrichment analysis to gain biological insights from gene expression data is a pivotal step in the analysis and interpretation of RNA-seq data, for which numerous methods have been developed (reviewed in \citep{Maleki2020-ur, Mubeen2022-eq}).
-Many existing methods tend to view pathways simply as a collection of gene names, as seen in those relying on the detection of differentially expressed genes and applying over-representation analysis (ORA) strategies, and those scoring all genes using functional class scoring (FCS), such as in Gene Set Enrichment Analysis (GSEA) \citep{Subramanian2005-lx}, arguably the most widely-used approach.
+Many existing methods tend to view pathways simply as a collection of gene names, as seen in those relying on the detection of differentially expressed genes and applying over-representation analysis (ORA) strategies, and those scoring all genes using functional class scoring (FCS), such as in Gene Set Enrichment Analysis (GSEA)\citep{Subramanian2005-lx}, arguably the most widely-used approach.
 However, databases such as the Kyoto Encyclopaedia of Genes and Genomes (KEGG)\citep{OgataKEGGKyotoEncyclopediaa} and WikiPathways\citep{Martens2021} capture not only which genes are implicated in a certain biological process but also their interactions, activating or inhibitory roles, and their relative importance within the pathway, all of which are overlooked in ORA- and FCS-based approaches.
 
 To fully utilise that additional information, the latest generation of pathway analysis approaches include many which are topology-based such as SPIA\citep{Tarca2009}, DEGraph\citep{Jacob2012}, NetGSA\citep{Ma2016} and PRS\citep{Ibrahim2012}, as well as others which explicitly model inter-gene correlations\citep{Wu2012}.
@@ -225,6 +225,7 @@ The median and median absolute deviation (MAD) are calculated from the set of pe
 All possible permuted pseudo-pairs are sampled unless otherwise specified, such that in an experiment with \(I\) total samples, the maximum number of unique permuted pairs is \({}^IP_2 = \frac{{I!}}{{(I-2)!}} = I \times (I-1)\).
 Permutation p-values for individual scores, indicating the approximate significance of pathway perturbation at the single-sample level, are also derived by assessing the proportion of permuted scores with absolute values as extreme, or more extreme, than the absolute value of test perturbation within each pathway\citep{Theo2009}.
 Since the smallest achievable permutation p-value is 1/\(NP\), where \(NP\) is the number of permuted pairs, accurate estimation of small p-value requires a large number of permutation that is only feasible in data with large sample size.
+As a guideline, GSEA recommends a minimum of 7 samples in each treatment group for utilizing their phenotype permutation approach\citep{GSEAUserGuide}.
 
 Apart from assessing whether a pathway's activity changed significantly within an individual sample, users may also be interested in detecting changes across all samples within a treatment, which can be performed by modelling scores using regression models, and incorporating Smyth's moderated \(t\)-statistic\citep{Smyth_2004} as implemented in \emph{limma}\citep{limma_2015}.
 The single-sample nature of \emph{sSNAPPY}'s pathway perturbation scores is particularly helpful for datasets with complex experimental designs or known confounding factors as these can also be incorporated into the final regression models.
@@ -265,6 +266,15 @@ The following packages are required for this workflow
 \begin{Shaded}
 \begin{Highlighting}[]
 \FunctionTok{library}\NormalTok{(sSNAPPY)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: package 'sSNAPPY' was built under R version 4.3.1
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
 \FunctionTok{library}\NormalTok{(tidyverse)}
 \FunctionTok{library}\NormalTok{(magrittr)}
 \FunctionTok{library}\NormalTok{(ggplot2)}
@@ -520,29 +530,29 @@ For our use case here, where only one treatment group is present, no design matr
 \toprule
 Pathway & Change & P.Value & FDR & Direction\\
 \midrule
-\cellcolor{gray!6}{Signaling by Retinoic Acid} & \cellcolor{gray!6}{0.60} & \cellcolor{gray!6}{4.4e-04} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Activated}\\
-Regulation of pyruvate dehydrogenase (PDH) complex & 0.60 & 4.6e-04 & 0.015 & Activated\\
-\cellcolor{gray!6}{Pyruvate metabolism} & \cellcolor{gray!6}{0.60} & \cellcolor{gray!6}{4.6e-04} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Activated}\\
-Pyruvate metabolism and Citric Acid (TCA) cycle & 0.60 & 4.6e-04 & 0.015 & Activated\\
-\cellcolor{gray!6}{Negative regulation of MAPK pathway} & \cellcolor{gray!6}{0.63} & \cellcolor{gray!6}{5.4e-04} & \cellcolor{gray!6}{0.017} & \cellcolor{gray!6}{Activated}\\
+\cellcolor{gray!6}{Signaling by Retinoic Acid} & \cellcolor{gray!6}{0.601} & \cellcolor{gray!6}{4.45e-04} & \cellcolor{gray!6}{0.0152} & \cellcolor{gray!6}{Activated}\\
+Regulation of pyruvate dehydrogenase (PDH) complex & 0.598 & 4.59e-04 & 0.0152 & Activated\\
+\cellcolor{gray!6}{Pyruvate metabolism} & \cellcolor{gray!6}{0.598} & \cellcolor{gray!6}{4.59e-04} & \cellcolor{gray!6}{0.0152} & \cellcolor{gray!6}{Activated}\\
+Pyruvate metabolism and Citric Acid (TCA) cycle & 0.598 & 4.59e-04 & 0.0152 & Activated\\
+\cellcolor{gray!6}{Negative regulation of MAPK pathway} & \cellcolor{gray!6}{0.627} & \cellcolor{gray!6}{5.40e-04} & \cellcolor{gray!6}{0.0174} & \cellcolor{gray!6}{Activated}\\
 \addlinespace
-Translocation of ZAP-70 to Immunological synapse & 0.62 & 8.8e-04 & 0.022 & Activated\\
-\cellcolor{gray!6}{Generation of second messenger molecules} & \cellcolor{gray!6}{0.62} & \cellcolor{gray!6}{8.8e-04} & \cellcolor{gray!6}{0.022} & \cellcolor{gray!6}{Activated}\\
-MHC class II antigen presentation & 0.63 & 1.2e-03 & 0.024 & Activated\\
-\cellcolor{gray!6}{NGF-stimulated transcription} & \cellcolor{gray!6}{0.58} & \cellcolor{gray!6}{1.4e-03} & \cellcolor{gray!6}{0.025} & \cellcolor{gray!6}{Activated}\\
-Downstream TCR signaling & 0.63 & 1.4e-03 & 0.025 & Activated\\
+Translocation of ZAP-70 to Immunological synapse & 0.624 & 8.75e-04 & 0.0218 & Activated\\
+\cellcolor{gray!6}{Generation of second messenger molecules} & \cellcolor{gray!6}{0.624} & \cellcolor{gray!6}{8.75e-04} & \cellcolor{gray!6}{0.0218} & \cellcolor{gray!6}{Activated}\\
+MHC class II antigen presentation & 0.628 & 1.17e-03 & 0.0241 & Activated\\
+\cellcolor{gray!6}{NGF-stimulated transcription} & \cellcolor{gray!6}{0.582} & \cellcolor{gray!6}{1.36e-03} & \cellcolor{gray!6}{0.0247} & \cellcolor{gray!6}{Activated}\\
+Downstream TCR signaling & 0.633 & 1.39e-03 & 0.0247 & Activated\\
 \addlinespace
-\cellcolor{gray!6}{Interleukin-35 Signalling} & \cellcolor{gray!6}{-0.90} & \cellcolor{gray!6}{1.7e-05} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Inhibited}\\
-Sphingolipid de novo biosynthesis & -0.90 & 2.8e-05 & 0.015 & Inhibited\\
-\cellcolor{gray!6}{SUMOylation of DNA replication proteins} & \cellcolor{gray!6}{-0.82} & \cellcolor{gray!6}{6.9e-05} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Inhibited}\\
-Condensation of Prometaphase Chromosomes & -0.90 & 9.9e-05 & 0.015 & Inhibited\\
-\cellcolor{gray!6}{Epigenetic regulation of gene expression} & \cellcolor{gray!6}{-0.79} & \cellcolor{gray!6}{1.2e-04} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Inhibited}\\
+\cellcolor{gray!6}{Interleukin-35 Signalling} & \cellcolor{gray!6}{-0.902} & \cellcolor{gray!6}{1.69e-05} & \cellcolor{gray!6}{0.0151} & \cellcolor{gray!6}{Inhibited}\\
+Sphingolipid de novo biosynthesis & -0.896 & 2.75e-05 & 0.0151 & Inhibited\\
+\cellcolor{gray!6}{SUMOylation of DNA replication proteins} & \cellcolor{gray!6}{-0.819} & \cellcolor{gray!6}{6.86e-05} & \cellcolor{gray!6}{0.0152} & \cellcolor{gray!6}{Inhibited}\\
+Condensation of Prometaphase Chromosomes & -0.904 & 9.91e-05 & 0.0152 & Inhibited\\
+\cellcolor{gray!6}{Epigenetic regulation of gene expression} & \cellcolor{gray!6}{-0.790} & \cellcolor{gray!6}{1.21e-04} & \cellcolor{gray!6}{0.0152} & \cellcolor{gray!6}{Inhibited}\\
 \addlinespace
-Polo-like kinase mediated events & -0.88 & 1.4e-04 & 0.015 & Inhibited\\
-\cellcolor{gray!6}{Chromatin modifying enzymes} & \cellcolor{gray!6}{-0.79} & \cellcolor{gray!6}{1.5e-04} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Inhibited}\\
-Chromatin organization & -0.79 & 1.5e-04 & 0.015 & Inhibited\\
-\cellcolor{gray!6}{SUMO E3 ligases SUMOylate target proteins} & \cellcolor{gray!6}{-0.77} & \cellcolor{gray!6}{1.8e-04} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Inhibited}\\
-APC-Cdc20 mediated degradation of Nek2A & -0.84 & 2.1e-04 & 0.015 & Inhibited\\
+Polo-like kinase mediated events & -0.880 & 1.43e-04 & 0.0152 & Inhibited\\
+\cellcolor{gray!6}{Chromatin modifying enzymes} & \cellcolor{gray!6}{-0.791} & \cellcolor{gray!6}{1.52e-04} & \cellcolor{gray!6}{0.0152} & \cellcolor{gray!6}{Inhibited}\\
+Chromatin organization & -0.791 & 1.52e-04 & 0.0152 & Inhibited\\
+\cellcolor{gray!6}{SUMO E3 ligases SUMOylate target proteins} & \cellcolor{gray!6}{-0.767} & \cellcolor{gray!6}{1.83e-04} & \cellcolor{gray!6}{0.0152} & \cellcolor{gray!6}{Inhibited}\\
+APC-Cdc20 mediated degradation of Nek2A & -0.838 & 2.13e-04 & 0.0152 & Inhibited\\
 \bottomrule
 \end{tabular}}
 \end{table}
@@ -553,8 +563,11 @@ Two clusters, associated with proliferative DNA repair signatures and stress-rel
 The representative pathways enriched in the stress-associated cluster were \emph{IL6-mediated signaling events}, \emph{TNF signaling pathway}, and \emph{cellular responses to stress}, and the other post-chemotherapy cell dominated cluster in the original study was enriched for pathways associated with cell proliferation and DNA repair, such as the Cell cycle, DNA repair, Homology directed repair (HDR) through homologous recombination, and the Fanconi anaemia pathway.
 \emph{sSNAPPY} not only detected many significant perturbed pathways that are highly concordant with the pathways reported to be enriched in the original study but also predicted their directions of changes.
 For example, the DNT repair pathway \emph{SUMOylation of DNA damage response and repair proteins} pathway was predicted to be significantly inhibited by the chemotherapy.
+In comparison, we also performed pathway analysis on this example dataset using two non-topological-based approaches: 1) \emph{GSEA} basing on the ranking statistics derived from the differentially expression (DE) analysis and 2) the rotation gene set testing for linear models (\emph{roast}), which does not rely on DE analysis results.
+Although the \emph{SUMOylation of DNA damage response and repair proteins} pathway was also defined as significantly impacted by the chemotherapy using the two non-topological-based methods(see extended data), the directionality of pathway perturbation can only be predicted by \emph{sSNAPPY}.
+The existing topology-based method \emph{SPIA}, on the other hand, only considers pathways containing differentially expressed genes, hence has a lower sensitivity in detecting pathway perturbation and was only able to capture changes in immune-related processes(see extended data).
 
-Apart from considering all treated samples as biological replicates, users may elect to perform an analysis incorporating other phenotypic traits which may impact a patients responses to chemotherapy, such as disease stages or tumour grades.
+The single-sample nature of the \emph{sSNAPPY} output also provides great flexibility: apart from considering all treated samples as biological replicates, users may elect to perform an analysis incorporating other phenotypic traits which may impact a patients responses to chemotherapy, such as disease stages or tumour grades.
 To perform this step using the moderated t-statistic strategy and extend the above analysis, an appropriate design matrix is the only additional requirement for model-fitting, or alternatively, samples may be subset as may be appropriate.
 
 \hypertarget{visualising-perturbed-pathways-as-networks}{%

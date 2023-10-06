@@ -44,7 +44,7 @@ header-includes:
 # Introduction
 
 Using pathway enrichment analysis to gain biological insights from gene expression data is a pivotal step in the analysis and interpretation of RNA-seq data, for which numerous methods have been developed (reviewed in [@Maleki2020-ur; @Mubeen2022-eq]). 
-Many existing methods tend to view pathways simply as a collection of gene names, as seen in those relying on the detection of differentially expressed genes and applying over-representation analysis (ORA) strategies, and those scoring all genes using functional class scoring (FCS), such as in Gene Set Enrichment Analysis (GSEA) [@Subramanian2005-lx], arguably the most widely-used approach. 
+Many existing methods tend to view pathways simply as a collection of gene names, as seen in those relying on the detection of differentially expressed genes and applying over-representation analysis (ORA) strategies, and those scoring all genes using functional class scoring (FCS), such as in Gene Set Enrichment Analysis (GSEA)[@Subramanian2005-lx], arguably the most widely-used approach. 
 However, databases such as the Kyoto Encyclopaedia of Genes and Genomes (KEGG)[@OgataKEGGKyotoEncyclopediaa] and WikiPathways[@Martens2021] capture not only which genes are implicated in a certain biological process but also their interactions, activating or inhibitory roles, and their relative importance within the pathway, all of which are overlooked in ORA- and FCS-based approaches. 
 
 To fully utilise that additional information, the latest generation of pathway analysis approaches include many which are topology-based such as SPIA[@Tarca2009], DEGraph[@Jacob2012], NetGSA[@Ma2016] and PRS[@Ibrahim2012], as well as others which explicitly model inter-gene correlations[@Wu2012].
@@ -116,6 +116,7 @@ The median and median absolute deviation (MAD) are calculated from the set of pe
 All possible permuted pseudo-pairs are sampled unless otherwise specified, such that in an experiment with $I$ total samples, the maximum number of unique permuted pairs is ${}^IP_2 = \frac{{I!}}{{(I-2)!}} = I \times (I-1)$. 
 Permutation p-values for individual scores, indicating the approximate significance of pathway perturbation at the single-sample level, are also derived by assessing the proportion of permuted scores with absolute values as extreme, or more extreme, than the absolute value of test perturbation within each pathway[@Theo2009].
 Since the smallest achievable permutation p-value is 1/$NP$, where $NP$ is the number of permuted pairs, accurate estimation of small p-value requires a large number of permutation that is only feasible in data with large sample size.
+As a guideline, GSEA recommends a minimum of 7 samples in each treatment group for utilizing their phenotype permutation approach[@GSEAUserGuide]. 
 
 Apart from assessing whether a pathway's activity changed significantly within an individual sample, users may also be interested in detecting changes across all samples within a treatment, which can be performed by modelling scores using regression models, and incorporating Smyth's moderated $t$-statistic[@Smyth_2004] as implemented in *limma*[@limma_2015].
 The single-sample nature of *sSNAPPY*'s pathway perturbation scores is particularly helpful for datasets with complex experimental designs or known confounding factors as these can also be incorporated into the final regression models.
@@ -273,7 +274,7 @@ permutedScore <- generate_permuted_scores(
 ```
 
 ```{r, echo=FALSE}
-permutedScore <- readRDS(here::here("data/permutedScore_wiki.rds"))
+permutedScore <- readRDS(here::here("data/permutedScore.rds"))
 ```
 
 Apart from pathways whose permuted perturbation scores are consistently zero, the empirical distributions of remaining pathways are expected to be approximately normally distributed with $\mu = 0$, but with the scale of distributions heavily impacted by both the number of genes within each pathway and the overall topology. 
@@ -351,6 +352,10 @@ sigPathway <- top_table %>%
     dplyr::filter(adj.P.Val < 0.05)
 ```
 
+```{r echo=FALSE}
+# write_tsv(sigPathway, here::here("data/sSNAPPY_output.tsv"))
+```
+
 `r nrow(sigPathway)` out of the `r nrow(top_table)` tested Reactome pathways have an FDR < 0.05 in the moderated t-test, hence were considered to be significantly perturbed at the group level. The Table \@ref(tab:Table1) presents the top 10 significantly inhibited and activated pathways, along with their predicted direction of change.
 
 ```{r}
@@ -373,7 +378,7 @@ knitr::kable(
   table1, format = "latex",
   caption = "Significantly impacted Reactome pathways identified among post-chemotherapy samples using sSNAPPY. Only the 10 most significantly inhibited and 10 most significantly activated pathways are shown.", 
   booktabs = TRUE,
-  format.args = list(digits = 2)
+  format.args = list(digits = 3)
 ) %>%
   kableExtra::kable_styling(
     latex_options = c("scale_down", "striped")
@@ -387,8 +392,12 @@ Two clusters, associated with proliferative DNA repair signatures and stress-rel
 The representative pathways enriched in the stress-associated cluster were *IL6-mediated signaling events*, *TNF signaling pathway*, and *cellular responses to stress*, and the other post-chemotherapy cell dominated cluster in the original study was enriched for pathways associated with cell proliferation and DNA repair, such as the Cell cycle, DNA repair, Homology directed repair (HDR) through homologous recombination, and the Fanconi anaemia pathway. 
 *sSNAPPY* not only detected many significant perturbed pathways that are highly concordant with the pathways reported to be enriched in the original study but also predicted their directions of changes.
 For example, the DNT repair pathway *SUMOylation of DNA damage response and repair proteins* pathway was predicted to be significantly inhibited by the chemotherapy. 
+In comparison, we also performed pathway analysis on this example dataset using two non-topological-based approaches: 1) *GSEA* basing on the ranking statistics derived from the differentially expression (DE) analysis and 2) the rotation gene set testing for linear models (*roast*), which does not rely on DE analysis results.
+Although the *SUMOylation of DNA damage response and repair proteins* pathway was also defined as significantly impacted by the chemotherapy using the two non-topological-based methods(see extended data), the directionality of pathway perturbation can only be predicted by *sSNAPPY*.
+The existing topology-based method *SPIA*, on the other hand, only considers pathways containing differentially expressed genes, hence has a lower sensitivity in detecting pathway perturbation and was only able to capture changes in immune-related processes(see extended data).
 
-Apart from considering all treated samples as biological replicates, users may elect to perform an analysis incorporating other phenotypic traits which may impact a patients responses to chemotherapy, such as disease stages or tumour grades. 
+
+The single-sample nature of the *sSNAPPY* output also provides great flexibility: apart from considering all treated samples as biological replicates, users may elect to perform an analysis incorporating other phenotypic traits which may impact a patients responses to chemotherapy, such as disease stages or tumour grades. 
 To perform this step using the moderated t-statistic strategy and extend the above analysis, an appropriate design matrix is the only additional requirement for model-fitting, or alternatively, samples may be subset as may be appropriate.
 
 

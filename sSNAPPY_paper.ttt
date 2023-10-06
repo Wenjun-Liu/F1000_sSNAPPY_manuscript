@@ -7,29 +7,29 @@
 \toprule
 Pathway & Change & P.Value & FDR & Direction\\
 \midrule
-\cellcolor{gray!6}{Signaling by Retinoic Acid} & \cellcolor{gray!6}{0.60} & \cellcolor{gray!6}{4.4e-04} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Activated}\\
-Regulation of pyruvate dehydrogenase (PDH) complex & 0.60 & 4.6e-04 & 0.015 & Activated\\
-\cellcolor{gray!6}{Pyruvate metabolism} & \cellcolor{gray!6}{0.60} & \cellcolor{gray!6}{4.6e-04} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Activated}\\
-Pyruvate metabolism and Citric Acid (TCA) cycle & 0.60 & 4.6e-04 & 0.015 & Activated\\
-\cellcolor{gray!6}{Negative regulation of MAPK pathway} & \cellcolor{gray!6}{0.63} & \cellcolor{gray!6}{5.4e-04} & \cellcolor{gray!6}{0.017} & \cellcolor{gray!6}{Activated}\\
+\cellcolor{gray!6}{Signaling by Retinoic Acid} & \cellcolor{gray!6}{0.601} & \cellcolor{gray!6}{4.45e-04} & \cellcolor{gray!6}{0.0152} & \cellcolor{gray!6}{Activated}\\
+Regulation of pyruvate dehydrogenase (PDH) complex & 0.598 & 4.59e-04 & 0.0152 & Activated\\
+\cellcolor{gray!6}{Pyruvate metabolism} & \cellcolor{gray!6}{0.598} & \cellcolor{gray!6}{4.59e-04} & \cellcolor{gray!6}{0.0152} & \cellcolor{gray!6}{Activated}\\
+Pyruvate metabolism and Citric Acid (TCA) cycle & 0.598 & 4.59e-04 & 0.0152 & Activated\\
+\cellcolor{gray!6}{Negative regulation of MAPK pathway} & \cellcolor{gray!6}{0.627} & \cellcolor{gray!6}{5.40e-04} & \cellcolor{gray!6}{0.0174} & \cellcolor{gray!6}{Activated}\\
 \addlinespace
-Translocation of ZAP-70 to Immunological synapse & 0.62 & 8.8e-04 & 0.022 & Activated\\
-\cellcolor{gray!6}{Generation of second messenger molecules} & \cellcolor{gray!6}{0.62} & \cellcolor{gray!6}{8.8e-04} & \cellcolor{gray!6}{0.022} & \cellcolor{gray!6}{Activated}\\
-MHC class II antigen presentation & 0.63 & 1.2e-03 & 0.024 & Activated\\
-\cellcolor{gray!6}{NGF-stimulated transcription} & \cellcolor{gray!6}{0.58} & \cellcolor{gray!6}{1.4e-03} & \cellcolor{gray!6}{0.025} & \cellcolor{gray!6}{Activated}\\
-Downstream TCR signaling & 0.63 & 1.4e-03 & 0.025 & Activated\\
+Translocation of ZAP-70 to Immunological synapse & 0.624 & 8.75e-04 & 0.0218 & Activated\\
+\cellcolor{gray!6}{Generation of second messenger molecules} & \cellcolor{gray!6}{0.624} & \cellcolor{gray!6}{8.75e-04} & \cellcolor{gray!6}{0.0218} & \cellcolor{gray!6}{Activated}\\
+MHC class II antigen presentation & 0.628 & 1.17e-03 & 0.0241 & Activated\\
+\cellcolor{gray!6}{NGF-stimulated transcription} & \cellcolor{gray!6}{0.582} & \cellcolor{gray!6}{1.36e-03} & \cellcolor{gray!6}{0.0247} & \cellcolor{gray!6}{Activated}\\
+Downstream TCR signaling & 0.633 & 1.39e-03 & 0.0247 & Activated\\
 \addlinespace
-\cellcolor{gray!6}{Interleukin-35 Signalling} & \cellcolor{gray!6}{-0.90} & \cellcolor{gray!6}{1.7e-05} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Inhibited}\\
-Sphingolipid de novo biosynthesis & -0.90 & 2.8e-05 & 0.015 & Inhibited\\
-\cellcolor{gray!6}{SUMOylation of DNA replication proteins} & \cellcolor{gray!6}{-0.82} & \cellcolor{gray!6}{6.9e-05} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Inhibited}\\
-Condensation of Prometaphase Chromosomes & -0.90 & 9.9e-05 & 0.015 & Inhibited\\
-\cellcolor{gray!6}{Epigenetic regulation of gene expression} & \cellcolor{gray!6}{-0.79} & \cellcolor{gray!6}{1.2e-04} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Inhibited}\\
+\cellcolor{gray!6}{Interleukin-35 Signalling} & \cellcolor{gray!6}{-0.902} & \cellcolor{gray!6}{1.69e-05} & \cellcolor{gray!6}{0.0151} & \cellcolor{gray!6}{Inhibited}\\
+Sphingolipid de novo biosynthesis & -0.896 & 2.75e-05 & 0.0151 & Inhibited\\
+\cellcolor{gray!6}{SUMOylation of DNA replication proteins} & \cellcolor{gray!6}{-0.819} & \cellcolor{gray!6}{6.86e-05} & \cellcolor{gray!6}{0.0152} & \cellcolor{gray!6}{Inhibited}\\
+Condensation of Prometaphase Chromosomes & -0.904 & 9.91e-05 & 0.0152 & Inhibited\\
+\cellcolor{gray!6}{Epigenetic regulation of gene expression} & \cellcolor{gray!6}{-0.790} & \cellcolor{gray!6}{1.21e-04} & \cellcolor{gray!6}{0.0152} & \cellcolor{gray!6}{Inhibited}\\
 \addlinespace
-Polo-like kinase mediated events & -0.88 & 1.4e-04 & 0.015 & Inhibited\\
-\cellcolor{gray!6}{Chromatin modifying enzymes} & \cellcolor{gray!6}{-0.79} & \cellcolor{gray!6}{1.5e-04} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Inhibited}\\
-Chromatin organization & -0.79 & 1.5e-04 & 0.015 & Inhibited\\
-\cellcolor{gray!6}{SUMO E3 ligases SUMOylate target proteins} & \cellcolor{gray!6}{-0.77} & \cellcolor{gray!6}{1.8e-04} & \cellcolor{gray!6}{0.015} & \cellcolor{gray!6}{Inhibited}\\
-APC-Cdc20 mediated degradation of Nek2A & -0.84 & 2.1e-04 & 0.015 & Inhibited\\
+Polo-like kinase mediated events & -0.880 & 1.43e-04 & 0.0152 & Inhibited\\
+\cellcolor{gray!6}{Chromatin modifying enzymes} & \cellcolor{gray!6}{-0.791} & \cellcolor{gray!6}{1.52e-04} & \cellcolor{gray!6}{0.0152} & \cellcolor{gray!6}{Inhibited}\\
+Chromatin organization & -0.791 & 1.52e-04 & 0.0152 & Inhibited\\
+\cellcolor{gray!6}{SUMO E3 ligases SUMOylate target proteins} & \cellcolor{gray!6}{-0.767} & \cellcolor{gray!6}{1.83e-04} & \cellcolor{gray!6}{0.0152} & \cellcolor{gray!6}{Inhibited}\\
+APC-Cdc20 mediated degradation of Nek2A & -0.838 & 2.13e-04 & 0.0152 & Inhibited\\
 \bottomrule
 \end{tabular}}
 \end{table}
