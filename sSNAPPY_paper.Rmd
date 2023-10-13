@@ -67,13 +67,13 @@ knitr::include_graphics(
 
 *sSNAPPY* is an R package that has been reviewed and published on the open-source bioinformatics software platform [Bioconductor](https://bioconductor.org/packages/release/bioc/html/*sSNAPPY*.html) with all source code available via GitHub.
 The methodology itself is topology-based, designed to compute directional, single-sample, pathway perturbation scores for gene expression datasets with a matched-pair, or nested design (eg. samples collected before and after treatment).
+Common examples of such designs may include treated vs control samples within cell-line passages, or across multiple treatments applied to tissue samples from within a specific donor.
 This allows for the detection of pathway perturbations within all samples from a treatment group, but also within individual samples.
 The only data required to run *sSNAPPY*, is a log-transformed expression matrix (e.g. logCPM) with matching sample metadata describing treatment groups and the nested structure.
 It is assumed that all pre-processing has been performed beforehand, such as the exclusion of low-signal genes or normalisation to minimise technical artefacts like GC-bias.
 
-The first step performed by *sSNAPPY*, is to estimate sample-specific log fold-change ($\delta_{ghi} = \mu_{ghi} - \mu_{g0i}$) across all genes $g$ for each treatment $h$ within each set of nested replicates $i$, by subtracting expression estimates for the baseline samples $\mu_{g0i}$ from those in the treatment group $h$.
-Each set of nested replicates may be drawn from treated or control samples within cell-line passages, or from treatments applied to the same donor tissue.
-It should also be noted that *sSNAPPY* is applicable to any number of treatment/condition levels and sample numbers within each treatment group are not required to be balanced. 
+The first step performed by *sSNAPPY*, is to estimate sample-specific log fold-change ($\delta_{ghi} = \mu_{ghi} - \mu_{g0i}$) across all genes $g$, for each treatment $h$, and within each set of nested replicates $i$, by subtracting expression estimates for the baseline samples $\mu_{g0i}$ from those in treatment group $h$.
+It should also be noted that *sSNAPPY* is applicable to any number of treatment/condition levels and that sample numbers within each treatment group are not required to be balanced. 
 
 It is well known that in RNA-seq data, genes with lower expression tend to have greater variability in signal and more broadly spread estimates of change[@Law2014].
 As such, we utilise a gene-level weighting strategy to down-weight fold-change estimates for low-abundance genes prior to passing these estimates to sSNAPPY.
@@ -87,7 +87,7 @@ knitr::include_graphics(
 ```
 
 *sSNAPPY* extends the topology-based scoring algorithm initially proposed in  SPIA[@Tarca2009] which propagates fold-change estimates from genes considered as differentially expressed through pathway topologies, to compute a perturbation score for each pathway.
-In contrast to SPIA, *sSNAPPY* uses fold-change estimates from all detected genes. 
+In contrast to SPIA, which relies on a defined set of differentially expressed genes, *sSNAPPY* uses fold-change estimates from all detected genes. 
 By modifying the algorithm to incorporate single-sample, weighted estimates of fold-change, we are able to numerically represent changes in a pathway within a given sample, and subsequently model these across all samples within a treatment group.
 Thus, we define the single-sample perturbation score ($S_{hip}$) for a given pathway $p$ and treatment $h$ for a set of nested samples $i$:
 
@@ -113,12 +113,12 @@ To scale single-sample pathway perturbation scores ($S_{hip}$) so they are compa
 During permutation, all sample labels are randomly shuffled and permuted pseudo-pairs formed from the re-shuffled labels. 
 Single-sample fold-changes are then calculated for each pseudo-pair of permuted samples while the rest of the scoring algorithm remains unchanged.
 The median and median absolute deviation (MAD) are calculated from the set of permuted perturbation scores within each pathway, and used to normalise the raw perturbation scores to robust $Z$-scores. 
-All possible permuted pseudo-pairs are sampled unless otherwise specified, such that in an experiment with $I$ total samples, the maximum number of unique permuted pairs is ${}^IP_2 = \frac{{I!}}{{(I-2)!}} = I \times (I-1)$. 
-Permutation p-values for individual scores, indicating the approximate significance of pathway perturbation at the single-sample level, are also derived by assessing the proportion of permuted scores with absolute values as extreme, or more extreme, than the absolute value of test perturbation within each pathway[@Theo2009].
-Since the smallest achievable permutation p-value is 1/$NP$, where $NP$ is the number of permuted pairs, accurate estimation of small p-value requires a large number of permutation that is only feasible in data with large sample size.
-As a guideline, GSEA recommends a minimum of 7 samples in each treatment group for utilizing their phenotype permutation approach[@GSEAUserGuide]. 
+All possible permuted pseudo-pairs are sampled unless otherwise specified, such that in an experiment with $I$ total samples, the maximum number of unique permuted pairs is $P = \frac{{I!}}{{(I-2)!}} = I \times (I-1)$. 
+Permutation p-values for each $S_{hip}$ value, indicating the approximate significance of pathway perturbation at the single-sample level, are also derived by assessing the proportion of permuted scores with absolute values as extreme, or more extreme, than the absolute value of test perturbation within each pathway[@Theo2009].
+Since the smallest achievable permutation p-value is 1/$P$, accurate estimation of small p-value requires a large number of permutation that is only feasible in data with large sample size.
+As a guideline, GSEA recommends a minimum of 7 samples in each treatment group for utilizing their phenotype permutation approach[@GSEAUserGuide], and under *sSNAPPY* this would yield $P$ = 182 unique permuted pseudo-pairs and minimal permutation p-values of 0.0055 at each individual sample and pathway-level. 
 
-Apart from assessing whether a pathway's activity changed significantly within an individual sample, users may also be interested in detecting changes across all samples within a treatment, which can be performed by modelling scores using regression models, and incorporating Smyth's moderated $t$-statistic[@Smyth_2004] as implemented in *limma*[@limma_2015].
+Apart from assessing whether a pathway's activity changed significantly within an individual sample, an important question may be the detection of changes in pathway activity across all samples within a treatment, and this can be performed by modelling $S_{hip}$ values using regression models, and incorporating Smyth's moderated $t$-statistic[@Smyth_2004] as implemented in *limma*[@limma_2015].
 The single-sample nature of *sSNAPPY*'s pathway perturbation scores is particularly helpful for datasets with complex experimental designs or known confounding factors as these can also be incorporated into the final regression models.
 
 The Bioconductor package graphite[@Sales2012] provides functions that can be used to retrieve pathway topologies from a database and convert topology information to adjacency matrices.
@@ -138,31 +138,62 @@ BiocManager::install("sSNAPPY")
 
 # Use Cases
 
-## Data
+## Required Packages
 
-To demonstrate the application of *sSNAPPY*, we used pre-processed counts from a publicly available scRNA-seq dataset, retrieved from Gene Expression Omnibus (GEO) with accession code GSE165897. 
-This dataset consists of 11 high-grade serous ovarian cancer (HGSOC) patients samples taken before and after chemotherapy[@Zhang2022].
-*sSNAPPY* was used to re-analyse data from the epithelial cells as they were the primary focus of the original study. 
-Since *sSNAPPY* was designed primarily for bulk RNA-seq data, and as such, counts from epithelial cells within the same samples were first summed into pseudo-bulk profiles, giving rise to a total of 22 samples. 
-We considered a gene detectable if we observed >1.5 counts per million in >11 samples out of 22, ideally representing all samples from a complete treatment group. 
-11,101 (33.8%) of the 32,847 annotated genes passed this selection criteria and were included for downstream analyses. 
-Conditional quantile normalisation[@Hansen2012] was then applied to mitigate potential biases introduced by gene length and GC content. 
-The normalised logCPM matrix of the processed dataset and sample metadata can be downloaded from [here](https://github.com/Wenjun-Liu/F1000_sSNAPPY_manuscript/tree/master/data).
+The set of additional required packages for this workflow can be installed using
 
-The following packages are required for this workflow
+```{r}
+pkg <- c(
+  "tidyverse", "patchwork", "kableExtra", "AnnotationHub", "edgeR", "here", 
+  "colorspace"
+)
+BiocManager::install(pkg, update = FALSE, force = FALSE, ask = FALSE)
+```
+
+Once installed, the complete set of packages can be loaded into the session.
 
 ```{r, message=FALSE}
 library(sSNAPPY)
 library(tidyverse)
 library(magrittr)
-library(ggplot2)
 library(patchwork)
 library(kableExtra)
 library(AnnotationHub) 
 library(edgeR)
-library(patchwork)
 library(colorspace)
 ```
+
+## Retrieval of Pathway Topology Matrices
+
+Retrieving pathway topology information from a chosen database is the next key step required during preparation for running *sSNAPPY* needs to be retrieved, and this is the only step requiring internet access.
+If running on an HPC cluster where internet access is restricted, this step can be performed separately with topologies saved by the user as an RDS object.
+Using the Reactome database[@reactome2021] in this workflow, the retrieved topology information will be stored as a list where each element corresponds to a pathway and the numbers in the matrices encode gene-gene interactions. 
+
+```{r, eval=FALSE}
+gsTopology <- retrieve_topology(database = "reactome", species = "hsapiens")
+```
+
+```{r, echo=FALSE}
+gsTopology <- readRDS(here::here("data/gsTopology.rds"))
+```
+
+In addition to downloading topology matrices for all pathways, it is also possible to provide a restricted set of keywords for a targeted analysis.
+For example, passing the argument `keyword = c("metabolism", "estrogen")` would only return the subset of pathways which match either of these keywords.
+Multiple databases are also able to be searched by passing a vector of database names to the `database` argument.
+
+<!-- Did you want to include a comment mentioning your findings about the structure of topology matrices, and which need transposing here? -->
+
+## Data
+
+To demonstrate the application of *sSNAPPY*, we used pre-processed counts from a publicly available scRNA-seq dataset, retrieved from Gene Expression Omnibus (GEO) with accession code GSE165897. 
+This dataset consists of 11 high-grade serous ovarian cancer (HGSOC) patients samples taken before and after chemotherapy[@Zhang2022].
+*sSNAPPY* was used to re-analyse data from the epithelial cells as they were the primary focus of the original study. 
+Since *sSNAPPY* was designed primarily for bulk RNA-seq data, counts from epithelial cells within the same samples were first summed into pseudo-bulk profiles, giving rise to a total of 22 samples. 
+<!-- Was this >11, or $\geq$11? -->
+We considered a gene detectable if we observed >1.5 counts per million in >11 of the 22 samples, ideally representing all samples from a complete treatment group. 
+11,101 (33.8%) of the 32,847 annotated genes passed this selection criteria and were included for downstream analyses. 
+Conditional quantile normalisation[@Hansen2012] was then applied to mitigate potential biases introduced by gene length and GC content. 
+The normalised logCPM matrix of the processed dataset and sample metadata can be downloaded from [here](https://github.com/Wenjun-Liu/F1000_sSNAPPY_manuscript/tree/master/data).
 
 To begin running the *sSNAPPY* workflow, we first load our expression matrix and define our sample-level metadata.
 Importantly, the row names of the expression matrix must be specified as EntrezGene IDs, for compatibility with pathway databases. 
@@ -214,28 +245,10 @@ head(sample_meta)
 ```
 
 
-## Retrieval of Pathway Topology
-
-Next, pathway topology information needs to be retrieved from a chosen database, and this is the only step requiring internet access.
-Using the Reactome database[@reactome2021] as an example, the retrieved topology information will be stored as a list where each element corresponds to a pathway and the numbers in the matrices encode gene-gene interactions. 
-
-```{r, eval=FALSE}
-gsTopology <- retrieve_topology(database = "reactome", species = "hsapiens")
-```
-
-```{r, echo=FALSE}
-gsTopology <- readRDS(here::here("data/gsTopology.rds"))
-```
-
-In addition to downloading topology matrices for all pathways, it is also possible to provide a restricted set of keywords for a targeted analysis.
-For example, passing the argument `keyword = c("metabolism", "estrogen")` would only return the subset of pathways which match either of these keywords.
-Multiple databases are also able to be searched by passing a vector of database names to the `database` argument.
-
 ## Score Single-Sample Pathway Perturbation 
 
-To compute the single-sample fold-changes (i.e. logFC) required for the set of perturbation scores, samples must be 'matched pairs' or nested, as would be found when analysing biopsies pre- vs post-treatment, or untreated vs treated cell lines nested by passage.
-The factor defining the nested structure is passed to the `weight_ss_fc()` function through the `groupBy` parameter. 
-In our example dataset, pre- and post-treatment samples are matched by the "patient_id" column. 
+To compute the single-sample fold-changes (i.e. logFC) required for the set of perturbation scores, samples must be 'matched pairs' or nested, as discussed earlier, and treatments performed within each patient represents the nesting structure in this dataset
+The factor (patient_id) defining the nested structure is passed to the `weight_ss_fc()` function through the `groupBy` parameter. 
 
 ```{r, results='hide'}
 weightedFC <- weight_ss_fc(
@@ -245,13 +258,14 @@ weightedFC <- weight_ss_fc(
 glimpse(weightedFC)
 ```
 
-The output of `weight_ss_fc()` is a `list` where one element is a matrix of weighted single-sample fold-changes ($\delta_{ghi}^*$), with rows corresponding to genes and columns to samples, and the other element is the vector of gene-wise weights ($w_g$) used to calculate the weighted log fold-change ($\delta_{ghi}^*$), as described above.
+The output of `weight_ss_fc()` is a `list` where one element is the matrix of weighted single-sample fold-changes ($\delta_{ghi}^*$), with rows corresponding to genes and columns to samples, and the other element is the vector of gene-wise weights ($w_g$) used to calculate the weighted log fold-change ($\delta_{ghi}^*$).
 By default, the string `ENTREZID:` is added to all row names of the $\delta_{ghi}^*$ matrix to be compatible with the format Reactome pathway topologies are retrieved in. 
 
 The matrix of $\delta_{ghi}^*$ values are then passed to pathway topologies to compute gene-wise perturbation scores for all genes within a pathway, before being summed into a single score for each pathway. 
-`raw_gene_pert()` returns a list, with each element containing the gene-level perturbation scores for a given pathway, with each matrix able to be used during downstream analysis to identify which genes play the most significant roles in each pathway, as demonstrated in later sections.
+The function `raw_gene_pert()` returns a initial list, with each element containing the gene-level perturbation scores for a given pathway.
+These matrices are able to be used during downstream analysis to identify which genes play the most significant roles in each pathway, as demonstrated in later sections.
 Pathway-level perturbation scores ($S_{hip}$) are then returned as a data.frame containing sample and gene-set names after calling `pathway_pert()`. 
-Pathways with zero perturbation scores across all genes and samples are dropped at this step. 
+Pathways with zero perturbation scores across all genes and samples are automatically dropped at this step. 
 
 ```{r}
 genePertScore <- raw_gene_pert(weightedFC$weighted_logFC, gsTopology)
