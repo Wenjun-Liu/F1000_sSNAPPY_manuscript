@@ -241,6 +241,17 @@ spia_sig <- spia_res %>%
 
 By applying a cut-off of 0.05 on the FDR derived from the Fisher p-values, `r nrow(spia_sig)` pathways' activities were considered to be significantly altered. 6 of those pathways were defined to be significantly perturbed by sSNAPPY. It's important to note that compared to the other methods where all pathways were tested, only `r nrow(spia_res)` pathways were tested by SPIA as pathways that did not contain DEGs were left out. 
 
+Most of the pathways that were considered as significantly impacted by *SPIA* are immune-related process. Compared to other methods, sPIA showed a lack of power in detecting significant pathway perturbation. 
+
+```{r}
+spia_sig %>%
+    dplyr::select(
+        Pathway = Name, pNDE,  pPERT, pGFdr, Status) %>%
+    pander(
+        caption = "Reactome pathways that were considered as significantly impacted
+        by chemotherapy throguh SPIA"
+    ) 
+```
 
 
 
@@ -289,7 +300,7 @@ allMethod_sig %>%
     )
 ```
 
-2 pathways: Translocation of ZAP-70 to Immunological synapse and Generation of second messenger molecules were found to be significantly impacted by the chemotherapy by all methods, and 32 pathways were significant in results returned by sSNAPPY, fry and GSEA. 
+2 pathways: Translocation of ZAP-70 to Immunological synapse and Generation of second messenger molecules were found to be significantly impacted by the chemotherapy by all methods, and 32 pathways were significant in results returned by *sSNAPPY*, *fry* and *GSEA*. The DNA damage response and repair pathway **SUMOylation of DNA damage response and repair proteins** was reported in the original study and considered as significantly impacted by all 3 methods: *sSNAPPY*, *fry* and *GSEA*. However, only *sSNAPPY* is capable of accounting for gene-gene interaction to predict the directionality of change in pathway acitvities. 
 
 ```{r}
 overlap_3methods <- allMethod_sig[c("GSEA", "fry", "sSNAPPY")] %>%

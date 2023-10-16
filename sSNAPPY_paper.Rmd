@@ -393,8 +393,8 @@ The representative pathways enriched in the stress-associated cluster were *IL6-
 *sSNAPPY* not only detected many significant perturbed pathways that are highly concordant with the pathways reported to be enriched in the original study but also predicted their directions of changes.
 For example, the DNT repair pathway *SUMOylation of DNA damage response and repair proteins* pathway was predicted to be significantly inhibited by the chemotherapy. 
 In comparison, we also performed pathway analysis on this example dataset using two non-topological-based approaches: 1) *GSEA* basing on the ranking statistics derived from the differentially expression (DE) analysis and 2) the rotation gene set testing for linear models (*roast*), which does not rely on DE analysis results.
-Although the *SUMOylation of DNA damage response and repair proteins* pathway was also defined as significantly impacted by the chemotherapy using the two non-topological-based methods(see extended data), the directionality of pathway perturbation can only be predicted by *sSNAPPY*.
-The existing topology-based method *SPIA*, on the other hand, only considers pathways containing differentially expressed genes, hence has a lower sensitivity in detecting pathway perturbation and was only able to capture changes in immune-related processes(see extended data).
+Although the *SUMOylation of DNA damage response and repair proteins* pathway was also defined as significantly impacted by the chemotherapy using the two non-topological-based methods(see [extended data](https://github.com/Wenjun-Liu/F1000_sSNAPPY_manuscript/blob/thesis_chapter/Compare.Rmd)), the directionality of pathway perturbation can only be predicted by *sSNAPPY*.
+The existing topology-based method *SPIA*, on the other hand, only considers pathways containing differentially expressed genes, hence has a lower sensitivity in detecting pathway perturbation and was only able to capture changes in immune-related processes(see [extended data](https://github.com/Wenjun-Liu/F1000_sSNAPPY_manuscript/blob/thesis_chapter/Compare.Rmd)).
 
 
 The single-sample nature of the *sSNAPPY* output also provides great flexibility: apart from considering all treated samples as biological replicates, users may elect to perform an analysis incorporating other phenotypic traits which may impact a patients responses to chemotherapy, such as disease stages or tumour grades. 
@@ -457,7 +457,7 @@ p1 / p2 + plot_annotation(tag_levels = "A")
 ```
 
 
-Any advantage of visualising pathway analysis results using network structures is that it allows the identification of highly connected pathways (Figure \@ref(fig:Figure4)).
+An advantage of visualising pathway analysis results using network structures is that it allows the identification of highly connected pathways (Figure \@ref(fig:Figure4)).
 To summarise related pathways and further enable interpretation, we can apply community detection[@Newman2004] to group related pathways into 'communities'.
 sSNAPPY’s `plot_community()` function is a "one-stop shop" for applying a community detection algorithm of the user’s choice to the network structure and annotating identified communities by the most common pathway category, denoting the main biological processes perturbed in that community.
 The most recent categories for both KEGG and Reactome databases were curated from their respective website ([KEGG website](https://www.genome.jp/kegg/pathway.html) & [Reactome website](https://reactome.org/PathwayBrowser/#/R-HSA-1632852&PATH=R-HSA-9612973)) and included as parts of sSNAPPY.
@@ -466,17 +466,14 @@ When the information about pathway categorisations is available, annotation of p
 In the current dataset, the Louvain method was applied to the network of biological pathways and revealed five primary communities: 1) Adaptive Immune System; 2) Cell Cycle, Mitotic; 3) Chromatin modifying enzymes & Epigenetic regulation of gene expression; 4) Post-translational protein modification and 5) The citric acid (TCA) cycle and respiratory electron transport (Figure \@ref(fig:Figure5)).
 The largest community formed was the Adaptive Immune System pathway, indicating a clear immune-signalling aspect to these results.
 
-```{r, echo=FALSE}
-load("~/sSNAPPY/inst/extdata/gsAnnotation_df_wiki.rda")
-```
 
 ```{r Figure5, out.width='100%', fig.width = 12, fig.height = 8,fig.cap = 'Significantly perturbed Reactome pathways identified among post-chemotherapy samples using sSNAPPY, colored by community structures detected through the louvain algorithm. The main biological processes associated with the top 20 pathways that wer most perturbed by the chemotherapy were shown.'}
-#load(system.file("extdata", "gsAnnotation_df_wiki.rda", package = "sSNAPPY"))
+load(system.file("extdata", "gsAnnotation_df_reactome.rda", package = "sSNAPPY"))
 set.seed(456)
 plot_community(
     normalisedScores = sigPathway,
     gsTopology = gsTopology, 
-    gsAnnotation = gsAnnotation_df_wiki,
+    gsAnnotation = gsAnnotation_df_reactome,
     colorBy = "status",
     lb_size = 3
 ) +
@@ -545,7 +542,7 @@ To further investigate a specific pathway and elucidate which are the key genes 
 This function takes advantage of the plotting capabilities of the `pheatmap` package[@pheatmap], and as such, other annotations are also able to be easily included, such as patient response, or which general ranges the pathway-level normalised Z-Scores are in.
 Inclusion of the Z-Scores enabled the assessment of the level of perturbation predicted in each sample and key genes involved (Figure \@ref(fig:Figure7)).
 
-```{r Figure7, out.width='100%', fig.width = 12, fig.height = 7, fig.cap = 'Gene-level perturbation scores for the top 15 genes in the \"SUMOylation of DNA replication proteins\" pathway ranked by average contribution to the perturbation score. Samples were annotated by patient chemotherapy response score (CRS), along with the range for sample-level Z-scores as a guide to sample-specific pathway perturbation. The genes CDCA8, TOP2A, UBE2I, BIRC5 were identified as possible key drivers of the inhibition of of this pathway.'}
+```{r Figure7, out.width='100%', fig.width = 12, fig.height = 7, fig.cap = 'Gene-level perturbation scores for the top 15 genes in the \"SUMOylation of DNA replication proteins\" pathway ranked by average contribution to the perturbation score. Samples were annotated by patient chemotherapy response score (CRS), along with the range for sample-level Z-scores as a guide to sample-specific pathway perturbation. The genes CDCA8, TOP2A, UBE2I, BIRC5 were identified as possible key drivers of the inhibition of of this pathway.', warning=FALSE}
 annotation_df <- normalisedScores %>%
     dplyr::filter(gs_name == "reactome.SUMOylation of DNA replication proteins") %>%
     left_join(dplyr::select(sample_meta, sample,  CRS), by = "sample") %>%

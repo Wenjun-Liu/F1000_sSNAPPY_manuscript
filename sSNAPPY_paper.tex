@@ -132,7 +132,7 @@ RNA-seq, pathway enrichment, R package, topology, KEGG, Reactome, scRNA-seq
 
 \textbf{Bioconductor version}: 3.17
 
-\textbf{Package}: 1.4.4
+\textbf{Package}: 1.5.4
 
 \hypertarget{introduction}{%
 \section{Introduction}\label{introduction}}
@@ -266,15 +266,6 @@ The following packages are required for this workflow
 \begin{Shaded}
 \begin{Highlighting}[]
 \FunctionTok{library}\NormalTok{(sSNAPPY)}
-\end{Highlighting}
-\end{Shaded}
-
-\begin{verbatim}
-## Warning: package 'sSNAPPY' was built under R version 4.3.1
-\end{verbatim}
-
-\begin{Shaded}
-\begin{Highlighting}[]
 \FunctionTok{library}\NormalTok{(tidyverse)}
 \FunctionTok{library}\NormalTok{(magrittr)}
 \FunctionTok{library}\NormalTok{(ggplot2)}
@@ -564,8 +555,8 @@ The representative pathways enriched in the stress-associated cluster were \emph
 \emph{sSNAPPY} not only detected many significant perturbed pathways that are highly concordant with the pathways reported to be enriched in the original study but also predicted their directions of changes.
 For example, the DNT repair pathway \emph{SUMOylation of DNA damage response and repair proteins} pathway was predicted to be significantly inhibited by the chemotherapy.
 In comparison, we also performed pathway analysis on this example dataset using two non-topological-based approaches: 1) \emph{GSEA} basing on the ranking statistics derived from the differentially expression (DE) analysis and 2) the rotation gene set testing for linear models (\emph{roast}), which does not rely on DE analysis results.
-Although the \emph{SUMOylation of DNA damage response and repair proteins} pathway was also defined as significantly impacted by the chemotherapy using the two non-topological-based methods(see extended data), the directionality of pathway perturbation can only be predicted by \emph{sSNAPPY}.
-The existing topology-based method \emph{SPIA}, on the other hand, only considers pathways containing differentially expressed genes, hence has a lower sensitivity in detecting pathway perturbation and was only able to capture changes in immune-related processes(see extended data).
+Although the \emph{SUMOylation of DNA damage response and repair proteins} pathway was also defined as significantly impacted by the chemotherapy using the two non-topological-based methods(see \href{https://github.com/Wenjun-Liu/F1000_sSNAPPY_manuscript/blob/thesis_chapter/Compare.Rmd}{extended data}), the directionality of pathway perturbation can only be predicted by \emph{sSNAPPY}.
+The existing topology-based method \emph{SPIA}, on the other hand, only considers pathways containing differentially expressed genes, hence has a lower sensitivity in detecting pathway perturbation and was only able to capture changes in immune-related processes(see \href{https://github.com/Wenjun-Liu/F1000_sSNAPPY_manuscript/blob/thesis_chapter/Compare.Rmd}{extended data}).
 
 The single-sample nature of the \emph{sSNAPPY} output also provides great flexibility: apart from considering all treated samples as biological replicates, users may elect to perform an analysis incorporating other phenotypic traits which may impact a patients responses to chemotherapy, such as disease stages or tumour grades.
 To perform this step using the moderated t-statistic strategy and extend the above analysis, an appropriate design matrix is the only additional requirement for model-fitting, or alternatively, samples may be subset as may be appropriate.
@@ -638,7 +629,7 @@ In the following example, we'll inspect the 10 most significantly inhibited and 
 \caption{Significantly perturbed Reactome pathways identified among post-chemotherapy samples using sSNAPPY, colored by (A) predicted direction of changes and (B) -log10(p-values). Only the 10 most significantly inhibited and 10 most significantly activated pathways are shown.}\label{fig:Figure4}
 \end{figure}
 
-Any advantage of visualising pathway analysis results using network structures is that it allows the identification of highly connected pathways (Figure \ref{fig:Figure4}).
+An advantage of visualising pathway analysis results using network structures is that it allows the identification of highly connected pathways (Figure \ref{fig:Figure4}).
 To summarise related pathways and further enable interpretation, we can apply community detection\citep{Newman2004} to group related pathways into `communities'.
 sSNAPPY's \texttt{plot\_community()} function is a ``one-stop shop'' for applying a community detection algorithm of the user's choice to the network structure and annotating identified communities by the most common pathway category, denoting the main biological processes perturbed in that community.
 The most recent categories for both KEGG and Reactome databases were curated from their respective website (\href{https://www.genome.jp/kegg/pathway.html}{KEGG website} \& \href{https://reactome.org/PathwayBrowser/\#/R-HSA-1632852&PATH=R-HSA-9612973}{Reactome website}) and included as parts of sSNAPPY.
@@ -649,12 +640,12 @@ The largest community formed was the Adaptive Immune System pathway, indicating 
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\#load(system.file("extdata", "gsAnnotation\_df\_wiki.rda", package = "sSNAPPY"))}
+\FunctionTok{load}\NormalTok{(}\FunctionTok{system.file}\NormalTok{(}\StringTok{"extdata"}\NormalTok{, }\StringTok{"gsAnnotation\_df\_reactome.rda"}\NormalTok{, }\AttributeTok{package =} \StringTok{"sSNAPPY"}\NormalTok{))}
 \FunctionTok{set.seed}\NormalTok{(}\DecValTok{456}\NormalTok{)}
 \FunctionTok{plot\_community}\NormalTok{(}
     \AttributeTok{normalisedScores =}\NormalTok{ sigPathway,}
     \AttributeTok{gsTopology =}\NormalTok{ gsTopology, }
-    \AttributeTok{gsAnnotation =}\NormalTok{ gsAnnotation\_df\_wiki,}
+    \AttributeTok{gsAnnotation =}\NormalTok{ gsAnnotation\_df\_reactome,}
     \AttributeTok{colorBy =} \StringTok{"status"}\NormalTok{,}
     \AttributeTok{lb\_size =} \DecValTok{3}
 \NormalTok{) }\SpecialCharTok{+}
