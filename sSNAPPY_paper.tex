@@ -128,11 +128,11 @@ RNA-seq, pathway enrichment, R package, topology, KEGG, Reactome, scRNA-seq
 \clearpage
 \pagestyle{main}
 
-\textbf{R version}: R version 4.3.0 (2023-04-21)
+\textbf{R version}: R version 4.3.1 (2023-06-16)
 
 \textbf{Bioconductor version}: 3.17
 
-\textbf{Package}: 1.4.4
+\textbf{Package}: 1.5.4
 
 \hypertarget{introduction}{%
 \section{Introduction}\label{introduction}}
@@ -166,13 +166,13 @@ The practical usage of the \emph{sSNAPPY} R/Bioconductor package is illustrated 
 
 \emph{sSNAPPY} is an R package that has been reviewed and published on the open-source bioinformatics software platform \href{https://bioconductor.org/packages/release/bioc/html/*sSNAPPY*.html}{Bioconductor} with all source code available via GitHub.
 The methodology itself is topology-based, designed to compute directional, single-sample, pathway perturbation scores for gene expression datasets with a matched-pair, or nested design (eg. samples collected before and after treatment).
+Common examples of such designs may include treated vs control samples within cell-line passages, or across multiple treatments applied to tissue samples from within a specific donor.
 This allows for the detection of pathway perturbations within all samples from a treatment group, but also within individual samples.
 The only data required to run \emph{sSNAPPY}, is a log-transformed expression matrix (e.g.~logCPM) with matching sample metadata describing treatment groups and the nested structure.
 It is assumed that all pre-processing has been performed beforehand, such as the exclusion of low-signal genes or normalisation to minimise technical artefacts like GC-bias.
 
-The first step performed by \emph{sSNAPPY}, is to estimate sample-specific log fold-change (\(\delta_{ghi} = \mu_{ghi} - \mu_{g0i}\)) across all genes \(g\) for each treatment \(h\) within each set of nested replicates \(i\), by subtracting expression estimates for the baseline samples \(\mu_{g0i}\) from those in the treatment group \(h\).
-Each set of nested replicates may be drawn from treated or control samples within cell-line passages, or from treatments applied to the same donor tissue.
-It should also be noted that \emph{sSNAPPY} is applicable to any number of treatment/condition levels and sample numbers within each treatment group are not required to be balanced.
+The first step performed by \emph{sSNAPPY}, is to estimate sample-specific log fold-change (\(\delta_{ghi} = \mu_{ghi} - \mu_{g0i}\)) across all genes \(g\), for each treatment \(h\), and within each set of nested replicates \(i\), by subtracting expression estimates for the baseline samples \(\mu_{g0i}\) from those in treatment group \(h\).
+It should also be noted that \emph{sSNAPPY} is applicable to any number of treatment/condition levels and that sample numbers within each treatment group are not required to be balanced.
 
 It is well known that in RNA-seq data, genes with lower expression tend to have greater variability in signal and more broadly spread estimates of change\citep{Law2014}.
 As such, we utilise a gene-level weighting strategy to down-weight fold-change estimates for low-abundance genes prior to passing these estimates to sSNAPPY.
@@ -189,7 +189,7 @@ We then use these weighted estimates of log fold-change (\(\delta_{ghi}^* = w_g\
 \end{figure}
 
 \emph{sSNAPPY} extends the topology-based scoring algorithm initially proposed in SPIA\citep{Tarca2009} which propagates fold-change estimates from genes considered as differentially expressed through pathway topologies, to compute a perturbation score for each pathway.
-In contrast to SPIA, \emph{sSNAPPY} uses fold-change estimates from all detected genes.
+In contrast to SPIA, which relies on a defined set of differentially expressed genes, \emph{sSNAPPY} uses fold-change estimates from all detected genes.
 By modifying the algorithm to incorporate single-sample, weighted estimates of fold-change, we are able to numerically represent changes in a pathway within a given sample, and subsequently model these across all samples within a treatment group.
 Thus, we define the single-sample perturbation score (\(S_{hip}\)) for a given pathway \(p\) and treatment \(h\) for a set of nested samples \(i\):
 
@@ -222,12 +222,12 @@ To scale single-sample pathway perturbation scores (\(S_{hip}\)) so they are com
 During permutation, all sample labels are randomly shuffled and permuted pseudo-pairs formed from the re-shuffled labels.
 Single-sample fold-changes are then calculated for each pseudo-pair of permuted samples while the rest of the scoring algorithm remains unchanged.
 The median and median absolute deviation (MAD) are calculated from the set of permuted perturbation scores within each pathway, and used to normalise the raw perturbation scores to robust \(Z\)-scores.
-All possible permuted pseudo-pairs are sampled unless otherwise specified, such that in an experiment with \(I\) total samples, the maximum number of unique permuted pairs is \({}^IP_2 = \frac{{I!}}{{(I-2)!}} = I \times (I-1)\).
-Permutation p-values for individual scores, indicating the approximate significance of pathway perturbation at the single-sample level, are also derived by assessing the proportion of permuted scores with absolute values as extreme, or more extreme, than the absolute value of test perturbation within each pathway\citep{Theo2009}.
-Since the smallest achievable permutation p-value is 1/\(NP\), where \(NP\) is the number of permuted pairs, accurate estimation of small p-value requires a large number of permutation that is only feasible in data with large sample size.
-As a guideline, GSEA recommends a minimum of 7 samples in each treatment group for utilizing their phenotype permutation approach\citep{GSEAUserGuide}.
+All possible permuted pseudo-pairs are sampled unless otherwise specified, such that in an experiment with \(I\) total samples, the maximum number of unique permuted pairs is \(P = \frac{{I!}}{{(I-2)!}} = I \times (I-1)\).
+Permutation p-values for each \(S_{hip}\) value, indicating the approximate significance of pathway perturbation at the single-sample level, are also derived by assessing the proportion of permuted scores with absolute values as extreme, or more extreme, than the absolute value of test perturbation within each pathway\citep{Theo2009}.
+Since the smallest achievable permutation p-value is 1/\(P\), accurate estimation of small p-value requires a large number of permutation that is only feasible in data with large sample size.
+As a guideline, GSEA recommends a minimum of 7 samples in each treatment group for utilizing their phenotype permutation approach\citep{GSEAUserGuide}, and under \emph{sSNAPPY} this would yield \(P\) = 182 unique permuted pseudo-pairs and minimal permutation p-values of 0.0055 at each individual sample and pathway-level.
 
-Apart from assessing whether a pathway's activity changed significantly within an individual sample, users may also be interested in detecting changes across all samples within a treatment, which can be performed by modelling scores using regression models, and incorporating Smyth's moderated \(t\)-statistic\citep{Smyth_2004} as implemented in \emph{limma}\citep{limma_2015}.
+Apart from assessing whether a pathway's activity changed significantly within an individual sample, an important question may be the detection of changes in pathway activity across all samples within a treatment, and this can be performed by modelling \(S_{hip}\) values using regression models, and incorporating Smyth's moderated \(t\)-statistic\citep{Smyth_2004} as implemented in \emph{limma}\citep{limma_2015}.
 The single-sample nature of \emph{sSNAPPY}'s pathway perturbation scores is particularly helpful for datasets with complex experimental designs or known confounding factors as these can also be incorporated into the final regression models.
 
 The Bioconductor package graphite\citep{Sales2012} provides functions that can be used to retrieve pathway topologies from a database and convert topology information to adjacency matrices.
@@ -249,43 +249,64 @@ The package has been tested on all operating systems, requiring R \textgreater{}
 \hypertarget{use-cases}{%
 \section{Use Cases}\label{use-cases}}
 
+\hypertarget{required-packages}{%
+\subsection{Required Packages}\label{required-packages}}
+
+The set of additional required packages for this workflow can be installed using
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{pkg }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}
+  \StringTok{"tidyverse"}\NormalTok{, }\StringTok{"patchwork"}\NormalTok{, }\StringTok{"kableExtra"}\NormalTok{, }\StringTok{"AnnotationHub"}\NormalTok{, }\StringTok{"edgeR"}\NormalTok{, }\StringTok{"here"}\NormalTok{, }
+  \StringTok{"colorspace"}
+\NormalTok{)}
+\NormalTok{BiocManager}\SpecialCharTok{::}\FunctionTok{install}\NormalTok{(pkg, }\AttributeTok{update =} \ConstantTok{FALSE}\NormalTok{, }\AttributeTok{force =} \ConstantTok{FALSE}\NormalTok{, }\AttributeTok{ask =} \ConstantTok{FALSE}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+Once installed, the complete set of packages can be loaded into the session.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(sSNAPPY)}
+\FunctionTok{library}\NormalTok{(tidyverse)}
+\FunctionTok{library}\NormalTok{(magrittr)}
+\FunctionTok{library}\NormalTok{(patchwork)}
+\FunctionTok{library}\NormalTok{(kableExtra)}
+\FunctionTok{library}\NormalTok{(AnnotationHub) }
+\FunctionTok{library}\NormalTok{(edgeR)}
+\FunctionTok{library}\NormalTok{(colorspace)}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{retrieval-of-pathway-topology-matrices}{%
+\subsection{Retrieval of Pathway Topology Matrices}\label{retrieval-of-pathway-topology-matrices}}
+
+Retrieving pathway topology information from a chosen database is the next key step required during preparation for running \emph{sSNAPPY} needs to be retrieved, and this is the only step requiring internet access.
+If running on an HPC cluster where internet access is restricted, this step can be performed separately with topologies saved by the user as an RDS object.
+Using the Reactome database\citep{reactome2021} in this workflow, the retrieved topology information will be stored as a list where each element corresponds to a pathway and the numbers in the matrices encode gene-gene interactions.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{gsTopology }\OtherTok{\textless{}{-}} \FunctionTok{retrieve\_topology}\NormalTok{(}\AttributeTok{database =} \StringTok{"reactome"}\NormalTok{, }\AttributeTok{species =} \StringTok{"hsapiens"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+In addition to downloading topology matrices for all pathways, it is also possible to provide a restricted set of keywords for a targeted analysis.
+For example, passing the argument \texttt{keyword\ =\ c("metabolism",\ "estrogen")} would only return the subset of pathways which match either of these keywords.
+Multiple databases are also able to be searched by passing a vector of database names to the \texttt{database} argument.
+
 \hypertarget{data}{%
 \subsection{Data}\label{data}}
 
 To demonstrate the application of \emph{sSNAPPY}, we used pre-processed counts from a publicly available scRNA-seq dataset, retrieved from Gene Expression Omnibus (GEO) with accession code GSE165897.
 This dataset consists of 11 high-grade serous ovarian cancer (HGSOC) patients samples taken before and after chemotherapy\citep{Zhang2022}.
 \emph{sSNAPPY} was used to re-analyse data from the epithelial cells as they were the primary focus of the original study.
-Since \emph{sSNAPPY} was designed primarily for bulk RNA-seq data, and as such, counts from epithelial cells within the same samples were first summed into pseudo-bulk profiles, giving rise to a total of 22 samples.
-We considered a gene detectable if we observed \textgreater1.5 counts per million in \textgreater11 samples out of 22, ideally representing all samples from a complete treatment group.
+Since \emph{sSNAPPY} was designed primarily for bulk RNA-seq data, counts from epithelial cells within the same samples were first summed into pseudo-bulk profiles, giving rise to a total of 22 samples.
+We considered a gene detectable if we observed \textgreater1.5 counts per million in \textgreater11 of the 22 samples, ideally representing all samples from a complete treatment group.
 11,101 (33.8\%) of the 32,847 annotated genes passed this selection criteria and were included for downstream analyses.
 Conditional quantile normalisation\citep{Hansen2012} was then applied to mitigate potential biases introduced by gene length and GC content.
 The normalised logCPM matrix of the processed dataset and sample metadata can be downloaded from \href{https://github.com/Wenjun-Liu/F1000_sSNAPPY_manuscript/tree/master/data}{here}.
-
-The following packages are required for this workflow
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\FunctionTok{library}\NormalTok{(sSNAPPY)}
-\end{Highlighting}
-\end{Shaded}
-
-\begin{verbatim}
-## Warning: package 'sSNAPPY' was built under R version 4.3.1
-\end{verbatim}
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\FunctionTok{library}\NormalTok{(tidyverse)}
-\FunctionTok{library}\NormalTok{(magrittr)}
-\FunctionTok{library}\NormalTok{(ggplot2)}
-\FunctionTok{library}\NormalTok{(patchwork)}
-\FunctionTok{library}\NormalTok{(kableExtra)}
-\FunctionTok{library}\NormalTok{(AnnotationHub) }
-\FunctionTok{library}\NormalTok{(edgeR)}
-\FunctionTok{library}\NormalTok{(patchwork)}
-\FunctionTok{library}\NormalTok{(colorspace)}
-\end{Highlighting}
-\end{Shaded}
 
 To begin running the \emph{sSNAPPY} workflow, we first load our expression matrix and define our sample-level metadata.
 Importantly, the row names of the expression matrix must be specified as EntrezGene IDs, for compatibility with pathway databases.
@@ -295,7 +316,7 @@ The treatment column within our metadata is expected to be a factor, with the re
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{logCPM }\OtherTok{\textless{}{-}} \FunctionTok{read\_tsv}\NormalTok{(here}\SpecialCharTok{::}\FunctionTok{here}\NormalTok{(}\StringTok{"data/logCPM.tsv"}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%}
-    \FunctionTok{column\_to\_rownames}\NormalTok{(}\StringTok{"entrezid"}\NormalTok{)}
+  \FunctionTok{column\_to\_rownames}\NormalTok{(}\StringTok{"entrezid"}\NormalTok{)}
 \NormalTok{sample\_meta }\OtherTok{\textless{}{-}} \FunctionTok{read\_tsv}\NormalTok{(here}\SpecialCharTok{::}\FunctionTok{here}\NormalTok{(}\StringTok{"data/sample\_meta.tsv"}\NormalTok{), }\AttributeTok{col\_types =} \StringTok{"cfccncnc"}\NormalTok{)}
 \FunctionTok{head}\NormalTok{(sample\_meta)}
 \end{Highlighting}
@@ -313,28 +334,11 @@ The treatment column within our metadata is expected to be a factor, with the re
 ## 6 EOC540_post-~ post-NACT EOC540     Omentum                62 IIIC    126 2
 \end{verbatim}
 
-\hypertarget{retrieval-of-pathway-topology}{%
-\subsection{Retrieval of Pathway Topology}\label{retrieval-of-pathway-topology}}
-
-Next, pathway topology information needs to be retrieved from a chosen database, and this is the only step requiring internet access.
-Using the Reactome database\citep{reactome2021} as an example, the retrieved topology information will be stored as a list where each element corresponds to a pathway and the numbers in the matrices encode gene-gene interactions.
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{gsTopology }\OtherTok{\textless{}{-}} \FunctionTok{retrieve\_topology}\NormalTok{(}\AttributeTok{database =} \StringTok{"reactome"}\NormalTok{, }\AttributeTok{species =} \StringTok{"hsapiens"}\NormalTok{)}
-\end{Highlighting}
-\end{Shaded}
-
-In addition to downloading topology matrices for all pathways, it is also possible to provide a restricted set of keywords for a targeted analysis.
-For example, passing the argument \texttt{keyword\ =\ c("metabolism",\ "estrogen")} would only return the subset of pathways which match either of these keywords.
-Multiple databases are also able to be searched by passing a vector of database names to the \texttt{database} argument.
-
 \hypertarget{score-single-sample-pathway-perturbation}{%
 \subsection{Score Single-Sample Pathway Perturbation}\label{score-single-sample-pathway-perturbation}}
 
-To compute the single-sample fold-changes (i.e.~logFC) required for the set of perturbation scores, samples must be `matched pairs' or nested, as would be found when analysing biopsies pre- vs post-treatment, or untreated vs treated cell lines nested by passage.
-The factor defining the nested structure is passed to the \texttt{weight\_ss\_fc()} function through the \texttt{groupBy} parameter.
-In our example dataset, pre- and post-treatment samples are matched by the ``patient\_id'' column.
+To compute the single-sample fold-changes (i.e.~logFC) required for the set of perturbation scores, samples must be `matched pairs' or nested, as discussed earlier, and treatments performed within each patient represents the nesting structure in this dataset
+The factor (patient\_id) defining the nested structure is passed to the \texttt{weight\_ss\_fc()} function through the \texttt{groupBy} parameter.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -346,13 +350,14 @@ In our example dataset, pre- and post-treatment samples are matched by the ``pat
 \end{Highlighting}
 \end{Shaded}
 
-The output of \texttt{weight\_ss\_fc()} is a \texttt{list} where one element is a matrix of weighted single-sample fold-changes (\(\delta_{ghi}^*\)), with rows corresponding to genes and columns to samples, and the other element is the vector of gene-wise weights (\(w_g\)) used to calculate the weighted log fold-change (\(\delta_{ghi}^*\)), as described above.
+The output of \texttt{weight\_ss\_fc()} is a \texttt{list} where one element is the matrix of weighted single-sample fold-changes (\(\delta_{ghi}^*\)), with rows corresponding to genes and columns to samples, and the other element is the vector of gene-wise weights (\(w_g\)) used to calculate the weighted log fold-change (\(\delta_{ghi}^*\)).
 By default, the string \texttt{ENTREZID:} is added to all row names of the \(\delta_{ghi}^*\) matrix to be compatible with the format Reactome pathway topologies are retrieved in.
 
 The matrix of \(\delta_{ghi}^*\) values are then passed to pathway topologies to compute gene-wise perturbation scores for all genes within a pathway, before being summed into a single score for each pathway.
-\texttt{raw\_gene\_pert()} returns a list, with each element containing the gene-level perturbation scores for a given pathway, with each matrix able to be used during downstream analysis to identify which genes play the most significant roles in each pathway, as demonstrated in later sections.
+The function \texttt{raw\_gene\_pert()} returns a initial list, with each element containing the gene-level perturbation scores for a given pathway.
+These matrices are able to be used during downstream analysis to identify which genes play the most significant roles in each pathway, as demonstrated in later sections.
 Pathway-level perturbation scores (\(S_{hip}\)) are then returned as a data.frame containing sample and gene-set names after calling \texttt{pathway\_pert()}.
-Pathways with zero perturbation scores across all genes and samples are dropped at this step.
+Pathways with zero perturbation scores across all genes and samples are automatically dropped at this step.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -379,12 +384,18 @@ The range of values obtained from each pathway will vary greatly due to the vari
 To determine the significance of individual scores and transform scores to ensure they are comparable across pathways, sSNAPPY utilises a sample-permutation strategy to estimate the null distributions of perturbation scores.
 Since sample labels will be permuted randomly to put samples into pseudo-pairs, sample metadata is not required by the \texttt{generate\_permuted\ \_scores()} function.
 All possible random pairs between samples will be sampled by default, unless otherwise specified.
-In this example dataset with a total of 22 samples, the full set of 462 (i.e.~22 \(\times\) 21) permuted scores will be computed for each pathway.
+In this example dataset with a total of 22 samples, the full set of 462 (i.e.~\(P = 22 \times 21\)) permuted scores will be computed for each pathway.
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{permutedScore }\OtherTok{\textless{}{-}} \FunctionTok{generate\_permuted\_scores}\NormalTok{(}
-    \FunctionTok{as.matrix}\NormalTok{(logCPM), }\AttributeTok{gsTopology =}\NormalTok{ gsTopology, }\AttributeTok{weight =}\NormalTok{ weightedFC}\SpecialCharTok{$}\NormalTok{weight}
+  \FunctionTok{as.matrix}\NormalTok{(logCPM), }
+  \DocumentationTok{\#\# I\textquotesingle{}m a bit unclear why there are 1609 pathways with non{-}zero genePertScore}
+  \DocumentationTok{\#\# but when we get the output here, there\textquotesingle{}s 1649. }
+  \DocumentationTok{\#\# Wouldn\textquotesingle{}t we drop the all{-}zero ones? Or didn\textquotesingle{}t we do that above?}
+  \DocumentationTok{\#\# Would my suggestion in the next line be a good strategy?}
+  \AttributeTok{gsTopology =}\NormalTok{ gsTopology[}\FunctionTok{names}\NormalTok{(genePertScore)], }
+  \AttributeTok{weight =}\NormalTok{ weightedFC}\SpecialCharTok{$}\NormalTok{weight}
 \NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
@@ -396,16 +407,20 @@ To demonstrate this, we randomly selected 6 pathways to demonstrate their quanti
 \begin{Highlighting}[]
 \FunctionTok{set.seed}\NormalTok{(}\DecValTok{123}\NormalTok{)}
 \NormalTok{random\_pathways }\OtherTok{\textless{}{-}}\NormalTok{ permutedScore }\SpecialCharTok{\%\textgreater{}\%}
-    \FunctionTok{keep}\NormalTok{(}\SpecialCharTok{\textasciitilde{}}\FunctionTok{all}\NormalTok{(.}\SpecialCharTok{!=}\DecValTok{0}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%}
-\NormalTok{    .[}\FunctionTok{sample}\NormalTok{(}\FunctionTok{seq\_along}\NormalTok{(.), }\DecValTok{6}\NormalTok{)] }\SpecialCharTok{\%\textgreater{}\%}
-    \FunctionTok{as.data.frame}\NormalTok{() }\SpecialCharTok{\%\textgreater{}\%}
-    \FunctionTok{pivot\_longer}\NormalTok{(}
-      \AttributeTok{cols =} \FunctionTok{everything}\NormalTok{(), }\AttributeTok{names\_to =} \StringTok{"gs\_name"}\NormalTok{, }\AttributeTok{values\_to =} \StringTok{"score"}
-\NormalTok{    ) }\SpecialCharTok{\%\textgreater{}\%}
-    \FunctionTok{mutate}\NormalTok{(}
-        \AttributeTok{gs\_name =} \FunctionTok{str\_replace\_all}\NormalTok{(gs\_name, }\StringTok{"}\SpecialCharTok{\textbackslash{}\textbackslash{}}\StringTok{."}\NormalTok{, }\StringTok{" "}\NormalTok{),}
-        \AttributeTok{gs\_name =} \FunctionTok{str\_remove\_all}\NormalTok{(gs\_name, }\StringTok{"reactome "}\NormalTok{)}
-\NormalTok{    ) }
+  \DocumentationTok{\#\# Why is this \textasciigrave{}keep()\textasciigrave{} statement here? }
+  \DocumentationTok{\#\# Didn\textquotesingle{}t we claim above that these are already dropped?}
+  \DocumentationTok{\#\# Wouldn\textquotesingle{}t it be sensible to add an argument \textasciigrave{}drop = TRUE/FALSE\textasciigrave{} which}
+  \DocumentationTok{\#\# automatically drops zero{-}score pathways}
+  \FunctionTok{keep}\NormalTok{(}\SpecialCharTok{\textasciitilde{}}\FunctionTok{all}\NormalTok{(. }\SpecialCharTok{!=} \DecValTok{0}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%} 
+\NormalTok{  .[}\FunctionTok{sample}\NormalTok{(}\FunctionTok{seq\_along}\NormalTok{(.), }\DecValTok{6}\NormalTok{)] }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{as.data.frame}\NormalTok{() }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{pivot\_longer}\NormalTok{(}
+    \AttributeTok{cols =} \FunctionTok{everything}\NormalTok{(), }\AttributeTok{names\_to =} \StringTok{"gs\_name"}\NormalTok{, }\AttributeTok{values\_to =} \StringTok{"score"}
+\NormalTok{  ) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}
+    \AttributeTok{gs\_name =} \FunctionTok{str\_replace\_all}\NormalTok{(gs\_name, }\StringTok{"}\SpecialCharTok{\textbackslash{}\textbackslash{}}\StringTok{."}\NormalTok{, }\StringTok{" "}\NormalTok{),}
+    \AttributeTok{gs\_name =} \FunctionTok{str\_remove\_all}\NormalTok{(gs\_name, }\StringTok{"reactome "}\NormalTok{)}
+\NormalTok{  ) }
 \NormalTok{p1 }\OtherTok{\textless{}{-}}\NormalTok{ random\_pathways }\SpecialCharTok{\%\textgreater{}\%}
   \FunctionTok{ggplot}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{sample =}\NormalTok{ score, }\AttributeTok{colour =}\NormalTok{ gs\_name)) }\SpecialCharTok{+}
   \FunctionTok{stat\_qq}\NormalTok{() }\SpecialCharTok{+}
@@ -414,24 +429,24 @@ To demonstrate this, we randomly selected 6 pathways to demonstrate their quanti
   \FunctionTok{labs}\NormalTok{(}\AttributeTok{y =} \StringTok{"Permuted Perturbation Score"}\NormalTok{, }\AttributeTok{x =} \StringTok{"Theoretical Quantiles"}\NormalTok{) }\SpecialCharTok{+}
   \FunctionTok{theme\_bw}\NormalTok{() }\SpecialCharTok{+}
   \FunctionTok{theme}\NormalTok{(}
-      \AttributeTok{legend.position =} \StringTok{"none"}\NormalTok{, }
-      \AttributeTok{text =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{14}\NormalTok{), }
-      \AttributeTok{strip.text =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{16}\NormalTok{))}
+    \AttributeTok{legend.position =} \StringTok{"none"}\NormalTok{, }
+    \AttributeTok{text =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{14}\NormalTok{), }
+    \AttributeTok{strip.text =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{16}\NormalTok{))}
 \NormalTok{p2 }\OtherTok{\textless{}{-}}\NormalTok{ random\_pathways }\SpecialCharTok{\%\textgreater{}\%}
-    \FunctionTok{ggplot}\NormalTok{(}\FunctionTok{aes}\NormalTok{(gs\_name, score, }\AttributeTok{fill =}\NormalTok{ gs\_name)) }\SpecialCharTok{+}
-    \FunctionTok{geom\_boxplot}\NormalTok{() }\SpecialCharTok{+}
-    \FunctionTok{scale\_x\_discrete}\NormalTok{(}\AttributeTok{labels =} \ControlFlowTok{function}\NormalTok{(x) }\FunctionTok{str\_wrap}\NormalTok{(x, }\AttributeTok{width =} \DecValTok{10}\NormalTok{)) }\SpecialCharTok{+}
-    \FunctionTok{scale\_fill\_discrete}\NormalTok{(}\AttributeTok{name =} \StringTok{"Gene{-}set Name"}\NormalTok{) }\SpecialCharTok{+} 
-    \FunctionTok{labs}\NormalTok{(}\AttributeTok{x =} \StringTok{"Pathway"}\NormalTok{, }\AttributeTok{y =} \StringTok{"Permuted Perturbation Score"}\NormalTok{) }\SpecialCharTok{+}
-    \FunctionTok{theme\_bw}\NormalTok{() }\SpecialCharTok{+} 
-    \FunctionTok{theme}\NormalTok{(}
-      \AttributeTok{legend.position =} \StringTok{"none"}\NormalTok{, }
-      \AttributeTok{axis.title =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{16}\NormalTok{), }
-      \AttributeTok{axis.text =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{14}\NormalTok{)}
-\NormalTok{    )}
+  \FunctionTok{ggplot}\NormalTok{(}\FunctionTok{aes}\NormalTok{(gs\_name, score, }\AttributeTok{fill =}\NormalTok{ gs\_name)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_boxplot}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{scale\_x\_discrete}\NormalTok{(}\AttributeTok{labels =} \ControlFlowTok{function}\NormalTok{(x) }\FunctionTok{str\_wrap}\NormalTok{(x, }\AttributeTok{width =} \DecValTok{10}\NormalTok{)) }\SpecialCharTok{+}
+  \FunctionTok{scale\_fill\_discrete}\NormalTok{(}\AttributeTok{name =} \StringTok{"Gene{-}set Name"}\NormalTok{) }\SpecialCharTok{+} 
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{x =} \StringTok{"Pathway"}\NormalTok{, }\AttributeTok{y =} \StringTok{"Permuted Perturbation Score"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{theme\_bw}\NormalTok{() }\SpecialCharTok{+} 
+  \FunctionTok{theme}\NormalTok{(}
+    \AttributeTok{legend.position =} \StringTok{"none"}\NormalTok{, }
+    \AttributeTok{axis.title =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{16}\NormalTok{), }
+    \AttributeTok{axis.text =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{14}\NormalTok{)}
+\NormalTok{  )}
 \NormalTok{(p1 }\SpecialCharTok{/}\NormalTok{ p2) }\SpecialCharTok{+}
-    \FunctionTok{plot\_annotation}\NormalTok{(}\AttributeTok{tag\_levels =} \StringTok{"A"}\NormalTok{) }\SpecialCharTok{+}
-    \FunctionTok{plot\_layout}\NormalTok{(}\AttributeTok{heights =} \FunctionTok{c}\NormalTok{(}\FloatTok{0.6}\NormalTok{, }\FloatTok{0.4}\NormalTok{))}
+  \FunctionTok{plot\_annotation}\NormalTok{(}\AttributeTok{tag\_levels =} \StringTok{"A"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{plot\_layout}\NormalTok{(}\AttributeTok{heights =} \FunctionTok{c}\NormalTok{(}\FloatTok{0.6}\NormalTok{, }\FloatTok{0.4}\NormalTok{))}
 \end{Highlighting}
 \end{Shaded}
 
@@ -489,35 +504,35 @@ For our use case here, where only one treatment group is present, no design matr
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{z\_matrix }\OtherTok{\textless{}{-}}\NormalTok{ normalisedScores }\SpecialCharTok{\%\textgreater{}\%}
-\NormalTok{    dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(robustZ, gs\_name, sample) }\SpecialCharTok{\%\textgreater{}\%}
-    \FunctionTok{pivot\_wider}\NormalTok{(}\AttributeTok{names\_from =} \StringTok{"sample"}\NormalTok{, }\AttributeTok{values\_from =} \StringTok{"robustZ"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
-    \FunctionTok{column\_to\_rownames}\NormalTok{(}\StringTok{"gs\_name"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
-    \FunctionTok{as.matrix}\NormalTok{()}
-\NormalTok{z\_fits }\OtherTok{\textless{}{-}} \FunctionTok{lmFit}\NormalTok{(z\_matrix, }\AttributeTok{design =} \FunctionTok{rep}\NormalTok{(}\DecValTok{1}\NormalTok{, }\FunctionTok{ncol}\NormalTok{(z\_matrix))}
-\NormalTok{                ) }\SpecialCharTok{\%\textgreater{}\%} 
+\NormalTok{  dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(robustZ, gs\_name, sample) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{pivot\_wider}\NormalTok{(}\AttributeTok{names\_from =} \StringTok{"sample"}\NormalTok{, }\AttributeTok{values\_from =} \StringTok{"robustZ"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{column\_to\_rownames}\NormalTok{(}\StringTok{"gs\_name"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{as.matrix}\NormalTok{()}
+\NormalTok{z\_fits }\OtherTok{\textless{}{-}}\NormalTok{ z\_matrix }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{lmFit}\NormalTok{(}\AttributeTok{design =} \FunctionTok{rep}\NormalTok{(}\DecValTok{1}\NormalTok{, }\FunctionTok{ncol}\NormalTok{(.))) }\SpecialCharTok{\%\textgreater{}\%} 
   \FunctionTok{eBayes}\NormalTok{()}
 \NormalTok{top\_table }\OtherTok{\textless{}{-}} \FunctionTok{topTable}\NormalTok{(z\_fits, }\AttributeTok{number =} \ConstantTok{Inf}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
   \FunctionTok{as\_tibble}\NormalTok{(}\AttributeTok{rownames =} \StringTok{"gs\_name"}\NormalTok{)}
-\NormalTok{sigPathway }\OtherTok{\textless{}{-}}\NormalTok{ top\_table }\SpecialCharTok{\%\textgreater{}\%}
-\NormalTok{    dplyr}\SpecialCharTok{::}\FunctionTok{filter}\NormalTok{(adj.P.Val }\SpecialCharTok{\textless{}} \FloatTok{0.05}\NormalTok{)}
+\NormalTok{sigPathway }\OtherTok{\textless{}{-}}\NormalTok{ dplyr}\SpecialCharTok{::}\FunctionTok{filter}\NormalTok{(top\_table, adj.P.Val }\SpecialCharTok{\textless{}} \FloatTok{0.05}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
-121 out of the 1094 tested Reactome pathways have an FDR \textless{} 0.05 in the moderated t-test, hence were considered to be significantly perturbed at the group level. The Table \ref{tab:Table1} presents the top 10 significantly inhibited and activated pathways, along with their predicted direction of change.
+121 out of the 1094 tested Reactome pathways have an FDR \textless{} 0.05 in the moderated t-test, and were considered to be significantly perturbed at the group level.
+Table \ref{tab:Table1} presents the top 10 significantly inhibited and activated pathways, along with their predicted direction of change.
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{table1 }\OtherTok{\textless{}{-}}\NormalTok{ sigPathway }\SpecialCharTok{\%\textgreater{}\%}
-    \FunctionTok{mutate}\NormalTok{(}
-        \AttributeTok{Direction =} \FunctionTok{ifelse}\NormalTok{(logFC }\SpecialCharTok{\textless{}} \DecValTok{0}\NormalTok{, }\StringTok{"Inhibited"}\NormalTok{, }\StringTok{"Activated"}\NormalTok{), }
-        \AttributeTok{gs\_name =} \FunctionTok{str\_remove\_all}\NormalTok{(gs\_name, }\StringTok{"reactome."}\NormalTok{)}
-\NormalTok{    ) }\SpecialCharTok{\%\textgreater{}\%}
-    \FunctionTok{split}\NormalTok{(}\AttributeTok{f =}\NormalTok{ .}\SpecialCharTok{$}\NormalTok{Direction) }\SpecialCharTok{\%\textgreater{}\%}
-    \FunctionTok{lapply}\NormalTok{(}\ControlFlowTok{function}\NormalTok{(x)x[}\DecValTok{1}\SpecialCharTok{:}\DecValTok{10}\NormalTok{,]) }\SpecialCharTok{\%\textgreater{}\%}
-    \FunctionTok{bind\_rows}\NormalTok{() }\SpecialCharTok{\%\textgreater{}\%}
-\NormalTok{    dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(}
+  \FunctionTok{mutate}\NormalTok{(}
+    \AttributeTok{Direction =} \FunctionTok{ifelse}\NormalTok{(logFC }\SpecialCharTok{\textless{}} \DecValTok{0}\NormalTok{, }\StringTok{"Inhibited"}\NormalTok{, }\StringTok{"Activated"}\NormalTok{), }
+    \AttributeTok{gs\_name =} \FunctionTok{str\_remove\_all}\NormalTok{(gs\_name, }\StringTok{"reactome."}\NormalTok{)}
+\NormalTok{  ) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{split}\NormalTok{(}\AttributeTok{f =}\NormalTok{ .}\SpecialCharTok{$}\NormalTok{Direction) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{lapply}\NormalTok{(dplyr}\SpecialCharTok{::}\NormalTok{slice, }\DecValTok{1}\SpecialCharTok{:}\DecValTok{10}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{bind\_rows}\NormalTok{() }\SpecialCharTok{\%\textgreater{}\%}
+\NormalTok{  dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(}
     \AttributeTok{Pathway =}\NormalTok{ gs\_name, }\AttributeTok{Change =}\NormalTok{ logFC,  P.Value, }\AttributeTok{FDR =}\NormalTok{ adj.P.Val, Direction}
-\NormalTok{)}
+\NormalTok{  )}
 \end{Highlighting}
 \end{Shaded}
 
@@ -561,11 +576,11 @@ For enrichment analysis in the original study\citep{Zhang2022}, unsupervised clu
 Clusters were then annotated manually by performing pathway enrichment testing on cluster marker genes.
 Two clusters, associated with proliferative DNA repair signatures and stress-related markers, contained significantly higher numbers of post-chemotherapy cells than pre-treatment ones\citep{Zhang2022}.
 The representative pathways enriched in the stress-associated cluster were \emph{IL6-mediated signaling events}, \emph{TNF signaling pathway}, and \emph{cellular responses to stress}, and the other post-chemotherapy cell dominated cluster in the original study was enriched for pathways associated with cell proliferation and DNA repair, such as the Cell cycle, DNA repair, Homology directed repair (HDR) through homologous recombination, and the Fanconi anaemia pathway.
-\emph{sSNAPPY} not only detected many significant perturbed pathways that are highly concordant with the pathways reported to be enriched in the original study but also predicted their directions of changes.
-For example, the DNT repair pathway \emph{SUMOylation of DNA damage response and repair proteins} pathway was predicted to be significantly inhibited by the chemotherapy.
-In comparison, we also performed pathway analysis on this example dataset using two non-topological-based approaches: 1) \emph{GSEA} basing on the ranking statistics derived from the differentially expression (DE) analysis and 2) the rotation gene set testing for linear models (\emph{roast}), which does not rely on DE analysis results.
-Although the \emph{SUMOylation of DNA damage response and repair proteins} pathway was also defined as significantly impacted by the chemotherapy using the two non-topological-based methods(see extended data), the directionality of pathway perturbation can only be predicted by \emph{sSNAPPY}.
-The existing topology-based method \emph{SPIA}, on the other hand, only considers pathways containing differentially expressed genes, hence has a lower sensitivity in detecting pathway perturbation and was only able to capture changes in immune-related processes(see extended data).
+\emph{sSNAPPY} not only detected many significant perturbed pathways that are highly concordant with the pathways reported to be enriched in the original study but also includes an expected direction of change in activity.
+For example, the DNT repair pathway \emph{SUMOylation of DNA damage response and repair proteins} pathway was predicted to be significantly inhibited by chemotherapy.
+In comparison, we also performed pathway analysis on this example dataset using two non-topological-based approaches: 1) \emph{GSEA} basing on the ranking statistics derived from the differential expression (DE) analysis and 2) the rotation gene set testing for linear models (\emph{roast}), which does not rely on DE analysis results.
+The pathway \emph{SUMOylation of DNA damage response and repair proteins} was also defined as significantly impacted by the chemotherapy using the two non-topological-based methods(see extended data), however, the expected direction of pathway perturbation can only be obtained using \emph{sSNAPPY}.
+The existing topology-based method \emph{SPIA}, on the other hand, only considers pathways containing differentially expressed genes, hence has a lower sensitivity in detecting pathway perturbation and was only able to capture changes in immune-related processes (see extended data).
 
 The single-sample nature of the \emph{sSNAPPY} output also provides great flexibility: apart from considering all treated samples as biological replicates, users may elect to perform an analysis incorporating other phenotypic traits which may impact a patients responses to chemotherapy, such as disease stages or tumour grades.
 To perform this step using the moderated t-statistic strategy and extend the above analysis, an appropriate design matrix is the only additional requirement for model-fitting, or alternatively, samples may be subset as may be appropriate.
@@ -584,19 +599,15 @@ In the following example, we'll inspect the 10 most significantly inhibited and 
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{sigPathway }\OtherTok{\textless{}{-}}\NormalTok{ sigPathway }\SpecialCharTok{\%\textgreater{}\%}
-\NormalTok{    dplyr}\SpecialCharTok{::}\FunctionTok{rename}\NormalTok{(}\AttributeTok{Z =}\NormalTok{ logFC) }\SpecialCharTok{\%\textgreater{}\%} 
-    \FunctionTok{mutate}\NormalTok{(}
-        \AttributeTok{status =} \FunctionTok{ifelse}\NormalTok{(}
-\NormalTok{            Z }\SpecialCharTok{\textgreater{}} \DecValTok{0}\NormalTok{, }\StringTok{"Activated"}\NormalTok{, }\StringTok{"Inhibited"}\NormalTok{), }
-        \AttributeTok{status =} \FunctionTok{ifelse}\NormalTok{(}
-\NormalTok{            adj.P.Val }\SpecialCharTok{\textless{}} \FloatTok{0.05}\NormalTok{, status, }\StringTok{"Unchanged"}
-\NormalTok{        ), }
-        \AttributeTok{status =} \FunctionTok{as.factor}\NormalTok{(status),}
-        \StringTok{\textasciigrave{}}\AttributeTok{{-}log10(p)}\StringTok{\textasciigrave{}} \OtherTok{=} \SpecialCharTok{{-}}\FunctionTok{log10}\NormalTok{(P.Value)}
-\NormalTok{    )  }\SpecialCharTok{\%\textgreater{}\%} 
-    \FunctionTok{split}\NormalTok{(}\AttributeTok{f =}\NormalTok{ .}\SpecialCharTok{$}\NormalTok{status) }\SpecialCharTok{\%\textgreater{}\%}
-    \FunctionTok{lapply}\NormalTok{(}\ControlFlowTok{function}\NormalTok{(x)x[}\DecValTok{1}\SpecialCharTok{:}\DecValTok{10}\NormalTok{,]) }\SpecialCharTok{\%\textgreater{}\%}
-    \FunctionTok{bind\_rows}\NormalTok{()}
+\NormalTok{  dplyr}\SpecialCharTok{::}\FunctionTok{rename}\NormalTok{(}\AttributeTok{Z =}\NormalTok{ logFC) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}
+    \AttributeTok{status =} \FunctionTok{ifelse}\NormalTok{(Z }\SpecialCharTok{\textgreater{}} \DecValTok{0}\NormalTok{, }\StringTok{"Activated"}\NormalTok{, }\StringTok{"Inhibited"}\NormalTok{), }
+    \AttributeTok{status =} \FunctionTok{as.factor}\NormalTok{(status),}
+    \StringTok{\textasciigrave{}}\AttributeTok{{-}log10(p)}\StringTok{\textasciigrave{}} \OtherTok{=} \SpecialCharTok{{-}}\FunctionTok{log10}\NormalTok{(P.Value)}
+\NormalTok{  )  }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{split}\NormalTok{(}\AttributeTok{f =}\NormalTok{ .}\SpecialCharTok{$}\NormalTok{status) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{lapply}\NormalTok{(dplyr}\SpecialCharTok{::}\NormalTok{slice, }\DecValTok{1}\SpecialCharTok{:}\DecValTok{10}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{bind\_rows}\NormalTok{()}
 \end{Highlighting}
 \end{Shaded}
 
@@ -610,7 +621,10 @@ In the following example, we'll inspect the 10 most significantly inhibited and 
 \NormalTok{) }\SpecialCharTok{+}
   \FunctionTok{scale\_colour\_manual}\NormalTok{(}\AttributeTok{values =} \FunctionTok{c}\NormalTok{(}\StringTok{"red"}\NormalTok{, }\StringTok{"blue"}\NormalTok{, }\StringTok{"grey30"}\NormalTok{)) }\SpecialCharTok{+}
   \FunctionTok{theme\_void}\NormalTok{() }\SpecialCharTok{+}
-  \FunctionTok{theme}\NormalTok{(}\AttributeTok{legend.text =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{10}\NormalTok{)) }
+  \FunctionTok{theme}\NormalTok{(}
+    \AttributeTok{legend.text =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{10}\NormalTok{),}
+    \AttributeTok{legend.position =} \FunctionTok{c}\NormalTok{(}\FloatTok{0.95}\NormalTok{, }\FloatTok{0.95}\NormalTok{)}
+\NormalTok{  ) }
 \FunctionTok{set.seed}\NormalTok{(}\DecValTok{123}\NormalTok{)}
 \NormalTok{p2 }\OtherTok{\textless{}{-}} \FunctionTok{plot\_gs\_network}\NormalTok{(}
   \AttributeTok{normalisedScores =}\NormalTok{ sigPathway,}
@@ -623,7 +637,8 @@ In the following example, we'll inspect the 10 most significantly inhibited and 
   \FunctionTok{theme\_void}\NormalTok{() }\SpecialCharTok{+}
   \FunctionTok{theme}\NormalTok{(}
     \AttributeTok{legend.text =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{8}\NormalTok{),}
-    \AttributeTok{legend.title =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{10}\NormalTok{)}
+    \AttributeTok{legend.title =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{10}\NormalTok{),}
+    \AttributeTok{legend.position =} \FunctionTok{c}\NormalTok{(}\FloatTok{0.95}\NormalTok{, }\FloatTok{0.95}\NormalTok{)}
 \NormalTok{  ) }
 \NormalTok{p1 }\SpecialCharTok{/}\NormalTok{ p2 }\SpecialCharTok{+} \FunctionTok{plot\_annotation}\NormalTok{(}\AttributeTok{tag\_levels =} \StringTok{"A"}\NormalTok{) }
 \end{Highlighting}
@@ -635,13 +650,13 @@ In the following example, we'll inspect the 10 most significantly inhibited and 
 
 }
 
-\caption{Significantly perturbed Reactome pathways identified among post-chemotherapy samples using sSNAPPY, colored by (A) predicted direction of changes and (B) -log10(p-values). Only the 10 most significantly inhibited and 10 most significantly activated pathways are shown.}\label{fig:Figure4}
+\caption{Significantly perturbed Reactome pathways identified among post-chemotherapy samples using sSNAPPY, colored by (A) predicted direction of change and (B) -log10(p). Only the 10 most significantly inhibited and 10 most significantly activated pathways are shown.}\label{fig:Figure4}
 \end{figure}
 
 Any advantage of visualising pathway analysis results using network structures is that it allows the identification of highly connected pathways (Figure \ref{fig:Figure4}).
 To summarise related pathways and further enable interpretation, we can apply community detection\citep{Newman2004} to group related pathways into `communities'.
 sSNAPPY's \texttt{plot\_community()} function is a ``one-stop shop'' for applying a community detection algorithm of the user's choice to the network structure and annotating identified communities by the most common pathway category, denoting the main biological processes perturbed in that community.
-The most recent categories for both KEGG and Reactome databases were curated from their respective website (\href{https://www.genome.jp/kegg/pathway.html}{KEGG website} \& \href{https://reactome.org/PathwayBrowser/\#/R-HSA-1632852&PATH=R-HSA-9612973}{Reactome website}) and included as parts of sSNAPPY.
+The most recent categories for both KEGG and Reactome databases were curated from their respective website (\href{https://www.genome.jp/kegg/pathway.html}{KEGG website} \& \href{https://reactome.org/PathwayBrowser/\#/R-HSA-1632852\&PATH=R-HSA-9612973}{Reactome website}) and included as parts of sSNAPPY.
 Analyses involving other pathway databases may require user-provided pathway categories.
 When the information about pathway categorisations is available, annotation of pathway communities is automatically completed.
 In the current dataset, the Louvain method was applied to the network of biological pathways and revealed five primary communities: 1) Adaptive Immune System; 2) Cell Cycle, Mitotic; 3) Chromatin modifying enzymes \& Epigenetic regulation of gene expression; 4) Post-translational protein modification and 5) The citric acid (TCA) cycle and respiratory electron transport (Figure \ref{fig:Figure5}).
@@ -649,35 +664,24 @@ The largest community formed was the Adaptive Immune System pathway, indicating 
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\#load(system.file("extdata", "gsAnnotation\_df\_wiki.rda", package = "sSNAPPY"))}
+\FunctionTok{load}\NormalTok{(}\FunctionTok{system.file}\NormalTok{(}\StringTok{"extdata"}\NormalTok{, }\StringTok{"gsAnnotation\_df\_reactome.rda"}\NormalTok{, }\AttributeTok{package =} \StringTok{"sSNAPPY"}\NormalTok{))}
 \FunctionTok{set.seed}\NormalTok{(}\DecValTok{456}\NormalTok{)}
 \FunctionTok{plot\_community}\NormalTok{(}
-    \AttributeTok{normalisedScores =}\NormalTok{ sigPathway,}
-    \AttributeTok{gsTopology =}\NormalTok{ gsTopology, }
-    \AttributeTok{gsAnnotation =}\NormalTok{ gsAnnotation\_df\_wiki,}
-    \AttributeTok{colorBy =} \StringTok{"status"}\NormalTok{,}
-    \AttributeTok{lb\_size =} \DecValTok{3}
+  \AttributeTok{normalisedScores =}\NormalTok{ sigPathway,}
+  \AttributeTok{gsTopology =}\NormalTok{ gsTopology, }
+  \AttributeTok{gsAnnotation =}\NormalTok{ gsAnnotation\_df\_reactome,}
+  \AttributeTok{colorBy =} \StringTok{"status"}\NormalTok{,}
+  \AttributeTok{lb\_size =} \DecValTok{3}
 \NormalTok{) }\SpecialCharTok{+}
-    \FunctionTok{scale\_colour\_manual}\NormalTok{(}\AttributeTok{values =} \FunctionTok{c}\NormalTok{(}\StringTok{"red"}\NormalTok{, }\StringTok{"blue"}\NormalTok{)) }\SpecialCharTok{+}
-    \FunctionTok{scale\_fill\_viridis\_d}\NormalTok{() }\SpecialCharTok{+}
-    \FunctionTok{scale\_x\_continuous}\NormalTok{(}\AttributeTok{expand =} \FunctionTok{expansion}\NormalTok{(}\FloatTok{0.25}\NormalTok{)) }\SpecialCharTok{+}
-    \FunctionTok{scale\_y\_continuous}\NormalTok{(}\AttributeTok{expand =} \FunctionTok{expansion}\NormalTok{(}\FloatTok{0.25}\NormalTok{)) }\SpecialCharTok{+}
-    \FunctionTok{guides}\NormalTok{(}\AttributeTok{fill =} \ConstantTok{FALSE}\NormalTok{) }\SpecialCharTok{+}
-    \FunctionTok{theme\_void}\NormalTok{() }\SpecialCharTok{+}
-    \FunctionTok{theme}\NormalTok{(}
-        \AttributeTok{legend.text =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{8}\NormalTok{),}
-        \AttributeTok{legend.title =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{10}\NormalTok{)}
-\NormalTok{    )}
+  \FunctionTok{scale\_colour\_manual}\NormalTok{(}\AttributeTok{values =} \FunctionTok{c}\NormalTok{(}\StringTok{"red"}\NormalTok{, }\StringTok{"blue"}\NormalTok{)) }\SpecialCharTok{+}
+  \FunctionTok{scale\_fill\_viridis\_d}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{scale\_x\_continuous}\NormalTok{(}\AttributeTok{expand =} \FunctionTok{expansion}\NormalTok{(}\FloatTok{0.2}\NormalTok{)) }\SpecialCharTok{+}
+  \FunctionTok{scale\_y\_continuous}\NormalTok{(}\AttributeTok{expand =} \FunctionTok{expansion}\NormalTok{(}\FloatTok{0.2}\NormalTok{)) }\SpecialCharTok{+}
+  \FunctionTok{guides}\NormalTok{(}\AttributeTok{fill =} \StringTok{"none"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{theme\_void}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{theme}\NormalTok{(}\AttributeTok{legend.position =} \FunctionTok{c}\NormalTok{(}\FloatTok{0.9}\NormalTok{, }\FloatTok{0.1}\NormalTok{))}
 \end{Highlighting}
 \end{Shaded}
-
-\begin{verbatim}
-## Warning: The `<scale>` argument of `guides()` cannot be `FALSE`. Use "none" instead as
-## of ggplot2 3.3.4.
-## This warning is displayed once every 8 hours.
-## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
-## generated.
-\end{verbatim}
 
 \begin{figure}
 
@@ -688,7 +692,7 @@ The largest community formed was the Adaptive Immune System pathway, indicating 
 \caption{Significantly perturbed Reactome pathways identified among post-chemotherapy samples using sSNAPPY, colored by community structures detected through the louvain algorithm. The main biological processes associated with the top 20 pathways that wer most perturbed by the chemotherapy were shown.}\label{fig:Figure5}
 \end{figure}
 
-A key advantage of sSNAPPY is that it does not require the prior identification of differentially expressed genes, as this is a common challenge within clinical datasets.
+A key advantage of sSNAPPY is that it does not require the prior identification of differentially expressed genes, as this is a common challenge faced within clinical datasets.
 However, knowing which genes are implicated in the perturbation of pathways, particularly those which influence multiple pathways, can provide valuable insights for hypothesis generation and the underlying biological mechanisms.
 Therefore, sSNAPPY provides another visualisation feature called \texttt{plot\_gs2gene}, which enables the inclusion of select genes from each pathway using network structures.
 Users can provide a vector of fold-change estimates to visualise genes within pathways, showing their estimated change in expression.
@@ -700,7 +704,6 @@ An alternative strategy will be to select genes based on test-statistics, howeve
 \begin{Highlighting}[]
 \NormalTok{meanFC }\OtherTok{\textless{}{-}} \FunctionTok{rowMeans}\NormalTok{(weightedFC}\SpecialCharTok{$}\NormalTok{weighted\_logFC) }\SpecialCharTok{/}\NormalTok{ weightedFC}\SpecialCharTok{$}\NormalTok{weight}
 \NormalTok{top500 }\OtherTok{\textless{}{-}} \FunctionTok{rank}\NormalTok{(}\DecValTok{1}\SpecialCharTok{/}\FunctionTok{abs}\NormalTok{(meanFC)) }\SpecialCharTok{\textless{}=} \DecValTok{500}
-\NormalTok{dirFC }\OtherTok{\textless{}{-}} \FunctionTok{ifelse}\NormalTok{(meanFC }\SpecialCharTok{\textgreater{}} \DecValTok{0}\NormalTok{, }\StringTok{"Up{-}Regulated"}\NormalTok{, }\StringTok{"Down{-}Regulated"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -730,24 +733,24 @@ A data.frame converting Entrez IDs to Ensembl gene names was derived from the En
 \begin{Highlighting}[]
 \FunctionTok{set.seed}\NormalTok{(}\DecValTok{123}\NormalTok{)}
 \FunctionTok{plot\_gs2gene}\NormalTok{(}
-    \AttributeTok{normalisedScores =}\NormalTok{ sigPathway, }
-    \AttributeTok{gsTopology =}\NormalTok{ gsTopology, }
-    \AttributeTok{colorGsBy =} \StringTok{"status"}\NormalTok{, }
-    \AttributeTok{mapEntrezID =}\NormalTok{ entrez2name, }
-    \AttributeTok{geneFC =}\NormalTok{ meanFC[top500], }
-    \AttributeTok{layout =} \StringTok{"kk"}\NormalTok{,}
-    \AttributeTok{edgeAlpha =} \DecValTok{1}\NormalTok{, }
-    \AttributeTok{gsNameSize =} \DecValTok{4}\NormalTok{, }
-    \AttributeTok{gsNodeSize =} \DecValTok{4}\NormalTok{,}
-    \AttributeTok{geneNameSize =} \DecValTok{4}
+  \AttributeTok{normalisedScores =}\NormalTok{ sigPathway, }
+  \AttributeTok{gsTopology =}\NormalTok{ gsTopology, }
+  \AttributeTok{colorGsBy =} \StringTok{"status"}\NormalTok{, }
+  \AttributeTok{mapEntrezID =}\NormalTok{ entrez2name, }
+  \AttributeTok{geneFC =}\NormalTok{ meanFC[top500], }
+  \AttributeTok{layout =} \StringTok{"kk"}\NormalTok{,}
+  \AttributeTok{edgeAlpha =} \DecValTok{1}\NormalTok{, }
+  \AttributeTok{gsNameSize =} \DecValTok{4}\NormalTok{, }
+  \AttributeTok{gsNodeSize =} \DecValTok{4}\NormalTok{,}
+  \AttributeTok{geneNameSize =} \DecValTok{4}
 \NormalTok{) }\SpecialCharTok{+}
-    \FunctionTok{scale\_colour\_gradient2}\NormalTok{(}\AttributeTok{name =} \StringTok{"logFC"}\NormalTok{) }\SpecialCharTok{+}
-    \FunctionTok{scale\_fill\_manual}\NormalTok{(}\AttributeTok{values =} \FunctionTok{c}\NormalTok{(}\StringTok{"red"}\NormalTok{, }\StringTok{"blue"}\NormalTok{, }\StringTok{"grey50"}\NormalTok{)) }\SpecialCharTok{+}
-    \FunctionTok{theme\_void}\NormalTok{() }\SpecialCharTok{+}
-    \FunctionTok{theme}\NormalTok{(}
-        \AttributeTok{legend.text =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{12}\NormalTok{),}
-        \AttributeTok{legend.title =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{12}\NormalTok{)}
-\NormalTok{    )}
+  \FunctionTok{scale\_colour\_gradient2}\NormalTok{(}\AttributeTok{name =} \StringTok{"logFC"}\NormalTok{, }\AttributeTok{low =} \StringTok{"navyblue"}\NormalTok{, }\AttributeTok{high =} \StringTok{"red"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{scale\_fill\_manual}\NormalTok{(}\AttributeTok{values =} \FunctionTok{c}\NormalTok{(}\StringTok{"forestgreen"}\NormalTok{, }\StringTok{"darkorange"}\NormalTok{)) }\SpecialCharTok{+}
+  \FunctionTok{theme\_void}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{theme}\NormalTok{(}
+    \AttributeTok{legend.text =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{12}\NormalTok{),}
+    \AttributeTok{legend.title =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{12}\NormalTok{)}
+\NormalTok{  )}
 \end{Highlighting}
 \end{Shaded}
 
@@ -767,18 +770,20 @@ To further investigate a specific pathway and elucidate which are the key genes 
 This function takes advantage of the plotting capabilities of the \texttt{pheatmap} package\citep{pheatmap}, and as such, other annotations are also able to be easily included, such as patient response, or which general ranges the pathway-level normalised Z-Scores are in.
 Inclusion of the Z-Scores enabled the assessment of the level of perturbation predicted in each sample and key genes involved (Figure \ref{fig:Figure7}).
 
+I've tried to make this easier for people to just change the pathway name \& have also used some standard Z-score cutoffs which can then be used for any pathway as they're based on N(0, 1) instead of the data.
+
 \begin{Shaded}
 \begin{Highlighting}[]
+\NormalTok{path\_name }\OtherTok{\textless{}{-}} \StringTok{"SUMOylation of DNA replication proteins"}
+\NormalTok{z\_breaks }\OtherTok{\textless{}{-}} \FunctionTok{round}\NormalTok{(}\FunctionTok{qnorm}\NormalTok{(}\FunctionTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\FloatTok{0.025}\NormalTok{, }\FloatTok{0.05}\NormalTok{, }\FloatTok{0.25}\NormalTok{, }\FloatTok{0.75}\NormalTok{, }\FloatTok{0.95}\NormalTok{, }\FloatTok{0.975}\NormalTok{, }\DecValTok{1}\NormalTok{)), }\DecValTok{2}\NormalTok{)}
 \NormalTok{annotation\_df }\OtherTok{\textless{}{-}}\NormalTok{ normalisedScores }\SpecialCharTok{\%\textgreater{}\%}
-\NormalTok{    dplyr}\SpecialCharTok{::}\FunctionTok{filter}\NormalTok{(gs\_name }\SpecialCharTok{==} \StringTok{"reactome.SUMOylation of DNA replication proteins"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
-    \FunctionTok{left\_join}\NormalTok{(dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(sample\_meta, sample,  CRS), }\AttributeTok{by =} \StringTok{"sample"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
-    \FunctionTok{mutate}\NormalTok{(}
-      \StringTok{\textasciigrave{}}\AttributeTok{Z Range}\StringTok{\textasciigrave{}} \OtherTok{=} \FunctionTok{cut}\NormalTok{(}
-\NormalTok{        robustZ, }\AttributeTok{breaks =} \FunctionTok{seq}\NormalTok{(}\SpecialCharTok{{-}}\DecValTok{2}\NormalTok{, }\DecValTok{2}\NormalTok{, }\AttributeTok{length.out =} \DecValTok{6}\NormalTok{), }\AttributeTok{include.lowest =} \ConstantTok{TRUE}
-\NormalTok{      ), }
-      \AttributeTok{sample =} \FunctionTok{str\_remove\_all}\NormalTok{(sample, }\StringTok{"\_post{-}NACT"}\NormalTok{)}
-\NormalTok{    ) }\SpecialCharTok{\%\textgreater{}\%} 
-\NormalTok{    dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(sample, }\StringTok{\textasciigrave{}}\AttributeTok{Z Range}\StringTok{\textasciigrave{}}\NormalTok{, CRS)  }
+\NormalTok{  dplyr}\SpecialCharTok{::}\FunctionTok{filter}\NormalTok{(}\FunctionTok{str\_detect}\NormalTok{(gs\_name, path\_name)) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{left\_join}\NormalTok{(dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(sample\_meta, sample,  CRS), }\AttributeTok{by =} \StringTok{"sample"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}
+    \StringTok{\textasciigrave{}}\AttributeTok{Z Range}\StringTok{\textasciigrave{}} \OtherTok{=} \FunctionTok{cut}\NormalTok{(robustZ, }\AttributeTok{breaks =}\NormalTok{ z\_breaks, }\AttributeTok{include.lowest =} \ConstantTok{TRUE}\NormalTok{), }
+    \AttributeTok{sample =} \FunctionTok{str\_remove\_all}\NormalTok{(sample, }\StringTok{"\_post{-}NACT"}\NormalTok{)}
+\NormalTok{  ) }\SpecialCharTok{\%\textgreater{}\%} 
+\NormalTok{  dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(sample, }\StringTok{\textasciigrave{}}\AttributeTok{Z Range}\StringTok{\textasciigrave{}}\NormalTok{, CRS)  }
 \NormalTok{z\_levels }\OtherTok{\textless{}{-}} \FunctionTok{levels}\NormalTok{(annotation\_df}\SpecialCharTok{$}\StringTok{\textasciigrave{}}\AttributeTok{Z Range}\StringTok{\textasciigrave{}}\NormalTok{)}
 \NormalTok{annotation\_col }\OtherTok{\textless{}{-}} \FunctionTok{list}\NormalTok{(}
   \AttributeTok{CRS =} \FunctionTok{c}\NormalTok{(}\StringTok{"3"} \OtherTok{=} \StringTok{"\#4B0055"}\NormalTok{, }\StringTok{"2"} \OtherTok{=} \StringTok{"\#009B95"}\NormalTok{, }\StringTok{"1"} \OtherTok{=} \StringTok{"\#FDE333"}\NormalTok{),}
@@ -787,19 +792,22 @@ Inclusion of the Z-Scores enabled the assessment of the level of perturbation pr
 \NormalTok{    z\_levels}
 \NormalTok{  )}
 \NormalTok{)}
+\NormalTok{mat }\OtherTok{\textless{}{-}}\NormalTok{ genePertScore }\SpecialCharTok{\%\textgreater{}\%}
+\NormalTok{  .[[}\FunctionTok{which}\NormalTok{(}\FunctionTok{str\_detect}\NormalTok{(}\FunctionTok{names}\NormalTok{(.), path\_name))]] }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{set\_colnames}\NormalTok{(}\FunctionTok{str\_remove\_all}\NormalTok{(}\FunctionTok{colnames}\NormalTok{(.), }\StringTok{"\_post{-}NACT"}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%}
+\NormalTok{  .[}\FunctionTok{rownames}\NormalTok{(.) }\SpecialCharTok{\%in\%} \FunctionTok{rownames}\NormalTok{(weightedFC}\SpecialCharTok{$}\NormalTok{weighted\_logFC),]}
+\NormalTok{max\_pert }\OtherTok{\textless{}{-}} \FunctionTok{max}\NormalTok{(}\FunctionTok{abs}\NormalTok{(}\FunctionTok{range}\NormalTok{(mat))) }\SpecialCharTok{*} \FloatTok{1.01}
 \FunctionTok{plot\_gene\_contribution}\NormalTok{(}
-    \AttributeTok{genePertMatr =}\NormalTok{ genePertScore}\SpecialCharTok{$}\StringTok{\textasciigrave{}}\AttributeTok{reactome.SUMOylation of DNA replication proteins}\StringTok{\textasciigrave{}} \SpecialCharTok{\%\textgreater{}\%}
-        \FunctionTok{set\_colnames}\NormalTok{(}\FunctionTok{str\_remove\_all}\NormalTok{(}\FunctionTok{colnames}\NormalTok{(.), }\StringTok{"\_post{-}NACT"}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%}
-\NormalTok{        .[}\FunctionTok{rownames}\NormalTok{(.) }\SpecialCharTok{\%in\%} \FunctionTok{rownames}\NormalTok{(weightedFC}\SpecialCharTok{$}\NormalTok{weighted\_logFC),],}
-    \AttributeTok{color =} \FunctionTok{rev}\NormalTok{(colorspace}\SpecialCharTok{::}\FunctionTok{divergex\_hcl}\NormalTok{(}\DecValTok{100}\NormalTok{, }\AttributeTok{palette =} \StringTok{"RdBu"}\NormalTok{)),}
-    \AttributeTok{breaks =} \FunctionTok{seq}\NormalTok{(}\SpecialCharTok{{-}}\FloatTok{0.002}\NormalTok{, }\FloatTok{0.002}\NormalTok{, }\AttributeTok{length.out =} \DecValTok{100}\NormalTok{), }
-    \AttributeTok{annotation\_df =}\NormalTok{  annotation\_df, }
-    \AttributeTok{topGene =} \DecValTok{15}\NormalTok{, }\AttributeTok{filterBy =} \StringTok{"mean"}\NormalTok{, }
-    \AttributeTok{mapEntrezID =}\NormalTok{ entrez2name,}
-    \AttributeTok{annotation\_colors =}\NormalTok{ annotation\_col,}
-    \AttributeTok{cutree\_rows =} \DecValTok{2}\NormalTok{,}
-    \AttributeTok{cutree\_cols =} \DecValTok{2}\NormalTok{,}
-    \AttributeTok{main =} \StringTok{"SUMOylation of DNA replication proteins [REACTOME]"}
+  \AttributeTok{genePertMatr =}\NormalTok{ mat,}
+  \AttributeTok{color =} \FunctionTok{rev}\NormalTok{(colorspace}\SpecialCharTok{::}\FunctionTok{divergex\_hcl}\NormalTok{(}\DecValTok{100}\NormalTok{, }\AttributeTok{palette =} \StringTok{"RdBu"}\NormalTok{)),}
+  \AttributeTok{breaks =} \FunctionTok{seq}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{max\_pert, max\_pert, }\AttributeTok{length.out =} \DecValTok{100}\NormalTok{), }
+  \AttributeTok{annotation\_df =}\NormalTok{  annotation\_df, }
+  \AttributeTok{annotation\_colors =}\NormalTok{ annotation\_col,}
+  \AttributeTok{filterBy =} \StringTok{"mean"}\NormalTok{, }
+  \AttributeTok{mapEntrezID =}\NormalTok{ entrez2name,}
+  \AttributeTok{cutree\_rows =} \DecValTok{2}\NormalTok{,}
+  \AttributeTok{cutree\_cols =} \DecValTok{2}\NormalTok{,}
+  \AttributeTok{main =} \FunctionTok{paste}\NormalTok{(path\_name, }\StringTok{"[REACTOME]"}\NormalTok{)}
 \NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
@@ -810,7 +818,7 @@ Inclusion of the Z-Scores enabled the assessment of the level of perturbation pr
 
 }
 
-\caption{Gene-level perturbation scores for the top 15 genes in the "SUMOylation of DNA replication proteins" pathway ranked by average contribution to the perturbation score. Samples were annotated by patient chemotherapy response score (CRS), along with the range for sample-level Z-scores as a guide to sample-specific pathway perturbation. The genes CDCA8, TOP2A, UBE2I, BIRC5 were identified as possible key drivers of the inhibition of of this pathway.}\label{fig:Figure7}
+\caption{Gene-level perturbation scores for the top 10 genes in the "SUMOylation of DNA replication proteins" pathway ranked by average contribution to the perturbation score. Samples were annotated by patient chemotherapy response score (CRS), along with the range for sample-level Z-scores as a guide to sample-specific pathway perturbation. The genes CDCA8, TOP2A, UBE2I, BIRC5 were identified as possible key drivers of the inhibition of of this pathway.}\label{fig:Figure7}
 \end{figure}
 
 From this heatmap we can identify candidate genes which are likely to be making the biggest contribution to the inhibition of the SUMOylation of DNA replication proteins pathway upon chemotherapy,
@@ -818,47 +826,35 @@ such as \emph{CDCA8}, \emph{TOP2A}, \emph{UBE2I}, \emph{BIRC5} (Figure \ref{fig:
 The four genes are all associated with tumour progression and invasiveness and have been studied in the context of ovarian cancer.
 Both ubiquitin conjugating enzyme E2I (\emph{UBE2I}) and cell division cycle associated 8 (\emph{CDCA8}) genes have been identified as oncogenes in numerous cancer types, including ovarian cancer\citep{Dong2013, qi2021}.
 Notably, in ovarian cancer, elevated \emph{UBE2I} expression has been associated with poorer clinical outcomes\citep{Zou2020}.
-Similarly, expression of \emph{BIRC5} that encodes human survivin protein is also a predictor of inferior ovarian cancer patient outcome\citep{Gasowska-Bajger2021}.
-Lastly, Topoisomerase II\(\alpha\) (\emph{TOP2A}), which encodes DNA topoisomerase, has been identified as a gene that promotes the tumorigenesis of HGSOC tumours\citep{Gao2020}.
+Similarly, \emph{BIRC5} encodes a protein which is also a predictor of inferior ovarian cancer patient outcome\citep{Gasowska-Bajger2021}.
+Lastly, \emph{Topoisomerase II}\(\alpha\) (\emph{TOP2A}), which encodes DNA topoisomerase, has been identified as a gene that promotes the tumorigenesis of HGSOC tumours\citep{Gao2020}.
 Aligning with the report by Chekerov et al.\citep{Chekerov2006} that expression of \emph{TOP2A} in ovarian tumour cells decreases as a response to chemotherapy\citep{Chekerov2006}, the median single-sample logFC of \emph{TOP2A} was negative among the HGSOC post-chemotherapy samples included in this study (Figure \ref{fig:Figure8}).
 The other three selected potential driver genes (\emph{CDCA8}, \emph{UBE2I}, and \emph{BIRC5}) also had negative median single-sample logFC in post-chemotherapy samples (Figure \ref{fig:Figure8}).
 Considering the implication of these four genes in ovarian cancer, decreases in their expression after chemotherapy treatment potentially indicate a favorable response to therapy.
-By annotating the heatmap of gene-wise perturbation scores with patient chemotherapy response score (CRS), we noticed that the strongest inhibition of the SUMOylation of DNA replication proteins pathway was in the patient with the highest CRS score of 3 (i.e sample EOC443).
+
+By annotating the heatmap of gene-wise perturbation scores with patient chemotherapy response score (CRS), we also noted that the strongest inhibition of the SUMOylation of DNA replication proteins pathway was in the patient with the highest CRS score of 3 (i.e sample EOC443).
 CRS is an indicator of the relative length of progression-free survival after chemotherapy, where a score of 3 represents the longest survival.
 Hence inhibition of the SUMOylation of DNA replication proteins pathway might mediate favorable response to chemotherapy in ovarian cancer patients.
 We acknowledge that our analysis was limited to a small number of patients, which restricts the generalizability of the results.
-However, despite this limitation, these findings underscore the strength of sSNAPPY as a valuable tool for hypothesis generation.
+However, despite this limitation, these findings underscore the strength of sSNAPPY as a valuable tool for hypothesis generation not otherwise possible.
 Not only can sSNAPPY predict directional pathway perturbations, but it also enables the identification of key driver genes underlying these perturbations.
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{gene2plot }\OtherTok{\textless{}{-}}\NormalTok{ entrez2name }\SpecialCharTok{\%\textgreater{}\%}
-\NormalTok{    dplyr}\SpecialCharTok{::}\FunctionTok{filter}\NormalTok{(}
-\NormalTok{        mapTo }\SpecialCharTok{\%in\%} \FunctionTok{c}\NormalTok{(}\StringTok{"CDCA8"}\NormalTok{, }\StringTok{"TOP2A"}\NormalTok{, }\StringTok{"UBE2I"}\NormalTok{, }\StringTok{"BIRC5"}\NormalTok{)}
-\NormalTok{    )}
+\NormalTok{  dplyr}\SpecialCharTok{::}\FunctionTok{filter}\NormalTok{(mapTo }\SpecialCharTok{\%in\%} \FunctionTok{c}\NormalTok{(}\StringTok{"CDCA8"}\NormalTok{, }\StringTok{"TOP2A"}\NormalTok{, }\StringTok{"UBE2I"}\NormalTok{, }\StringTok{"BIRC5"}\NormalTok{))}
 \NormalTok{(weightedFC}\SpecialCharTok{$}\NormalTok{weighted\_logFC }\SpecialCharTok{/}\NormalTok{ weightedFC}\SpecialCharTok{$}\NormalTok{weight) }\SpecialCharTok{\%\textgreater{}\%}
-    \FunctionTok{as.data.frame}\NormalTok{() }\SpecialCharTok{\%\textgreater{}\%}
-    \FunctionTok{rownames\_to\_column}\NormalTok{(}\StringTok{"entrezid"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
-    \FunctionTok{pivot\_longer}\NormalTok{(}
-        \AttributeTok{cols =} \SpecialCharTok{{-}}\StringTok{"entrezid"}\NormalTok{, }
-        \AttributeTok{names\_to =} \StringTok{"sample"}\NormalTok{, }
-        \AttributeTok{values\_to =} \StringTok{"ssFC"}
-\NormalTok{    ) }\SpecialCharTok{\%\textgreater{}\%}
-    \FunctionTok{left\_join}\NormalTok{(entrez2name) }\SpecialCharTok{\%\textgreater{}\%}
-\NormalTok{    dplyr}\SpecialCharTok{::}\FunctionTok{filter}\NormalTok{(mapTo }\SpecialCharTok{\%in\%} \FunctionTok{c}\NormalTok{(}\StringTok{"CDCA8"}\NormalTok{, }\StringTok{"TOP2A"}\NormalTok{, }\StringTok{"UBE2I"}\NormalTok{, }\StringTok{"BIRC5"}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%}
-    \FunctionTok{ggplot}\NormalTok{(}
-        \FunctionTok{aes}\NormalTok{(mapTo, ssFC, }\AttributeTok{fill =}\NormalTok{ mapTo)}
-\NormalTok{    ) }\SpecialCharTok{+}
-    \FunctionTok{geom\_boxplot}\NormalTok{() }\SpecialCharTok{+}
-    \FunctionTok{labs}\NormalTok{(}
-        \AttributeTok{x =} \StringTok{""}\NormalTok{, }
-        \AttributeTok{fill =} \StringTok{"Gene"}
-\NormalTok{    ) }\SpecialCharTok{+}
-    \FunctionTok{geom\_hline}\NormalTok{(}\AttributeTok{yintercept =} \DecValTok{0}\NormalTok{, }\AttributeTok{color =} \StringTok{"red"}\NormalTok{, }\AttributeTok{linetype =} \StringTok{"dashed"}\NormalTok{) }\SpecialCharTok{+}
-    \FunctionTok{theme\_bw}\NormalTok{() }\SpecialCharTok{+}
-    \FunctionTok{theme}\NormalTok{(}
-        \AttributeTok{text =} \FunctionTok{element\_text}\NormalTok{(}\AttributeTok{size =} \DecValTok{10}\NormalTok{)}
-\NormalTok{    )}
+  \FunctionTok{as.data.frame}\NormalTok{() }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{rownames\_to\_column}\NormalTok{(}\StringTok{"entrezid"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{pivot\_longer}\NormalTok{(}
+    \AttributeTok{cols =} \SpecialCharTok{{-}}\FunctionTok{all\_of}\NormalTok{(}\StringTok{"entrezid"}\NormalTok{), }\AttributeTok{names\_to =} \StringTok{"sample"}\NormalTok{, }\AttributeTok{values\_to =} \StringTok{"ssFC"}
+\NormalTok{  ) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{inner\_join}\NormalTok{(gene2plot, }\AttributeTok{by =} \StringTok{"entrezid"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ggplot}\NormalTok{(}\FunctionTok{aes}\NormalTok{(mapTo, ssFC, }\AttributeTok{fill =}\NormalTok{ mapTo)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_boxplot}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{x =} \StringTok{""}\NormalTok{,  }\AttributeTok{fill =} \StringTok{"Gene"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{geom\_hline}\NormalTok{(}\AttributeTok{yintercept =} \DecValTok{0}\NormalTok{, }\AttributeTok{color =} \StringTok{"red"}\NormalTok{, }\AttributeTok{linetype =} \StringTok{"dashed"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{theme\_bw}\NormalTok{() }
 \end{Highlighting}
 \end{Shaded}
 
@@ -874,11 +870,11 @@ Not only can sSNAPPY predict directional pathway perturbations, but it also enab
 \hypertarget{discussion}{%
 \section{Discussion}\label{discussion}}
 
-In conclusion, we have presented and provided a demonstration for the R/Bioconductor package \emph{sSNAPPY} which offers a novel single-sample pathway perturbation testing approach, tailored for heterogeneous tissue samples in matched-pair design.
+In conclusion, we have presented and provided a demonstration for the R/Bioconductor package \emph{sSNAPPY} which offers a novel single-sample pathway perturbation testing approach, tailored for heterogeneous tissue samples where experiments are performed using a matched-pair design.
 In contrast to many common enrichment methods, sSNAPPY uses pathway topology information to compute perturbation scores which indicate the likely impact on the activity of a pathway, by predicting direction of change and enabling deeper characterisation of biological responses.
 By applying sSNAPPY to a public scRNA-seq data collected before and after HGSOC patients were subjected to chemotherapy, we demonstrated its ability to detect significant pathway perturbations of various interesting biological processes consistent with, and far beyond what was shown in the original study.
-Whilst initially conceived for bulk-RNA studies, this demonstration has also provided clear applicability to scRNA datasets.
-\emph{sSNAPPY} addresses the limitations of alternative strategies which fail to account for gene-gene interactions encoded by pathway topologies and are unable to predict the directionality of pathway activities.
+Whilst initially conceived for bulk-RNA studies, this demonstration has also provided clear applicability to scRNA datasets when using using pseudo-bulk approaches
+\emph{sSNAPPY} addresses the limitations of alternative strategies which fail to account for gene-gene interactions encoded by pathway topologies and are unable to predict the direction of pathway activities, nor the cumulative effect of expression change across multiple genes.
 In addition, the single-sample nature of the method can be utilised to address the increasing demand for personalised medicine.
 Through identifying shared and divergent responses between individuals, \emph{sSNAPPY} can provide valuable insights into the heterogeneous responses across clinical samples.
 Overall, we believe sSNAPPY represents a valuable addition to the existing body of pathway analysis methods.
