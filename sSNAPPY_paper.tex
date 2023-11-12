@@ -81,9 +81,9 @@
 \setlength{\parskip}{6pt plus 2pt minus 1pt}
 
 
-\usepackage{endfloat}
 \usepackage{booktabs}
 \usepackage{longtable}
+\usepackage{endfloat}
 \usepackage{booktabs}
 \usepackage{longtable}
 \usepackage{array}
@@ -132,7 +132,7 @@ RNA-seq, pathway enrichment, R package, topology, KEGG, Reactome, scRNA-seq
 
 \textbf{Bioconductor version}: 3.18
 
-\textbf{Package}: 1.6.0
+\textbf{Package}: 1.6.1
 
 \hypertarget{introduction}{%
 \section{Introduction}\label{introduction}}
@@ -878,12 +878,17 @@ Not only can sSNAPPY predict directional pathway perturbations, but it also enab
 \hypertarget{comparison-to-other-pathway-enrichment-methods}{%
 \subsection{Comparison to other pathway enrichment methods}\label{comparison-to-other-pathway-enrichment-methods}}
 
-In comparison, we also performed pathway analysis on this example dataset using two non-topological-based approaches: 1) \emph{GSEA}\citep{Subramanian2005-lx} basing on the ranking statistics derived from the differential expression (DE) analysis and 2) the rotation gene set testing for linear models (\emph{roast})\citep{wu2010roast}, which does not rely on DE analysis results.
-While there was large overlap in the significantly impacted pathways revealed by \emph{GSEA}, \emph{roast} and \emph{sSNAPPY}, \emph{sSNAPPY} identified processes that could not be detected using the other two methods.\\
-Additionally, the pathway \emph{SUMOylation of DNA damage response and repair proteins} was defined as significantly impacted by the chemotherapy using all 3 methods, however, the expected direction of pathway perturbation can only be obtained using \emph{sSNAPPY}.
-We also applied the existing group-level topology-based method \emph{SPIA}\citep{Tarca2009} to the example dataset.
-Since \emph{SPIA} only consideres pathways containing at least one differentially expressed genes, it has a lower sensitivity in detecting pathway perturbation and was only able to capture changes in immune-related processes.
-Details on the implementation of the other three methods and the comparison of results are available on \href{https://zenodo.org/doi/10.5281/zenodo.10059951}{10.5281/zenodo.10059952}.
+We also performed pathway analysis on this example dataset using three other methods to compare their performances against \emph{sSNAPPY}.
+Details on the implementation of those methods and the comparisons performed are available on \href{https://zenodo.org/doi/10.5281/zenodo.10059951}{10.5281/zenodo.10059952}.
+The first method applied was the existing group-level topology-based method \emph{SPIA}\citep{Tarca2009}.
+Since \emph{SPIA} only considers pathways containing at least one differentially expressed genes, it has a lower sensitivity and was not able to detect any significant pathway perturbation in this dataset where very few genes were differentially expressed.
+Additionally, we also performed pathway analysis on this example dataset using two non-topological-based approaches: 1) \emph{GSEA}\citep{Subramanian2005-lx} basing on the ranking statistics derived from the differential expression analysis and 2) the fast version of rotation gene set testing for linear models (\emph{roast})\citep{wu2010roast} \emph{fry}, which does not rely on DE analysis results.
+While there was large overlap in the significantly impacted pathways revealed by \emph{GSEA}, \emph{fry} and \emph{sSNAPPY}, \emph{sSNAPPY} identified processes that could not be detected using the other two methods.\\
+Moreover, although both \emph{GSEA} and \emph{fry} try to infer the directionality of change in pathway activity, they only base it on whether genes from a pathway are more enriched in up- or down-regulated genes, ignoring the fact that genes can have both an activator and a repressor role in biological processes.
+For example, the pathway \textbf{Terminal pathway of complement} was considered as significantly inhibited by \emph{sSNAPPY} but significant activated by \emph{fry}.
+\emph{fry} identified this pathway as activated as the only expressed gene in this pathway \emph{CLU} was significantly up-regulated among post-chemotherapy samples.
+However, the topology of this pathway indicates that \emph{CLU} is a suppressor of the process, which \emph{sSNAPPY} was able to account for.
+Through comparing \emph{sSNAPPY} against existing pathway analysis methods, both topological and non-topological, the strength and novelty of \emph{sSNAPPY} were demonstrated.
 
 \hypertarget{discussion}{%
 \section{Discussion}\label{discussion}}

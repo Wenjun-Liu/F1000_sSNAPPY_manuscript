@@ -29,10 +29,10 @@ bibliography: bibliography.bib
 csl: vancouver.csl
 output: BiocWorkflowTools::f1000_article
 
-header-includes:
-  - \usepackage{endfloat}    
+header-includes: 
   - \usepackage{booktabs}
   - \usepackage{longtable}
+  - \usepackage{endfloat}
 ---
 
 **R version**: `r R.version.string`
@@ -637,12 +637,19 @@ gene2plot <- entrez2name %>%
 
 ## Comparison to other pathway enrichment methods
 
-In comparison, we also performed pathway analysis on this example dataset using two non-topological-based approaches: 1) *GSEA*[@Subramanian2005-lx] basing on the ranking statistics derived from the differential expression (DE) analysis and 2) the rotation gene set testing for linear models (*roast*)[@wu2010roast], which does not rely on DE analysis results.
-While there was large overlap in the significantly impacted pathways revealed by *GSEA*, *roast* and *sSNAPPY*, *sSNAPPY* identified processes that could not be detected using the other two methods.  
-Additionally, the pathway *SUMOylation of DNA damage response and repair proteins* was defined as significantly impacted by the chemotherapy using all 3 methods, however, the expected direction of pathway perturbation can only be obtained using *sSNAPPY*.
-We also applied the existing group-level topology-based method *SPIA*[@Tarca2009] to the example dataset.
-Since *SPIA* only consideres pathways containing at least one differentially expressed genes, it has a lower sensitivity in detecting pathway perturbation and was only able to capture changes in immune-related processes.
-Details on the implementation of the other three methods and the comparison of results are available on [10.5281/zenodo.10059952](https://zenodo.org/doi/10.5281/zenodo.10059951).
+We also performed pathway analysis on this example dataset using three other methods to compare their performances against *sSNAPPY*.
+<!-- I will update the zenodo link afterwards.  -->
+Details on the implementation of those methods and the comparisons performed are available on [10.5281/zenodo.10059952](https://zenodo.org/doi/10.5281/zenodo.10059951).
+The first method applied was the existing group-level topology-based method *SPIA*[@Tarca2009].
+Since *SPIA* only considers pathways containing at least one differentially expressed genes, it has a lower sensitivity and was not able to detect any significant pathway perturbation in this dataset where very few genes were differentially expressed.
+Additionally, we also performed pathway analysis on this example dataset using two non-topological-based approaches: 1) *GSEA*[@Subramanian2005-lx] basing on the ranking statistics derived from the differential expression analysis and 2) the fast version of rotation gene set testing for linear models (*roast*)[@wu2010roast] *fry*, which does not rely on DE analysis results.
+While there was large overlap in the significantly impacted pathways revealed by *GSEA*, *fry* and *sSNAPPY*, *sSNAPPY* identified processes that could not be detected using the other two methods.  
+Moreover, although both *GSEA* and *fry* try to infer the directionality of change in pathway activity, they only base it on whether genes from a pathway are more enriched in up- or down-regulated genes, ignoring the fact that genes can have both an activator and a repressor role in biological processes.
+For example, the pathway **Terminal pathway of complement** was considered as significantly inhibited by *sSNAPPY* but significant activated by *fry*.
+*fry* identified this pathway as activated as the only expressed gene in this pathway *CLU* was significantly up-regulated among post-chemotherapy samples. 
+However, the topology of this pathway indicates that *CLU* is a suppressor of the process, which *sSNAPPY* was able to account for.
+Through comparing *sSNAPPY* against existing pathway analysis methods, both topological and non-topological, the strength and novelty of *sSNAPPY* were demonstrated.
+
 
 # Discussion
 
