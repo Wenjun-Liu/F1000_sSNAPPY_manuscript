@@ -128,11 +128,11 @@ RNA-seq, pathway enrichment, R package, topology, KEGG, Reactome, scRNA-seq
 \clearpage
 \pagestyle{main}
 
-\textbf{R version}: R version 4.3.0 (2023-04-21)
+\textbf{R version}: R version 4.3.1 (2023-06-16)
 
 \textbf{Bioconductor version}: 3.18
 
-\textbf{Package}: 1.6.1
+\textbf{Package}: 1.6.0
 
 \hypertarget{introduction}{%
 \section{Introduction}\label{introduction}}
@@ -143,8 +143,8 @@ However, databases such as the Kyoto Encyclopaedia of Genes and Genomes (KEGG)\c
 
 To fully utilise that additional information, the latest generation of pathway analysis approaches include many which are topology-based such as SPIA\citep{Tarca2009}, DEGraph\citep{Jacob2012}, NetGSA\citep{Ma2016} and PRS\citep{Ibrahim2012}, as well as others which explicitly model inter-gene correlations\citep{Wu2012}.
 Despite differences in the null hypotheses tested across these approaches, overall, they have demonstrated enhanced sensitivity and specificity due to their abilities to take gene-gene interconnections into account\citep{Nguyen2019-va, Ma2019}.
-Nevertheless, most topology-based methods focus only on comparing activities of pathways between two treatment groups and cannot be used to score individual samples (Figure \ref{fig:Figure1}).
-However, in heterogenous data where more than one factor may be influencing observations\citep{Hanzelmann2013}, incorporating scoring within paired samples may be desirable and may be able to reveal more nuanced insights.
+Nevertheless, most topology-based methods focus only on comparing the activity of pathways between two treatment groups and cannot be used to score individual samples (Figure \ref{fig:Figure1}).
+However, in heterogeneous data where more than one factor may be influencing observations\citep{Hanzelmann2013}, incorporating scoring within paired samples may be desirable and may be able to reveal more nuanced insights.
 To address this gap, we present a Single-Sample directioNAl Pathway Perturbation analYsis methodology called \href{https://bioconductor.org/packages/sSNAPPY}{\emph{sSNAPPY}}, available as an R/Bioconductor package.
 This article defines how \emph{sSNAPPY} computes changes in gene expression within paired samples, and propagates this through gene-set topologies to predict the perturbation in pathway activities within paired samples, before providing summarised results across an entire dataset (Figure \ref{fig:Figure1}).
 The practical usage of the \emph{sSNAPPY} R/Bioconductor package is illustrated through the analysis of a public scRNA-seq dataset using the pseudo-bulk strategy.
@@ -165,7 +165,7 @@ The practical usage of the \emph{sSNAPPY} R/Bioconductor package is illustrated 
 \subsection{Implementation}\label{implementation}}
 
 \emph{sSNAPPY} is an R package that has been reviewed and published on the open-source bioinformatics software platform \href{https://bioconductor.org/packages/release/bioc/html/*sSNAPPY*.html}{Bioconductor} with all source code available via GitHub.
-The methodology itself is topology-based, designed to compute directional, single-sample, pathway perturbation scores for gene expression datasets with a matched-pair, or nested design (eg. samples collected before and after treatment).
+The methodology itself is topology-based, designed to compute directional, single-sample, pathway perturbation scores for gene expression datasets with a matched-pair, or nested design (e.g.~samples collected before and after treatment).
 Common examples of such designs may include treated vs control samples within cell-line passages, or across multiple treatments applied to tissue samples from within a specific donor.
 This allows for the detection of pathway perturbations within all samples from a treatment group, but also within individual samples.
 The only data required to run \emph{sSNAPPY}, is a log-transformed expression matrix (e.g.~logCPM) with matching sample metadata describing treatment groups and the nested structure.
@@ -231,7 +231,7 @@ Apart from assessing whether a pathway's activity changed significantly within a
 The single-sample nature of \emph{sSNAPPY}'s pathway perturbation scores is particularly helpful for datasets with complex experimental designs or known confounding factors as these can also be incorporated into the final regression models.
 
 The Bioconductor package graphite\citep{Sales2012} provides functions that can be used to retrieve pathway topologies from a database and convert topology information to adjacency matrices.
-In order to streamline this process we have implemented a convenience function, where users only need to provide the name of the desired database and species to retrieve all topology information in the format required by the scoring algorithm with the correct type of gene identifiers (ie. Entrez ID).
+In order to streamline this process we have implemented a convenience function, where users only need to provide the name of the desired database and species to retrieve all topology information in the format required by the scoring algorithm with the correct type of gene identifiers (i.e.~EntrezID).
 Importantly, we noted that graphite\citep{Sales2012} retrieves topology matrices in varied orientations from different databases; in KEGG pathways, columns represent downstream relationships, whereas in Reactome and WikiPathway, columns indicate upstream regulation.''
 However, this discrepancy is not taken account of in the \texttt{runSPIA} function of graphite.
 We resolve the issue by transposing the topology matrices retrieved from the Reactome and WikiPathway as part of our convenience function.
@@ -666,7 +666,7 @@ In the following example, we'll inspect the 10 most significantly inhibited and 
 An advantage of visualising pathway analysis results using network structures is that it allows the identification of highly connected pathways (Figure \ref{fig:Figure4}).
 To summarise related pathways and further enable interpretation, we can apply community detection\citep{Newman2004} to group related pathways into `communities'.
 sSNAPPY's \texttt{plot\_community()} function is a ``one-stop shop'' for applying a community detection algorithm of the user's choice to the network structure and annotating identified communities by the most common pathway category, denoting the main biological processes perturbed in that community.
-The most recent categories for both KEGG and Reactome databases were curated from their respective website (\href{https://www.genome.jp/kegg/pathway.html}{KEGG website} \& \href{https://reactome.org/PathwayBrowser/\#/R-HSA-1632852&PATH=R-HSA-9612973}{Reactome website}) and included as parts of sSNAPPY.
+The most recent categories for both KEGG and Reactome databases were curated from their respective website (\href{https://www.genome.jp/kegg/pathway.html}{KEGG website} \& \href{https://reactome.org/PathwayBrowser/\#/R-HSA-1632852\&PATH=R-HSA-9612973}{Reactome website}) and included as parts of sSNAPPY.
 Analyses involving other pathway databases may require user-provided pathway categories.
 When the information about pathway categorisations is available, annotation of pathway communities is automatically completed.
 In the current dataset, the Louvain method was applied to the network of biological pathways and revealed five primary communities: 1) Adaptive Immune System; 2) Cell Cycle, Mitotic; 3) Chromatin modifying enzymes \& Epigenetic regulation of gene expression; 4) Post-translational protein modification and 5) The citric acid (TCA) cycle and respiratory electron transport (Figure \ref{fig:Figure5}).
@@ -717,8 +717,8 @@ An alternative strategy will be to select genes based on test-statistics, howeve
 \end{Highlighting}
 \end{Shaded}
 
-Since Reactome pathway topologies were retrieved using Entrez IDs, users can provide a data.frame mapping Entrez IDs to their chosen identifiers, such as gene names, through the mapEntrezID parameter, in order to make the visualisations more informative.
-A data.frame converting Entrez IDs to Ensembl gene names was derived from the Ensembl Release 101\citep{Ensembl2022} and has been made available as part of the package and serves as a helpful template for future mapping operations by users.
+Since Reactome pathway topologies were retrieved using EntrezIDs, users can provide a data.frame mapping EntrezIDs to their chosen identifiers, such as gene names, through the mapEntrezID parameter, in order to make the visualisations more informative.
+A data.frame converting EntrezIDs to Ensembl gene names was derived from the Ensembl Release 101\citep{Ensembl2022} and has been made available as part of the package and serves as a helpful template for future mapping operations by users.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -878,17 +878,20 @@ Not only can sSNAPPY predict directional pathway perturbations, but it also enab
 \hypertarget{comparison-to-other-pathway-enrichment-methods}{%
 \subsection{Comparison to other pathway enrichment methods}\label{comparison-to-other-pathway-enrichment-methods}}
 
-We also performed pathway analysis on this example dataset using three other methods to compare their performances against \emph{sSNAPPY}.
+We also performed pathway analysis on this example dataset using three other methods to compare their performance against \emph{sSNAPPY}.
 Details on the implementation of those methods and the comparisons performed are available on \href{https://zenodo.org/doi/10.5281/zenodo.10059951}{10.5281/zenodo.10059952}.
-The first method applied was the existing group-level topology-based method \emph{SPIA}\citep{Tarca2009}.
-Since \emph{SPIA} only considers pathways containing at least one differentially expressed genes, it has a lower sensitivity and was not able to detect any significant pathway perturbation in this dataset where very few genes were differentially expressed.
-Additionally, we also performed pathway analysis on this example dataset using two non-topological-based approaches: 1) \emph{GSEA}\citep{Subramanian2005-lx} basing on the ranking statistics derived from the differential expression analysis and 2) the fast version of rotation gene set testing for linear models (\emph{roast})\citep{wu2010roast} \emph{fry}, which does not rely on DE analysis results.
-While there was large overlap in the significantly impacted pathways revealed by \emph{GSEA}, \emph{fry} and \emph{sSNAPPY}, \emph{sSNAPPY} identified processes that could not be detected using the other two methods.\\
-Moreover, although both \emph{GSEA} and \emph{fry} try to infer the directionality of change in pathway activity, they only base it on whether genes from a pathway are more enriched in up- or down-regulated genes, ignoring the fact that genes can have both an activator and a repressor role in biological processes.
-For example, the pathway \textbf{Terminal pathway of complement} was considered as significantly inhibited by \emph{sSNAPPY} but significant activated by \emph{fry}.
-\emph{fry} identified this pathway as activated as the only expressed gene in this pathway \emph{CLU} was significantly up-regulated among post-chemotherapy samples.
-However, the topology of this pathway indicates that \emph{CLU} is a suppressor of the process, which \emph{sSNAPPY} was able to account for.
-Through comparing \emph{sSNAPPY} against existing pathway analysis methods, both topological and non-topological, the strength and novelty of \emph{sSNAPPY} were demonstrated.
+We initially performed an analysis using SPIA\citep{Tarca2009}.
+However, SPIA relies on differentially expressed genes and given that only 49 genes were identified in our analysis using conventional differential expression analysis, no pathways were considered to be significant using SPIA.
+Additionally, we also performed pathway analysis on this example dataset using two non-topological-based approaches: 1) \emph{GSEA}\citep{Subramanian2005-lx} using ranking statistics derived from differential expression analysis and 2) the fast version of rotation gene set testing for linear models (\emph{roast})\citep{wu2010roast} \emph{fry}, neither of which rely on the presence of differentially expressed genes,
+Importantly, both methods test for signal within genes at either the up-regulated, or down-regulated extremes.
+Of the 219 gene sets considered associated with down-regulated genes by \emph{GSEA}, 61 were considered as inhibited using \emph{sSNAPPY.}
+Similarly, of the 21 pathways considered as associated with up-regulated genes by \emph{GSEA}, 5 were considered as activated using \emph{sSNAPPY.}
+\emph{GSEA} produced a further 173 gene-sets not detected by \emph{sSNAPPY}, whilst \emph{sSNAPPY} produced an additional 54 pathways of interest.
+
+Analysis using \emph{fry} yielded 117 pathways associated with down-regulated genes, with \emph{sSNAPPY} considering 36 of these as inhibited.
+However, 5 were considered as activated under \emph{sSNAPPY}, highlighting that up-regulation of some genes may lead to inhibition of a pathway, which is vital information not available under \emph{fry.}
+Similarly, for the 13 pathways associated with up-regulation under \emph{fry}, two were considered activated by \emph{sSNAPPY}, with one considered inhibited.
+A further 88 pathways were detected as being of interest under \emph{fry}, without being considered as activated or inhibited by \emph{sSNAPPY}, with 77 pathways uniquely detected under \emph{sSNAPPY.}
 
 \hypertarget{discussion}{%
 \section{Discussion}\label{discussion}}
@@ -900,7 +903,7 @@ Whilst initially conceived for bulk-RNA studies, this demonstration has also pro
 \emph{sSNAPPY} addresses the limitations of alternative strategies which fail to account for gene-gene interactions encoded by pathway topologies and are unable to predict the direction of pathway activities, nor the cumulative effect of expression change across multiple genes.
 In addition, the single-sample nature of the method can be utilised to address the increasing demand for personalised medicine.
 Through identifying shared and divergent responses between individuals, \emph{sSNAPPY} can provide valuable insights into the heterogeneous responses across clinical samples.
-Overall, we believe sSNAPPY represents a valuable addition to the existing body of pathway analysis methods.
+Overall, we believe \emph{sSNAPPY} represents a valuable addition to the existing body of pathway analysis methods.
 
 \hypertarget{data-availability}{%
 \section{Data availability}\label{data-availability}}
