@@ -49,8 +49,8 @@ However, databases such as the Kyoto Encyclopaedia of Genes and Genomes (KEGG)[@
 
 To fully utilise that additional information, the latest generation of pathway analysis approaches include many which are topology-based such as SPIA[@Tarca2009], DEGraph[@Jacob2012], NetGSA[@Ma2016] and PRS[@Ibrahim2012], as well as others which explicitly model inter-gene correlations[@Wu2012].
 Despite differences in the null hypotheses tested across these approaches, overall, they have demonstrated enhanced sensitivity and specificity due to their abilities to take gene-gene interconnections into account[@Nguyen2019-va; @Ma2019]. 
-Nevertheless, most topology-based methods focus only on comparing activities of pathways between two treatment groups and cannot be used to score individual samples (Figure \@ref(fig:Figure1)). 
-However, in heterogenous data where more than one factor may be influencing observations[@Hanzelmann2013], incorporating scoring within paired samples may be desirable and may be able to reveal more nuanced insights. 
+Nevertheless, most topology-based methods focus only on comparing the activity of pathways between two treatment groups and cannot be used to score individual samples (Figure \@ref(fig:Figure1)). 
+However, in heterogeneous data where more than one factor may be influencing observations[@Hanzelmann2013], incorporating scoring within paired samples may be desirable and may be able to reveal more nuanced insights. 
 To address this gap, we present a Single-Sample directioNAl Pathway Perturbation analYsis methodology called [*sSNAPPY*](https://bioconductor.org/packages/sSNAPPY), available as an R/Bioconductor package.
 This article defines how *sSNAPPY* computes changes in gene expression within paired samples, and propagates this through gene-set topologies to predict the perturbation in pathway activities within paired samples, before providing summarised results across an entire dataset (Figure \@ref(fig:Figure1)). 
 The practical usage of the *sSNAPPY* R/Bioconductor package is illustrated through the analysis of a public scRNA-seq dataset using the pseudo-bulk strategy.
@@ -66,7 +66,7 @@ knitr::include_graphics(
 ## Implementation
 
 *sSNAPPY* is an R package that has been reviewed and published on the open-source bioinformatics software platform [Bioconductor](https://bioconductor.org/packages/release/bioc/html/*sSNAPPY*.html) with all source code available via GitHub.
-The methodology itself is topology-based, designed to compute directional, single-sample, pathway perturbation scores for gene expression datasets with a matched-pair, or nested design (eg. samples collected before and after treatment).
+The methodology itself is topology-based, designed to compute directional, single-sample, pathway perturbation scores for gene expression datasets with a matched-pair, or nested design (e.g. samples collected before and after treatment).
 Common examples of such designs may include treated vs control samples within cell-line passages, or across multiple treatments applied to tissue samples from within a specific donor.
 This allows for the detection of pathway perturbations within all samples from a treatment group, but also within individual samples.
 The only data required to run *sSNAPPY*, is a log-transformed expression matrix (e.g. logCPM) with matching sample metadata describing treatment groups and the nested structure.
@@ -86,7 +86,7 @@ knitr::include_graphics(
 )
 ```
 
-*sSNAPPY* extends the topology-based scoring algorithm initially proposed in  SPIA[@Tarca2009] which propagates fold-change estimates from genes considered as differentially expressed through pathway topologies, to compute a perturbation score for each pathway.
+*sSNAPPY* extends the topology-based scoring algorithm initially proposed in SPIA[@Tarca2009] which propagates fold-change estimates from genes considered as differentially expressed through pathway topologies, to compute a perturbation score for each pathway.
 In contrast to SPIA, which relies on a defined set of differentially expressed genes, *sSNAPPY* uses fold-change estimates from all detected genes. 
 By modifying the algorithm to incorporate single-sample, weighted estimates of fold-change, we are able to numerically represent changes in a pathway within a given sample, and subsequently model these across all samples within a treatment group.
 Thus, we define the single-sample perturbation score ($S_{hip}$) for a given pathway $p$ and treatment $h$ for a set of nested samples $i$:
@@ -122,7 +122,7 @@ Apart from assessing whether a pathway's activity changed significantly within a
 The single-sample nature of *sSNAPPY*'s pathway perturbation scores is particularly helpful for datasets with complex experimental designs or known confounding factors as these can also be incorporated into the final regression models.
 
 The Bioconductor package graphite[@Sales2012] provides functions that can be used to retrieve pathway topologies from a database and convert topology information to adjacency matrices.
-In order to streamline this process we have implemented a convenience function, where users only need to provide the name of the desired database and species to retrieve all topology information in the format required by the scoring algorithm with the correct type of gene identifiers (ie. Entrez ID).
+In order to streamline this process we have implemented a convenience function, where users only need to provide the name of the desired database and species to retrieve all topology information in the format required by the scoring algorithm with the correct type of gene identifiers (i.e. EntrezID).
 Importantly, we noted that graphite[@Sales2012] retrieves topology matrices in varied orientations from different databases; in KEGG pathways, columns represent downstream relationships, whereas in Reactome and WikiPathway, columns indicate upstream regulation."
 However, this discrepancy is not taken account of in the `runSPIA` function of graphite. 
 We resolve the issue by transposing the topology matrices retrieved from the Reactome and WikiPathway as part of our convenience function.
@@ -522,8 +522,8 @@ meanFC <- rowMeans(weightedFC$weighted_logFC) / weightedFC$weight
 top500 <- rank(1/abs(meanFC)) <= 500
 ```
 
-Since Reactome pathway topologies were retrieved using Entrez IDs, users can provide a data.frame mapping Entrez IDs to their chosen identifiers, such as gene names, through the mapEntrezID parameter, in order to make the visualisations more informative. 
-A data.frame converting Entrez IDs to Ensembl gene names was derived from the Ensembl Release 101[@Ensembl2022] and has been made available as part of the package and serves as a helpful template for future mapping operations by users. 
+Since Reactome pathway topologies were retrieved using EntrezIDs, users can provide a data.frame mapping EntrezIDs to their chosen identifiers, such as gene names, through the mapEntrezID parameter, in order to make the visualisations more informative. 
+A data.frame converting EntrezIDs to Ensembl gene names was derived from the Ensembl Release 101[@Ensembl2022] and has been made available as part of the package and serves as a helpful template for future mapping operations by users. 
 
 ```{r}
 load(system.file("extdata", "entrez2name.rda", package = "sSNAPPY"))
@@ -637,18 +637,22 @@ gene2plot <- entrez2name %>%
 
 ## Comparison to other pathway enrichment methods
 
-We also performed pathway analysis on this example dataset using three other methods to compare their performances against *sSNAPPY*.
+We also performed pathway analysis on this example dataset using three other methods to compare their performance against *sSNAPPY*.
 <!-- I will update the zenodo link afterwards.  -->
 Details on the implementation of those methods and the comparisons performed are available on [10.5281/zenodo.10059952](https://zenodo.org/doi/10.5281/zenodo.10059951).
-The first method applied was the existing group-level topology-based method *SPIA*[@Tarca2009].
-Since *SPIA* only considers pathways containing at least one differentially expressed genes, it has a lower sensitivity and was not able to detect any significant pathway perturbation in this dataset where very few genes were differentially expressed.
-Additionally, we also performed pathway analysis on this example dataset using two non-topological-based approaches: 1) *GSEA*[@Subramanian2005-lx] basing on the ranking statistics derived from the differential expression analysis and 2) the fast version of rotation gene set testing for linear models (*roast*)[@wu2010roast] *fry*, which does not rely on DE analysis results.
-While there was large overlap in the significantly impacted pathways revealed by *GSEA*, *fry* and *sSNAPPY*, *sSNAPPY* identified processes that could not be detected using the other two methods.  
-Moreover, although both *GSEA* and *fry* try to infer the directionality of change in pathway activity, they only base it on whether genes from a pathway are more enriched in up- or down-regulated genes, ignoring the fact that genes can have both an activator and a repressor role in biological processes.
-For example, the pathway **Terminal pathway of complement** was considered as significantly inhibited by *sSNAPPY* but significant activated by *fry*.
-*fry* identified this pathway as activated as the only expressed gene in this pathway *CLU* was significantly up-regulated among post-chemotherapy samples. 
-However, the topology of this pathway indicates that *CLU* is a suppressor of the process, which *sSNAPPY* was able to account for.
-Through comparing *sSNAPPY* against existing pathway analysis methods, both topological and non-topological, the strength and novelty of *sSNAPPY* were demonstrated.
+We initially performed an analysis using SPIA[@Tarca2009].
+However, SPIA relies on differentially expressed genes and given that only 49 genes were identified in our analysis using conventional differential expression analysis, no pathways were considered to be significant using SPIA.
+Additionally, we also performed pathway analysis on this example dataset using two non-topological-based approaches: 1) *GSEA*[@Subramanian2005-lx] using ranking statistics derived from differential expression analysis and 2) the fast version of rotation gene set testing for linear models (*roast*)[@wu2010roast] *fry*, neither of which rely on the presence of differentially expressed genes,
+Importantly, both methods test for signal within genes at either the up-regulated, or down-regulated extremes.
+Of the 219 gene sets considered associated with down-regulated genes by *GSEA*, 61 were considered as inhibited using *sSNAPPY.*
+Similarly, of the 21 pathways considered as associated with up-regulated genes by *GSEA*, 5 were considered as activated using *sSNAPPY.*
+*GSEA* produced a further 173 gene-sets not detected by *sSNAPPY*, whilst *sSNAPPY* produced an additional 54 pathways of interest.
+
+Analysis using *fry* yielded 117 pathways associated with down-regulated genes, with *sSNAPPY* considering 36 of these as inhibited.
+However, 5 were considered as activated under *sSNAPPY*, highlighting that up-regulation of some genes may lead to inhibition of a pathway, which is vital information not available under *fry.*
+Similarly, for the 13 pathways associated with up-regulation under *fry*, two were considered activated by *sSNAPPY*, with one considered inhibited.
+A further 88 pathways were detected as being of interest under *fry*, without being considered as activated or inhibited by *sSNAPPY*, with 77 pathways uniquely detected under *sSNAPPY.*
+
 
 
 # Discussion
@@ -660,7 +664,7 @@ Whilst initially conceived for bulk-RNA studies, this demonstration has also pro
 *sSNAPPY* addresses the limitations of alternative strategies which fail to account for gene-gene interactions encoded by pathway topologies and are unable to predict the direction of pathway activities, nor the cumulative effect of expression change across multiple genes. 
 In addition, the single-sample nature of the method can be utilised to address the increasing demand for personalised medicine. 
 Through identifying shared and divergent responses between individuals, *sSNAPPY* can provide valuable insights into the heterogeneous responses across clinical samples.
-Overall, we believe sSNAPPY represents a valuable addition to the existing body of pathway analysis methods.
+Overall, we believe *sSNAPPY* represents a valuable addition to the existing body of pathway analysis methods.
 
 # Data availability
 
