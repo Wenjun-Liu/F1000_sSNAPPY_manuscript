@@ -638,8 +638,7 @@ gene2plot <- entrez2name %>%
 ## Comparison to other pathway enrichment methods
 
 We also performed pathway analysis on this example dataset using three other methods to compare their performance against *sSNAPPY*.
-<!-- I will update the zenodo link afterwards.  -->
-Details on the implementation of those methods and the comparisons performed are available on [10.5281/zenodo.10059952](https://zenodo.org/doi/10.5281/zenodo.10059951).
+Details on the implementation of those methods and the comparisons performed are available on [10.5281/zenodo.10127829](https://zenodo.org/doi/10.5281/zenodo.10059951).
 We initially performed an analysis using SPIA[@Tarca2009].
 However, SPIA relies on differentially expressed genes and given that only 49 genes were identified in our analysis using conventional differential expression analysis, no pathways were considered to be significant using SPIA.
 Additionally, we also performed pathway analysis on this example dataset using two non-topological-based approaches: 1) *GSEA*[@Subramanian2005-lx] using ranking statistics derived from differential expression analysis and 2) the fast version of rotation gene set testing for linear models (*roast*)[@wu2010roast] *fry*, neither of which rely on the presence of differentially expressed genes,
@@ -674,7 +673,7 @@ The dataset analysed in this manuscript are stored in the data directory of this
 
 * Software available from: https://bioconductor.org/packages/release/bioc/html/sSNAPPY.html 
 * Source code available from: https://github.com/Wenjun-Liu/sSNAPPY
-* Archived source code at time of publication: https://doi.org/10.5281/zenodo.8185451
+* Archived source code at time of publication: https://zenodo.org/doi/10.5281/zenodo.8185450
 * License: GNU General Public License v3.0 [GPL-3](https://opensource.org/license/gpl-3-0/)
 
 # Author Contributions

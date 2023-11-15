@@ -128,11 +128,11 @@ RNA-seq, pathway enrichment, R package, topology, KEGG, Reactome, scRNA-seq
 \clearpage
 \pagestyle{main}
 
-\textbf{R version}: R version 4.3.1 (2023-06-16)
+\textbf{R version}: R version 4.3.0 (2023-04-21)
 
 \textbf{Bioconductor version}: 3.18
 
-\textbf{Package}: 1.6.0
+\textbf{Package}: 1.6.1
 
 \hypertarget{introduction}{%
 \section{Introduction}\label{introduction}}
@@ -666,7 +666,7 @@ In the following example, we'll inspect the 10 most significantly inhibited and 
 An advantage of visualising pathway analysis results using network structures is that it allows the identification of highly connected pathways (Figure \ref{fig:Figure4}).
 To summarise related pathways and further enable interpretation, we can apply community detection\citep{Newman2004} to group related pathways into `communities'.
 sSNAPPY's \texttt{plot\_community()} function is a ``one-stop shop'' for applying a community detection algorithm of the user's choice to the network structure and annotating identified communities by the most common pathway category, denoting the main biological processes perturbed in that community.
-The most recent categories for both KEGG and Reactome databases were curated from their respective website (\href{https://www.genome.jp/kegg/pathway.html}{KEGG website} \& \href{https://reactome.org/PathwayBrowser/\#/R-HSA-1632852\&PATH=R-HSA-9612973}{Reactome website}) and included as parts of sSNAPPY.
+The most recent categories for both KEGG and Reactome databases were curated from their respective website (\href{https://www.genome.jp/kegg/pathway.html}{KEGG website} \& \href{https://reactome.org/PathwayBrowser/\#/R-HSA-1632852&PATH=R-HSA-9612973}{Reactome website}) and included as parts of sSNAPPY.
 Analyses involving other pathway databases may require user-provided pathway categories.
 When the information about pathway categorisations is available, annotation of pathway communities is automatically completed.
 In the current dataset, the Louvain method was applied to the network of biological pathways and revealed five primary communities: 1) Adaptive Immune System; 2) Cell Cycle, Mitotic; 3) Chromatin modifying enzymes \& Epigenetic regulation of gene expression; 4) Post-translational protein modification and 5) The citric acid (TCA) cycle and respiratory electron transport (Figure \ref{fig:Figure5}).
@@ -879,7 +879,7 @@ Not only can sSNAPPY predict directional pathway perturbations, but it also enab
 \subsection{Comparison to other pathway enrichment methods}\label{comparison-to-other-pathway-enrichment-methods}}
 
 We also performed pathway analysis on this example dataset using three other methods to compare their performance against \emph{sSNAPPY}.
-Details on the implementation of those methods and the comparisons performed are available on \href{https://zenodo.org/doi/10.5281/zenodo.10059951}{10.5281/zenodo.10059952}.
+Details on the implementation of those methods and the comparisons performed are available on \href{https://zenodo.org/doi/10.5281/zenodo.10059951}{10.5281/zenodo.10127829}.
 We initially performed an analysis using SPIA\citep{Tarca2009}.
 However, SPIA relies on differentially expressed genes and given that only 49 genes were identified in our analysis using conventional differential expression analysis, no pathways were considered to be significant using SPIA.
 Additionally, we also performed pathway analysis on this example dataset using two non-topological-based approaches: 1) \emph{GSEA}\citep{Subramanian2005-lx} using ranking statistics derived from differential expression analysis and 2) the fast version of rotation gene set testing for linear models (\emph{roast})\citep{wu2010roast} \emph{fry}, neither of which rely on the presence of differentially expressed genes,
@@ -919,7 +919,7 @@ The dataset analysed in this manuscript are stored in the data directory of this
 \item
   Source code available from: \url{https://github.com/Wenjun-Liu/sSNAPPY}
 \item
-  Archived source code at time of publication: \url{https://doi.org/10.5281/zenodo.8185451}
+  Archived source code at time of publication: \url{https://zenodo.org/doi/10.5281/zenodo.8185450}
 \item
   License: GNU General Public License v3.0 \href{https://opensource.org/license/gpl-3-0/}{GPL-3}
 \end{itemize}
