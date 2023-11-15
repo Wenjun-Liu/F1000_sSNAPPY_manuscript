@@ -81,9 +81,9 @@
 \setlength{\parskip}{6pt plus 2pt minus 1pt}
 
 
+\usepackage{float}
 \usepackage{booktabs}
 \usepackage{longtable}
-\usepackage{endfloat}
 \usepackage{booktabs}
 \usepackage{longtable}
 \usepackage{array}
@@ -149,7 +149,7 @@ To address this gap, we present a Single-Sample directioNAl Pathway Perturbation
 This article defines how \emph{sSNAPPY} computes changes in gene expression within paired samples, and propagates this through gene-set topologies to predict the perturbation in pathway activities within paired samples, before providing summarised results across an entire dataset (Figure \ref{fig:Figure1}).
 The practical usage of the \emph{sSNAPPY} R/Bioconductor package is illustrated through the analysis of a public scRNA-seq dataset using the pseudo-bulk strategy.
 
-\begin{figure}
+\begin{figure}[H]
 
 {\centering \includegraphics[width=1\linewidth]{sSNAPPY_paper_files/figure-latex/Figure1} 
 
@@ -179,7 +179,7 @@ As such, we utilise a gene-level weighting strategy to down-weight fold-change e
 Gene-level weights \(w_g\) are obtained in a treatment-agnostic manner by fitting a loess curve through the relationship between observed gene-level variance (\(\sigma^2_g\)) and average signal (\(\bar\mu_{g}\))(Figure \ref{fig:Figure2}), and taking the inverse of the loess-predicted variance as the weight \(w_g = a / f(\bar\mu_{g})\), where \(f(\bar\mu_{g})\) is the predicted value from the loess curve and the constant \(a\) ensures \(\sum w_g = 1\).
 We then use these weighted estimates of log fold-change (\(\delta_{ghi}^* = w_g\delta_{ghi}\)) in the calculation of all subsequent pathway perturbation scores.
 
-\begin{figure}
+\begin{figure}[H]
 
 {\centering \includegraphics[width=1\linewidth]{sSNAPPY_paper_files/figure-latex/Figure2} 
 
@@ -463,7 +463,7 @@ To demonstrate this, we randomly selected 6 pathways to demonstrate their quanti
 \end{Highlighting}
 \end{Shaded}
 
-\begin{figure}
+\begin{figure}[H]
 
 {\centering \includegraphics[width=1\linewidth]{sSNAPPY_paper_files/figure-latex/Figure3-1} 
 
@@ -654,7 +654,7 @@ In the following example, we'll inspect the 10 most significantly inhibited and 
 \end{Highlighting}
 \end{Shaded}
 
-\begin{figure}
+\begin{figure}[H]
 
 {\centering \includegraphics[width=1\linewidth]{sSNAPPY_paper_files/figure-latex/Figure4-1} 
 
@@ -693,7 +693,7 @@ The largest community formed was the Adaptive Immune System pathway, indicating 
 \end{Highlighting}
 \end{Shaded}
 
-\begin{figure}
+\begin{figure}[H]
 
 {\centering \includegraphics[width=1\linewidth]{sSNAPPY_paper_files/figure-latex/Figure5-1} 
 
@@ -764,7 +764,7 @@ A data.frame converting EntrezIDs to Ensembl gene names was derived from the Ens
 \end{Highlighting}
 \end{Shaded}
 
-\begin{figure}
+\begin{figure}[H]
 
 {\centering \includegraphics[width=1\linewidth]{sSNAPPY_paper_files/figure-latex/Figure6-1} 
 
@@ -820,7 +820,7 @@ Inclusion of the Z-Scores enabled the assessment of the level of perturbation pr
 \end{Highlighting}
 \end{Shaded}
 
-\begin{figure}
+\begin{figure}[H]
 
 {\centering \includegraphics[width=1\linewidth]{sSNAPPY_paper_files/figure-latex/Figure7-1} 
 
@@ -866,7 +866,7 @@ Not only can sSNAPPY predict directional pathway perturbations, but it also enab
 \end{Highlighting}
 \end{Shaded}
 
-\begin{figure}
+\begin{figure}[H]
 
 {\centering \includegraphics[width=0.8\linewidth]{sSNAPPY_paper_files/figure-latex/Figure8-1} 
 

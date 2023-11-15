@@ -30,9 +30,9 @@ csl: vancouver.csl
 output: BiocWorkflowTools::f1000_article
 
 header-includes: 
+  - \usepackage{float}
   - \usepackage{booktabs}
   - \usepackage{longtable}
-  - \usepackage{endfloat}
 ---
 
 **R version**: `r R.version.string`
@@ -55,7 +55,7 @@ To address this gap, we present a Single-Sample directioNAl Pathway Perturbation
 This article defines how *sSNAPPY* computes changes in gene expression within paired samples, and propagates this through gene-set topologies to predict the perturbation in pathway activities within paired samples, before providing summarised results across an entire dataset (Figure \@ref(fig:Figure1)). 
 The practical usage of the *sSNAPPY* R/Bioconductor package is illustrated through the analysis of a public scRNA-seq dataset using the pseudo-bulk strategy.
 
-```{r Figure1, out.width='100%',fig.cap="Schematic illustration of the differences betweeen conventional pathway analysis methods and sSNAPPY. Instead of being limited to treatment-level analyses, \\textit{sSNAPPY} allows the detection of pathway perturbation in individual samples by using sample-specific estimates of fold-change instead of experiment-wide estimates. (Created with BioRender.com).", echo=FALSE}
+```{r Figure1, out.width='100%',fig.cap="Schematic illustration of the differences betweeen conventional pathway analysis methods and sSNAPPY. Instead of being limited to treatment-level analyses, \\textit{sSNAPPY} allows the detection of pathway perturbation in individual samples by using sample-specific estimates of fold-change instead of experiment-wide estimates. (Created with BioRender.com).", echo=FALSE, fig.pos='H'}
 knitr::include_graphics(
   here::here("sSNAPPY_paper_files/figure-latex/Figure1.pdf")
 )
@@ -80,7 +80,7 @@ As such, we utilise a gene-level weighting strategy to down-weight fold-change e
 Gene-level weights $w_g$ are obtained in a treatment-agnostic manner by fitting a loess curve through the relationship between observed gene-level variance ($\sigma^2_g$) and average signal ($\bar\mu_{g}$)(Figure \@ref(fig:Figure2)), and taking the inverse of the loess-predicted variance as the weight $w_g = a / f(\bar\mu_{g})$, where $f(\bar\mu_{g})$ is the predicted value from the loess curve and the constant $a$ ensures $\sum w_g = 1$.
 We then use these weighted estimates of log fold-change ($\delta_{ghi}^* = w_g\delta_{ghi}$) in the calculation of all subsequent pathway perturbation scores.
 
-```{r Figure2, out.width='100%',fig.cap="Gene-wise standard deviations are plotted against the mean logCPM values with mean-variance trend modelled by a loess fit. Whilst standard deviations are shown here for the purposes of visualisation, gene-level weights are calculated using variances at this stage of the sSNAPPY algorithm.", echo=FALSE}
+```{r Figure2, out.width='100%',fig.cap="Gene-wise standard deviations are plotted against the mean logCPM values with mean-variance trend modelled by a loess fit. Whilst standard deviations are shown here for the purposes of visualisation, gene-level weights are calculated using variances at this stage of the sSNAPPY algorithm.", echo=FALSE, fig.pos='H'}
 knitr::include_graphics(
   here::here("sSNAPPY_paper_files/figure-latex/Figure2.pdf")
 )
@@ -306,7 +306,7 @@ permutedScore <- readRDS(here::here("data/permutedScore.rds"))
 Apart from pathways whose permuted perturbation scores are consistently zero (which will be dropped by default), the empirical distributions of remaining pathways are expected to be approximately normally distributed with $\mu = 0$, but with the scale of distributions heavily impacted by both the number of genes within each pathway and the overall topology. 
 To demonstrate this, we randomly selected 6 pathways to demonstrate their quantile-quantile (q-q) plot and visualised the distributions of their permuted perturbation scores as boxplots (Figure \@ref(fig:Figure3)).
 
-```{r Figure3, out.width='100%', fig.width=12, fig.height=12, fig.cap="(A) Q-Q plot and (B) distributions of permuted perturbation scores of six randomly selected pathways. All sampled empirical distributions are approximately normally distributed with a mean of zero."}
+```{r Figure3, out.width='100%', fig.width=12, fig.height=12, fig.cap="(A) Q-Q plot and (B) distributions of permuted perturbation scores of six randomly selected pathways. All sampled empirical distributions are approximately normally distributed with a mean of zero.", fig.pos='H'}
 set.seed(123)
 random_pathways <- permutedScore %>%
   keep(~all(. != 0)) %>% 
@@ -414,7 +414,6 @@ knitr::kable(
 
 For enrichment analysis in the original study[@Zhang2022], unsupervised clustering was performed on all cells labelled as cancer cells. 
 Clusters were then annotated manually by performing pathway enrichment testing on cluster marker genes. 
-<!-- We should state which database was used in the original. Was it GO? That will help make clearer some apparent discrepancies, given the lack of topology information in GO -->
 Two clusters, associated with proliferative DNA repair signatures and stress-related markers, contained significantly higher numbers of post-chemotherapy cells than pre-treatment ones[@Zhang2022].
 The representative pathways enriched in the stress-associated cluster were *IL6-mediated signaling events*, *TNF signaling pathway*, and *cellular responses to stress*, and the other post-chemotherapy cell dominated cluster in the original study was enriched for pathways associated with cell proliferation and DNA repair, such as the Cell cycle, DNA repair, Homology directed repair (HDR) through homologous recombination, and the Fanconi anaemia pathway. 
 *sSNAPPY* not only detected many significant perturbed pathways that are highly concordant with the pathways reported to be enriched in the original study but also predicted their directions of changes.
@@ -447,7 +446,7 @@ sigPathway <- sigPathway %>%
   bind_rows()
 ```
 
-```{r Figure4, out.width='100%', fig.width = 8, fig.height = 12, fig.cap = "Significantly perturbed Reactome pathways identified among post-chemotherapy samples using sSNAPPY, colored by (A) predicted direction of change and (B) -log10(p). Only the 10 most significantly inhibited and 10 most significantly activated pathways are shown."}
+```{r Figure4, out.width='100%', fig.width = 8, fig.height = 12, fig.cap = "Significantly perturbed Reactome pathways identified among post-chemotherapy samples using sSNAPPY, colored by (A) predicted direction of change and (B) -log10(p). Only the 10 most significantly inhibited and 10 most significantly activated pathways are shown.", fig.pos='H'}
 set.seed(123)
 # Plot the network structure
 p1 <- plot_gs_network(
@@ -489,7 +488,7 @@ In the current dataset, the Louvain method was applied to the network of biologi
 The largest community formed was the Adaptive Immune System pathway, indicating a clear immune-signalling aspect to these results.
 
 
-```{r Figure5, out.width='100%', fig.width = 12, fig.height = 8,fig.cap = 'Significantly perturbed Reactome pathways identified among post-chemotherapy samples using sSNAPPY, colored by community structures detected through the louvain algorithm. The main biological processes associated with the top 20 pathways that wer most perturbed by the chemotherapy were shown.'}
+```{r Figure5, out.width='100%', fig.width = 12, fig.height = 8,fig.cap = 'Significantly perturbed Reactome pathways identified among post-chemotherapy samples using sSNAPPY, colored by community structures detected through the louvain algorithm. The main biological processes associated with the top 20 pathways that wer most perturbed by the chemotherapy were shown.', fig.pos='H'}
 load(system.file("extdata", "gsAnnotation_df_reactome.rda", package = "sSNAPPY"))
 set.seed(456)
 plot_community(
@@ -530,7 +529,7 @@ load(system.file("extdata", "entrez2name.rda", package = "sSNAPPY"))
 head(entrez2name)
 ```
 
-```{r Figure6, out.width='100%', fig.width = 12, fig.height = 10, fig.cap = 'Significantly perturbed Reactome pathways identified among post-chemotherapy samples using sSNAPPY, showing any genes in the top 500 ranked by magnitude of change in expression, and which pathways they are likely contributing to. Only the 10 most significantly inhibited and 10 most significantly activated pathways are shown.'}
+```{r Figure6, out.width='100%', fig.width = 12, fig.height = 10, fig.cap = 'Significantly perturbed Reactome pathways identified among post-chemotherapy samples using sSNAPPY, showing any genes in the top 500 ranked by magnitude of change in expression, and which pathways they are likely contributing to. Only the 10 most significantly inhibited and 10 most significantly activated pathways are shown.', fig.pos='H'}
 set.seed(123)
 plot_gs2gene(
   normalisedScores = sigPathway, 
@@ -561,7 +560,7 @@ This function takes advantage of the plotting capabilities of the `pheatmap` pac
 Inclusion of the Z-Scores enabled the assessment of the level of perturbation predicted in each sample and key genes involved (Figure \@ref(fig:Figure7)).
 
 
-```{r Figure7, out.width='100%', fig.width = 12, fig.height = 7, fig.cap = 'Gene-level perturbation scores for the top 10 genes in the \"SUMOylation of DNA replication proteins\" pathway ranked by average contribution to the perturbation score. Samples were annotated by patient chemotherapy response score (CRS), along with the range for sample-level Z-scores as a guide to sample-specific pathway perturbation. The genes CDCA8, TOP2A, UBE2I, BIRC5 were identified as possible key drivers of the inhibition of of this pathway.'}
+```{r Figure7, out.width='100%', fig.width = 12, fig.height = 7, fig.cap = 'Gene-level perturbation scores for the top 10 genes in the \"SUMOylation of DNA replication proteins\" pathway ranked by average contribution to the perturbation score. Samples were annotated by patient chemotherapy response score (CRS), along with the range for sample-level Z-scores as a guide to sample-specific pathway perturbation. The genes CDCA8, TOP2A, UBE2I, BIRC5 were identified as possible key drivers of the inhibition of of this pathway.', fig.pos='H'}
 path_name <- "SUMOylation of DNA replication proteins"
 z_breaks <- round(qnorm(c(0, 0.025, 0.05, 0.25, 0.75, 0.95, 0.975, 1)), 2)
 annotation_df <- normalisedScores %>%
@@ -618,7 +617,7 @@ We acknowledge that our analysis was limited to a small number of patients, whic
 However, despite this limitation, these findings underscore the strength of sSNAPPY as a valuable tool for hypothesis generation not otherwise possible. 
 Not only can sSNAPPY predict directional pathway perturbations, but it also enables the identification of key driver genes underlying these perturbations. 
 
-```{r Figure8, out.width='80%', fig.height=5, fig.width=6, fig.cap = 'Single-sample logFC (ssFC) of potential key genes driving the inhibition of \"SUMOylation of DNA replication proteins\" pathway as a response to chemotherapy in HGSOC tumours.', message=FALSE}
+```{r Figure8, out.width='80%', fig.height=5, fig.width=6, fig.cap = 'Single-sample logFC (ssFC) of potential key genes driving the inhibition of \"SUMOylation of DNA replication proteins\" pathway as a response to chemotherapy in HGSOC tumours.', message=FALSE, fig.pos='H'}
 gene2plot <- entrez2name %>%
   dplyr::filter(mapTo %in% c("CDCA8", "TOP2A", "UBE2I", "BIRC5"))
 (weightedFC$weighted_logFC / weightedFC$weight) %>%
