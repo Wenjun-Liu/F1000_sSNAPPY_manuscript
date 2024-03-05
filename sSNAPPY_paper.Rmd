@@ -2,7 +2,10 @@
 title: "sSNAPPY: an R/Bioconductor package for single-sample directional pathway perturbation analysis"
 author: 
   - name: Wenjun Liu
-    affiliation: Dame Roma Mitchell Cancer Research Laboratories, Adelaide Medical School, Faculty of Health and Medical Sciences, University of Adelaide, Adelaide, Australia
+    affiliation: 
+    - Dame Roma Mitchell Cancer Research Laboratories, Adelaide Medical School, Faculty of Health and Medical Sciences, University of Adelaide, Adelaide, Australia
+    - Adelaide Centre for Epigenetics, School of Biomedicine, Faculty of Health and Medical Sciences, University of Adelaide, Adelaide, Australia
+    - The South Australian Immunogenomics Cancer Institute, Faculty of Health and Medical Sciences, University of Adelaide, Adelaide, Australia
     email: Corresponding Author wenjun.liu@adelaide.edu.au
   - name: Ville-Petteri Mäkinen
     affiliation: 
