@@ -113,7 +113,7 @@
 \affil[3]{The South Australian Immunogenomics Cancer Institute, Faculty of Health and Medical Sciences, University of Adelaide, Adelaide, Australia}
 \affil[4]{Computational Medicine, Faculty of Medicine, University of Oulu, Oulu, Finland}
 \affil[5]{Center for Life Course Health Research, Faculty of Medicine, University of Oulu, Oulu, Finland}
-\affil[6]{Black Ochre Data Laboratories, Telethon Kids Institute, Adelaide, Australia}
+\affil[6]{Black Ochre Data Laboratories, Indigenous Genomics, Telethon Kids Institute, Adelaide, Australia}
 \affil[7]{John Curtin School of Medical Research, Australian National University, Canberra, Australia}
 
 \maketitle
@@ -130,7 +130,7 @@ RNA-seq, pathway enrichment, R package, topology, KEGG, Reactome, scRNA-seq
 \clearpage
 \pagestyle{main}
 
-\textbf{R version}: R version 4.3.2 (2023-10-31)
+\textbf{R version}: R version 4.3.3 (2024-02-29)
 
 \textbf{Bioconductor version}: 3.18
 
@@ -157,7 +157,7 @@ The practical usage of the \emph{sSNAPPY} R/Bioconductor package is illustrated 
 
 }
 
-\caption{Schematic illustration of the differences betweeen conventional pathway analysis methods and sSNAPPY. Instead of being limited to treatment-level analyses, \textit{sSNAPPY} allows the detection of pathway perturbation in individual samples by using sample-specific estimates of fold-change instead of experiment-wide estimates. (Created with BioRender.com).}\label{fig:Figure1}
+\caption{Schematic illustration of the differences between conventional pathway analysis methods and sSNAPPY. Instead of being limited to treatment-level analyses, \textit{sSNAPPY} allows the detection of pathway perturbation in individual samples by using sample-specific estimates of fold-change instead of experiment-wide estimates. (Created with BioRender.com).}\label{fig:Figure1}
 \end{figure}
 
 \hypertarget{methods}{%
@@ -201,7 +201,7 @@ S_{hip} = \sum_{g \in G_p} \lbrack S_{ghip} - \delta_{ghi}^*\rbrack \text{, wher
 S_{ghip} = \delta_{ghi}^* + \sum_{g' \in U_{gp}} \beta_{gg'p} \frac{S_{g'hip}}{N_{g'p}} 
 \end{aligned}
 \]
-where:
+and:
 
 \begin{itemize}
 \item
@@ -228,7 +228,7 @@ All possible permuted pseudo-pairs are sampled unless otherwise specified, such 
 Permutation p-values are calculated for each \(S_{hip}\) value, indicating the approximate significance of pathway perturbation at the single-sample level.
 Relying on symmetry around zero, these are derived by assessing the proportion of permuted scores with absolute values as extreme, or more extreme, than the absolute value of test perturbation score within each pathway\citep{Theo2009}.
 Since the smallest achievable permutation p-value is 1/\(P\), accurate estimation of small p-value requires a large number of permutation that is only feasible in data with large sample size.
-As a guideline, GSEA recommends a minimum of 7 samples in each treatment group for utilizing their phenotype permutation approach\citep{GSEAUserGuide}, and under \emph{sSNAPPY} this would yield \(P\) = 182 unique permuted pseudo-pairs and minimal permutation p-values of 0.0055 at each individual sample and pathway-level.
+As a guideline, GSEA recommends a minimum of 7 samples in each treatment group for utilizing their phenotype permutation approach\citep{GSEAUserGuide}, and under \emph{sSNAPPY} this would yield \(P\) = 182 unique permuted pseudo-pairs and minimal permutation p-values of \(p \geq 0.0055\) at each individual sample and pathway-level.
 
 Apart from assessing whether a pathway's activity changed significantly within an individual sample, an important question may be the detection of changes in pathway activity across all samples within a treatment, and this can be performed by modelling \(Z_{hip}\) values using regression models, and incorporating Smyth's moderated \(t\)-statistic\citep{Smyth_2004} as implemented in \emph{limma}\citep{limma_2015}.
 The single-sample nature of \emph{sSNAPPY}'s pathway perturbation scores is particularly helpful for datasets with complex experimental designs or known confounding factors as these can also be incorporated into the final regression models.
@@ -237,7 +237,7 @@ The Bioconductor package graphite\citep{Sales2012} provides functions that can b
 In order to streamline this process we have implemented a convenience function, where users only need to provide the name of the desired database and species to retrieve all topology information in the format required by the scoring algorithm with the correct type of gene identifiers (i.e.~EntrezID).
 Importantly, we noted that graphite\citep{Sales2012} retrieves topology matrices in varied orientations from different databases; in KEGG pathways, columns represent downstream relationships, whereas in Reactome and WikiPathway, columns indicate upstream regulation.
 However, this discrepancy is not taken account of in the \texttt{runSPIA} function of graphite.
-We resolve the issue by transposing the topology matrices retrieved from the Reactome and WikiPathway as part of our convenience function.
+We resolve the issue by transposing the topology matrices retrieved from Reactome and WikiPathway as part of our convenience function.
 
 \hypertarget{operation}{%
 \subsection{Operation}\label{operation}}
