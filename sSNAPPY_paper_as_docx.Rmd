@@ -1,42 +1,78 @@
 ---
-title: "sSNAPPY: an R/Bioconductor package for single-sample directional pathway perturbation analysis"
-author: 
-  - name: Wenjun Liu
-    affiliation: 
-    - Dame Roma Mitchell Cancer Research Laboratories, Adelaide Medical School, Faculty of Health and Medical Sciences, University of Adelaide, Adelaide, Australia
-    - Adelaide Centre for Epigenetics, School of Biomedicine, Faculty of Health and Medical Sciences, University of Adelaide, Adelaide, Australia
-    - The South Australian Immunogenomics Cancer Institute, Faculty of Health and Medical Sciences, University of Adelaide, Adelaide, Australia
-    email: Corresponding Author wenjun.liu@adelaide.edu.au
-  - name: Ville-Petteri Mäkinen
-    affiliation: 
-    - Computational Medicine, Faculty of Medicine, University of Oulu, Oulu, Finland
-    - Center for Life Course Health Research, Faculty of Medicine, University of Oulu, Oulu, Finland
-  - name: Wayne D. Tilley
-    affiliation: Dame Roma Mitchell Cancer Research Laboratories, Adelaide Medical School, Faculty of Health and Medical Sciences, University of Adelaide, Adelaide, Australia
-  - name: Stephen M. Pederson
-    affiliation: 
-    - Dame Roma Mitchell Cancer Research Laboratories, Adelaide Medical School, Faculty of Health and Medical Sciences, University of Adelaide, Adelaide, Australia
-    - Black Ochre Data Laboratories, Indigenous Genomics, Telethon Kids Institute, Adelaide, Australia
-    - John Curtin School of Medical Research, Australian National University, Canberra, Australia
-abstract: 
- A common outcome of analysing RNA-Seq data is the detection of biological pathways with significantly altered activity between the conditions under investigation. 
- Whilst many strategies test for over-representation of genes showing changed expression within pre-defined gene-sets, these analyses typically do not account for gene-gene interactions encoded by pathway topologies, and are not able to directly predict the directional change of pathway activity. 
- To address these issues, we have developed a single-sample pathway perturbation analysis method  [*sSNAPPY*](https://bioconductor.org/packages/sSNAPPY), now available as an R/Bioconductor package, which leverages pathway topology information to compute pathway perturbation scores, and predicts the direction of change across a set of pathways. 
- Here, we demonstrate the use of *sSNAPPY* by applying the method to public scRNA-seq data, derived from ovarian cancer patient tissues collected before and after chemotherapy. 
- Not only were we able to predict the direction of pathway perturbations discussed in the original study, but *sSNAPPY* was also able to detect significant changes of other biological processes, yielding far greater insight into the response to treatment.
- *sSNAPPY* represents a novel pathway analysis strategy that takes into consideration of pathway topology to predict impacted biology pathways, both within related samples and across treatment groups. 
- In addition to not relying on differentially expressed genes, the method and associated R package offers important flexibility and provides powerful visualisation tools.
+title: "sSNAPPY: an R/Bioconductor package for single-sample directional pathway perturbation
+  analysis"
+author:
+- name: Wenjun Liu
+  affiliation:
+  - Dame Roma Mitchell Cancer Research Laboratories, Adelaide Medical School, Faculty
+    of Health and Medical Sciences, University of Adelaide, Adelaide, Australia
+  - Adelaide Centre for Epigenetics, School of Biomedicine, Faculty of Health and
+    Medical Sciences, University of Adelaide, Adelaide, Australia
+  - The South Australian Immunogenomics Cancer Institute, Faculty of Health and Medical
+    Sciences, University of Adelaide, Adelaide, Australia
+  email: Corresponding Author wenjun.liu@adelaide.edu.au
+- name: "Ville-Petteri Mäkinen"
+  affiliation:
+  - Computational Medicine, Faculty of Medicine, University of Oulu, Oulu, Finland
+  - Center for Life Course Health Research, Faculty of Medicine, University of Oulu,
+    Oulu, Finland
+- name: Wayne D. Tilley
+  affiliation: Dame Roma Mitchell Cancer Research Laboratories, Adelaide Medical School,
+    Faculty of Health and Medical Sciences, University of Adelaide, Adelaide, Australia
+- name: Stephen M. Pederson
+  affiliation:
+  - Dame Roma Mitchell Cancer Research Laboratories, Adelaide Medical School, Faculty
+    of Health and Medical Sciences, University of Adelaide, Adelaide, Australia
+  - Black Ochre Data Laboratories, Indigenous Genomics, Telethon Kids Institute, Adelaide,
+    Australia
+  - John Curtin School of Medical Research, Australian National University, Canberra,
+    Australia
+  email: Corresponding Author stephen.pederson@telethonkids.org.au
 
-keywords: RNA-seq, pathway enrichment, R package, topology, KEGG, Reactome, scRNA-seq
+output: word_document
 bibliography: bibliography.bib
 csl: vancouver.csl
-output: BiocWorkflowTools::f1000_article
-
-header-includes: 
-  - \usepackage{booktabs}
-  - \usepackage{longtable}
-  - \usepackage{endfloat}
+header-includes:
+- \usepackage{booktabs}
+- \usepackage{longtable}
+- \usepackage{endfloat}
+keywords: "RNA-seq, pathway enrichment, R package, topology, KEGG, Reactome, scRNA-seq"
 ---
+
+# Author List and Affiliations
+
+Wenjun Liu*,1,2,3 , Ville-Petteri Mäkinen4,5 , Wayne D. Tilley1 , and Stephen M. Pederson*,1,6,7 
+
+1 Dame Roma Mitchell Cancer Research Laboratories, Adelaide Medical School, Faculty of Health and Medical Sciences, University of Adelaide, Adelaide, Australia 
+
+2 Adelaide Centre for Epigenetics, School of Biomedicine, Faculty of Health and Medical Sciences, University of Adelaide, Adelaide, Australia 
+
+3 The South Australian Immunogenomics Cancer Institute, Faculty of Health and Medical Sciences, University of Adelaide, Adelaide, Australia 
+
+4 Computational Medicine, Faculty of Medicine, University of Oulu, Oulu, Finland 
+
+5 Center for Life Course Health Research, Faculty of Medicine, University of Oulu, Oulu, Finland 
+
+6 Black Ochre Data Laboratories, Indigenous Genomics, Telethon Kids Institute, Adelaide, Australia 
+
+7 John Curtin School of Medical Research, Australian National University, Canberra, Australia 
+
+*Corresponding authors: 
+
+Wenjun Liu: wenjun.liu@adelaide.edu.au 
+
+Stephen Pederson stephen.pederson@telethonkids.org.au 
+
+# Abstract
+
+A common outcome of analysing RNA-Seq data is the detection of biological pathways with significantly altered activity between the conditions under investigation.
+Whilst many strategies test for over-representation of genes showing changed expression within pre-defined gene-sets, these analyses typically do not account for gene-gene interactions encoded by pathway topologies, and are not able to directly predict the directional change of pathway activity. 
+To address these issues, we have developed now available as an R/Bioconductor package, which leverages pathway topology information to compute pathway perturbation scores, and predicts the direction of change across a set of pathways.
+
+Here, we demonstrate the use of *sSNAPPY* by applying the method to public scRNA-seq data, derived from ovarian cancer patient tissues collected before and after chemotherapy. 
+Not only were we able to predict the direction of pathway perturbations discussed in the original study, but *sSNAPPY* was also able to detect significant changes of other biological processes, yielding far greater insight into the response to treatment. 
+*sSNAPPY* represents a novel pathway analysis strategy that takes into consideration of pathway topology to predict impacted biology pathways, both within related samples and across treatment groups.
+In addition to not relying on differentially expressed genes, the method and associated R package offers important flexibility and provides powerful visualisation tools.
 
 **R version**: `r R.version.string`
 
@@ -101,7 +137,7 @@ S_{hip} = \sum_{g \in G_p} \lbrack S_{ghip} - \delta_{ghi}^*\rbrack \text{, wher
 S_{ghip} = \delta_{ghi}^* + \sum_{g' \in U_{gp}} \beta_{gg'p} \frac{S_{g'hip}}{N_{g'p}} 
 \end{aligned}
 $$
-and:
+where:
 
 * $G_p$ represents the set of genes in pathway $p$, such that $g \in G_p$
 * $S_{ghip}$ is the gene-, treatment- and sample-specific perturbation score for pathway $p$
@@ -120,7 +156,7 @@ All possible permuted pseudo-pairs are sampled unless otherwise specified, such 
 Permutation p-values are calculated for each $S_{hip}$ value, indicating the approximate significance of pathway perturbation at the single-sample level.
 Relying on symmetry around zero, these are derived by assessing the proportion of permuted scores with absolute values as extreme, or more extreme, than the absolute value of test perturbation score within each pathway[@Theo2009].
 Since the smallest achievable permutation p-value is 1/$P$, accurate estimation of small p-value requires a large number of permutation that is only feasible in data with large sample size.
-As a guideline, GSEA recommends a minimum of 7 samples in each treatment group for utilizing their phenotype permutation approach[@GSEAUserGuide], and under *sSNAPPY* this would yield $P$ = 182 unique permuted pseudo-pairs and minimal permutation p-values of $p \geq 0.0055$ at each individual sample and pathway-level. 
+As a guideline, GSEA recommends a minimum of 7 samples in each treatment group for utilizing their phenotype permutation approach[@GSEAUserGuide], and under *sSNAPPY* this would yield $P$ = 182 unique permuted pseudo-pairs and minimal permutation p-values of 0.0055 at each individual sample and pathway-level. 
 
 Apart from assessing whether a pathway's activity changed significantly within an individual sample, an important question may be the detection of changes in pathway activity across all samples within a treatment, and this can be performed by modelling $Z_{hip}$ values using regression models, and incorporating Smyth's moderated $t$-statistic[@Smyth_2004] as implemented in *limma*[@limma_2015].
 The single-sample nature of *sSNAPPY*'s pathway perturbation scores is particularly helpful for datasets with complex experimental designs or known confounding factors as these can also be incorporated into the final regression models.
@@ -129,7 +165,7 @@ The Bioconductor package graphite[@Sales2012] provides functions that can be use
 In order to streamline this process we have implemented a convenience function, where users only need to provide the name of the desired database and species to retrieve all topology information in the format required by the scoring algorithm with the correct type of gene identifiers (i.e. EntrezID).
 Importantly, we noted that graphite[@Sales2012] retrieves topology matrices in varied orientations from different databases; in KEGG pathways, columns represent downstream relationships, whereas in Reactome and WikiPathway, columns indicate upstream regulation.
 However, this discrepancy is not taken account of in the `runSPIA` function of graphite. 
-We resolve the issue by transposing the topology matrices retrieved from Reactome and WikiPathway as part of our convenience function.
+We resolve the issue by transposing the topology matrices retrieved from the Reactome and WikiPathway as part of our convenience function.
 
 ## Operation
 
